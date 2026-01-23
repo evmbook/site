@@ -111,6 +111,9 @@ export function Footer() {
                 CC BY-SA 4.0
               </a>
             </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Last Updated: January 2026
+            </p>
             <p className="text-xs text-[var(--text-muted)]/60">
               Derivative of Mastering Ethereum by Andreas M. Antonopoulos &amp;
               Gavin Wood
