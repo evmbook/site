@@ -54,7 +54,7 @@ export function Header() {
           <div className="hidden md:flex">
             <Link
               href="/read"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-pink to-neon-purple px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-neon-pink/25 hover:shadow-xl hover:shadow-neon-pink/40 transition-all duration-200"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-green to-neon-yellow px-4 py-2 text-sm font-semibold text-void-black shadow-lg shadow-neon-green/25 hover:shadow-xl hover:shadow-neon-green/40 hover:scale-105 transition-all duration-200"
             >
               Start Reading
             </Link>

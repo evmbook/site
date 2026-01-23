@@ -13,12 +13,25 @@ export default function AboutPage() {
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="prose dark:prose-invert max-w-none">
+          <div className="prose max-w-none">
             <h1>About Mastering EVM</h1>
 
             <p className="lead">
               A comprehensive guide to the Ethereum Virtual Machine ecosystem,
               covering both Ethereum (ETH) and Ethereum Classic (ETC).
+            </p>
+
+            <h2>A Living Book</h2>
+            <p>
+              The blockchain space moves at lightning speed. The original <em>Mastering Ethereum</em> was
+              written with content reflecting February 2017—a lifetime ago in this industry. Since then,
+              we've seen The Merge, Layer 2 scaling solutions, the DeFi explosion, and countless protocol
+              upgrades.
+            </p>
+            <p>
+              <strong>Mastering EVM</strong> is designed as a living document that evolves with the ecosystem.
+              We continuously update content to reflect the current state of EVM development, ensuring you're
+              learning modern practices, not historical artifacts.
             </p>
 
             <h2>Why This Book?</h2>
@@ -46,22 +59,9 @@ export default function AboutPage() {
               technically. Understanding both gives you a complete picture of the EVM ecosystem.
             </p>
 
-            <h2>The Nakamoto Wei Collective</h2>
+            <h2>Author</h2>
             <p>
-              Mastering EVM is written by <strong>Nakamoto Wei</strong> — a collective pseudonym
-              representing contributors to this project.
-            </p>
-            <p>
-              We chose this name as a deliberate homage to:
-            </p>
-            <ul>
-              <li><strong>Satoshi Nakamoto</strong> — Creator of Bitcoin, identity unknown</li>
-              <li><strong>Wei Dai</strong> — Inventor of b-money, referenced in the Bitcoin whitepaper</li>
-              <li><strong>Wei</strong> — The smallest unit of Ether (1 ETH = 10¹⁸ wei)</li>
-            </ul>
-            <p>
-              The cypherpunk tradition values ideas over identities. Like those who came before,
-              we believe in code, not credentials.
+              Mastering EVM is written by <strong>Cipher Null</strong>.
             </p>
 
             <h2>Attribution</h2>
@@ -128,7 +128,7 @@ export default function AboutPage() {
           <div className="mt-12 flex justify-center gap-4">
             <Link
               href="/read"
-              className="inline-flex items-center justify-center rounded-md bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-500 transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-green to-neon-yellow px-6 py-3 text-base font-semibold text-void-black shadow-lg shadow-neon-green/25 hover:shadow-xl hover:shadow-neon-green/40 hover:scale-105 transition-all duration-200"
             >
               Start Reading
             </Link>
@@ -136,7 +136,7 @@ export default function AboutPage() {
               href="https://github.com/evmbook"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 px-6 py-3 text-base font-semibold text-slate-900 dark:text-white shadow-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-transparent border border-neon-blue px-6 py-3 text-base font-semibold text-neon-blue shadow-md shadow-neon-blue/10 hover:bg-neon-blue/10 hover:shadow-lg hover:shadow-neon-blue/25 transition-all duration-200"
             >
               View on GitHub
             </a>

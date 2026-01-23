@@ -50,7 +50,7 @@ export function Hero() {
           >
             <Link
               href="/read"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-pink to-neon-purple px-6 py-3 text-base font-semibold text-white shadow-lg shadow-neon-pink/25 hover:shadow-xl hover:shadow-neon-pink/40 transition-all duration-200"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-green to-neon-yellow px-6 py-3 text-base font-semibold text-void-black shadow-lg shadow-neon-green/25 hover:shadow-xl hover:shadow-neon-green/40 hover:scale-105 transition-all duration-200"
             >
               Read Online
               <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -59,7 +59,7 @@ export function Hero() {
             </Link>
             <Link
               href="/download"
-              className="inline-flex items-center justify-center rounded-lg bg-transparent border border-neon-cyan px-6 py-3 text-base font-semibold text-neon-cyan shadow-md shadow-neon-cyan/10 hover:bg-neon-cyan/10 hover:shadow-lg hover:shadow-neon-cyan/25 transition-all duration-200"
+              className="inline-flex items-center justify-center rounded-lg bg-transparent border border-neon-blue px-6 py-3 text-base font-semibold text-neon-blue shadow-md shadow-neon-blue/10 hover:bg-neon-blue/10 hover:shadow-lg hover:shadow-neon-blue/25 transition-all duration-200"
             >
               Download PDF
               <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -74,11 +74,11 @@ export function Hero() {
             className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-2xl mx-auto"
           >
             <div className="text-center">
-              <div className="text-3xl font-bold text-neon-cyan">17</div>
+              <div className="text-3xl font-bold text-neon-blue">17</div>
               <div className="text-sm text-text-muted">Chapters</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-neon-pink">5</div>
+              <div className="text-3xl font-bold text-neon-orange">5</div>
               <div className="text-sm text-text-muted">Appendices</div>
             </div>
             <div className="text-center">
@@ -86,7 +86,7 @@ export function Hero() {
               <div className="text-sm text-text-muted">Code Examples</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-neon-purple">Free</div>
+              <div className="text-3xl font-bold text-neon-yellow">Free</div>
               <div className="text-sm text-text-muted">Forever</div>
             </div>
           </motion.div>

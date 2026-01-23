@@ -11,7 +11,7 @@ export default function ReadPage() {
   const appendices = getAppendices()
 
   return (
-    <div className="prose dark:prose-invert max-w-none">
+    <div className="prose max-w-none">
       <h1>Table of Contents</h1>
 
       <p className="lead">
@@ -24,12 +24,12 @@ export default function ReadPage() {
           <li key={chapter.slug}>
             <Link
               href={`/read/${chapter.slug}`}
-              className="text-brand-600 dark:text-brand-400 hover:underline"
+              className="text-neon-cyan hover:text-neon-orange transition-colors"
             >
               {chapter.title}
             </Link>
             {chapter.description && (
-              <span className="text-slate-600 dark:text-slate-400 text-sm ml-2">
+              <span className="text-text-muted text-sm ml-2">
                 — {chapter.description}
               </span>
             )}
@@ -45,12 +45,12 @@ export default function ReadPage() {
               <li key={appendix.slug}>
                 <Link
                   href={`/read/appendix/${appendix.slug}`}
-                  className="text-brand-600 dark:text-brand-400 hover:underline"
+                  className="text-neon-cyan hover:text-neon-orange transition-colors"
                 >
                   {appendix.title}
                 </Link>
                 {appendix.description && (
-                  <span className="text-slate-600 dark:text-slate-400 text-sm ml-2">
+                  <span className="text-text-muted text-sm ml-2">
                     — {appendix.description}
                   </span>
                 )}
@@ -64,7 +64,7 @@ export default function ReadPage() {
 
       <h2>Getting Started</h2>
       <p>
-        New to blockchain development? Start with <Link href="/read/00-preface" className="text-brand-600 dark:text-brand-400 hover:underline">the Preface</Link> for
+        New to blockchain development? Start with <Link href="/read/00-preface" className="text-neon-cyan hover:text-neon-orange transition-colors">the Preface</Link> for
         an overview of the book, then proceed to Chapter 1.
       </p>
       <p>

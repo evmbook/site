@@ -7,7 +7,7 @@ const features = [
   {
     name: 'Dual-Chain Coverage',
     description: 'Learn about both Ethereum and Ethereum Classic. Understand the technical and philosophical differences between PoS and PoW.',
-    color: 'neon-cyan',
+    color: 'neon-blue',
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
@@ -27,7 +27,7 @@ const features = [
   {
     name: 'Security First',
     description: 'Dedicated chapter on smart contract security covering common vulnerabilities, attack vectors, and defensive patterns.',
-    color: 'neon-pink',
+    color: 'neon-orange',
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
@@ -37,7 +37,7 @@ const features = [
   {
     name: 'DeFi & Scaling',
     description: 'Deep dives into DeFi protocols, L2 scaling solutions, rollups, and zero-knowledge proofs.',
-    color: 'neon-purple',
+    color: 'neon-yellow',
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
@@ -77,15 +77,20 @@ const colorStyles: Record<string, { bg: string; border: string; shadow: string }
     border: 'border-neon-green/30 hover:border-neon-green/60',
     shadow: 'hover:shadow-[0_0_30px_rgba(57,255,20,0.15)]',
   },
-  'neon-pink': {
-    bg: 'bg-neon-pink/10',
-    border: 'border-neon-pink/30 hover:border-neon-pink/60',
-    shadow: 'hover:shadow-[0_0_30px_rgba(255,45,149,0.15)]',
+  'neon-orange': {
+    bg: 'bg-neon-orange/10',
+    border: 'border-neon-orange/30 hover:border-neon-orange/60',
+    shadow: 'hover:shadow-[0_0_30px_rgba(255,107,0,0.15)]',
   },
-  'neon-purple': {
-    bg: 'bg-neon-purple/10',
-    border: 'border-neon-purple/30 hover:border-neon-purple/60',
-    shadow: 'hover:shadow-[0_0_30px_rgba(189,0,255,0.15)]',
+  'neon-yellow': {
+    bg: 'bg-neon-yellow/10',
+    border: 'border-neon-yellow/30 hover:border-neon-yellow/60',
+    shadow: 'hover:shadow-[0_0_30px_rgba(255,230,0,0.15)]',
+  },
+  'neon-blue': {
+    bg: 'bg-neon-blue/10',
+    border: 'border-neon-blue/30 hover:border-neon-blue/60',
+    shadow: 'hover:shadow-[0_0_30px_rgba(0,168,255,0.15)]',
   },
 }
 
