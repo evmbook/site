@@ -12,6 +12,9 @@ This glossary contains terms used throughout this book and in the broader EVM ec
 **Account**
 An object containing an address, balance, nonce, and optional storage and code. An account can be a contract account or an externally owned account (EOA).
 
+**Agentic Coding**
+AI-assisted software development using autonomous agents that can generate, review, test, and deploy code. Particularly valuable for resource-constrained development teams. See Chapter 18.
+
 **Address**
 A 20-byte (160-bit) identifier for an account. Derived from the rightmost 160 bits of the Keccak-256 hash of an ECDSA public key.
 
@@ -42,6 +45,9 @@ In post-Merge Ethereum (PoS), the client responsible for the Proof of Stake cons
 
 **Consensus Rules**
 The validation rules that full nodes follow to stay in consensus with other nodes.
+
+**CLAUDE.md**
+A configuration file placed in a project root that provides context, principles, and constraints to Claude Code. Used to encode network-specific development guidelines for agentic coding workflows.
 
 **Contract Account**
 An account containing code that executes when it receives transactions. Has no private key—controlled only by its code.
@@ -140,6 +146,9 @@ A popular Ethereum development framework for JavaScript/TypeScript, featuring Ha
 **Hard Fork**
 A protocol change that is not backward compatible. Nodes must upgrade or they will follow a different chain.
 
+**Human-in-the-Loop**
+A development pattern where AI agents perform tasks but require human approval at critical checkpoints. Essential for production smart contract deployment where errors can be irreversible.
+
 **Hash**
 A fixed-size output produced by a cryptographic hash function from variable-size input. Used extensively for data integrity and identification.
 
@@ -189,6 +198,9 @@ An internal transaction between contracts, never serialized to the blockchain.
 
 **Miner**
 A node that finds valid Proof of Work solutions for new blocks. Used on PoW chains like Ethereum Classic.
+
+**MCP (Model Context Protocol)**
+A protocol developed by Anthropic for connecting AI agents to external tools and data sources. Enables Claude Code to interact with blockchain nodes, databases, and other services.
 
 **Mordor**
 The primary testnet for Ethereum Classic. Uses PoW consensus (ETCHash) and chainId 63.

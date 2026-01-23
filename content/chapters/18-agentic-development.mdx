@@ -1,0 +1,581 @@
+---
+title: Agentic Development
+description: AI-assisted blockchain development for resource-constrained networks
+chapter: 18
+---
+
+# Agentic Development
+
+The most valuable resource in blockchain development isn't capital—it's principled engineering talent. Ethereum Classic demonstrates this reality: with no premine, no foundation treasury, and a handful of dedicated developers, ETC maintains critical infrastructure that serves a multi-billion dollar network.
+
+This chapter explores how AI-assisted development—**agentic coding**—enables small, principled teams to punch above their weight while staying true to decentralization values.
+
+## The Resource Constraint
+
+Consider the contrast between major EVM networks:
+
+| Network | Treasury/Foundation | Core Developers | Annual Budget |
+|---------|---------------------|-----------------|---------------|
+| Ethereum | Ethereum Foundation (premine) | 100+ | $100M+ |
+| Ethereum Classic | None (fair launch) | ~5-10 | Volunteer/grants |
+
+ETC operates without the financial advantages of a premine or foundation. Yet it maintains:
+- A full execution client (Core Geth)
+- Testnet infrastructure (Mordor)
+- Protocol upgrades and security patches
+- Developer tooling and documentation
+
+How? The answer increasingly involves **encoding network principles into AI development agents**.
+
+## Principles-First Development
+
+Traditional development guides focus on *what* to build. Agentic development for principled networks requires encoding *how* and *why*—the philosophical constraints that define the network's identity.
+
+### ETC's Core Principles
+
+Ethereum Classic adheres to principles that emerged from the 2016 DAO fork debate:
+
+1. **Immutability** — "Code is Law." Deployed contracts must not be altered through irregular state changes.
+2. **Decentralization** — No privileged actors. The network should function without trusted parties.
+3. **Proof of Work** — Nakamoto consensus provides objective, permissionless security.
+4. **Backward Compatibility** — Changes should be additive. Existing contracts must continue working.
+
+These aren't just slogans—they're engineering constraints that can be encoded into development agents.
+
+### The CLAUDE.md Pattern
+
+Claude Code reads a `CLAUDE.md` file from your project root, using it to understand project context and constraints. For ETC development, this becomes a powerful way to encode network principles:
+
+```markdown
+# CLAUDE.md - Ethereum Classic Development
+
+You are developing software for Ethereum Classic, a proof-of-work blockchain
+that prioritizes immutability, decentralization, and backward compatibility.
+
+## Core Principles
+
+### Immutability
+- Never suggest proxy patterns or upgradeable contracts
+- Design for correctness upfront—deployed code cannot be "fixed"
+- Prefer simple, auditable contracts over complex upgradeable systems
+- If a contract has a bug, the solution is a new deployment, not a state change
+
+### Decentralization
+- Avoid patterns requiring trusted operators or admin keys
+- No owner-only functions unless absolutely necessary (and document why)
+- Prefer permissionless designs over whitelists
+- External dependencies should be decentralized (Chainlink over centralized oracles)
+
+### Proof of Work Considerations
+- Gas optimization matters—miners process transactions
+- Consider block time (~13s) in time-dependent logic
+- The DIFFICULTY opcode returns actual difficulty (not PREVRANDAO like PoS ETH)
+- No staking, no validators—security comes from hashpower
+
+### Backward Compatibility
+- Additive changes only where possible
+- Deprecate, don't remove
+- Test against existing deployed contracts
+- ECIP process for protocol changes: https://ecips.ethereumclassic.org
+
+## Network Details
+- Mainnet chainId: 61
+- Mordor testnet chainId: 63
+- Block time: ~13 seconds
+- Consensus: ETCHash (Proof of Work)
+- RPC: https://etc.rivet.link (mainnet), https://rpc.mordor.etccooperative.org (testnet)
+```
+
+This file transforms Claude from a generic coding assistant into an ETC-aware development partner that understands the network's values.
+
+## Agentic Smart Contract Development
+
+With principles encoded, agents can generate, review, and test smart contracts that align with network philosophy.
+
+### Generating Principle-Aligned Contracts
+
+Instead of generic prompts, frame requests in terms of the encoded principles:
+
+```typescript
+// Bad prompt
+"Create an ERC-20 token"
+
+// Good prompt (with CLAUDE.md in place)
+"Create an ERC-20 token for ETC mainnet with:
+- Fixed supply minted at deployment (no mint function)
+- No owner or admin privileges
+- Transfer events for all movements
+- Full NatSpec documentation
+Verify it aligns with our immutability principles."
+```
+
+The agent, understanding the CLAUDE.md context, produces:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+/**
+ * @title ImmutableToken
+ * @notice A fixed-supply ERC-20 token with no admin functions
+ * @dev Designed for ETC's immutability principles - no upgrades, no admin keys
+ */
+contract ImmutableToken {
+    string public constant name = "Immutable Token";
+    string public constant symbol = "IMTK";
+    uint8 public constant decimals = 18;
+    uint256 public immutable totalSupply;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    /**
+     * @notice Deploys the token with fixed supply
+     * @param _totalSupply The total supply, minted to deployer
+     * @dev Supply is immutable after deployment - no mint function exists
+     */
+    constructor(uint256 _totalSupply) {
+        totalSupply = _totalSupply;
+        balanceOf[msg.sender] = _totalSupply;
+        emit Transfer(address(0), msg.sender, _totalSupply);
+    }
+
+    /**
+     * @notice Transfer tokens to a recipient
+     * @param to Recipient address
+     * @param value Amount to transfer
+     * @return success Always true if no revert
+     */
+    function transfer(address to, uint256 value) external returns (bool success) {
+        require(balanceOf[msg.sender] >= value, "Insufficient balance");
+        require(to != address(0), "Transfer to zero address");
+
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+
+    /**
+     * @notice Approve spender to transfer tokens
+     * @param spender Address authorized to spend
+     * @param value Amount authorized
+     * @return success Always true if no revert
+     */
+    function approve(address spender, uint256 value) external returns (bool success) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    /**
+     * @notice Transfer tokens from one address to another
+     * @param from Source address
+     * @param to Destination address
+     * @param value Amount to transfer
+     * @return success Always true if no revert
+     */
+    function transferFrom(address from, address to, uint256 value) external returns (bool success) {
+        require(balanceOf[from] >= value, "Insufficient balance");
+        require(allowance[from][msg.sender] >= value, "Insufficient allowance");
+        require(to != address(0), "Transfer to zero address");
+
+        balanceOf[from] -= value;
+        balanceOf[to] += value;
+        allowance[from][msg.sender] -= value;
+
+        emit Transfer(from, to, value);
+        return true;
+    }
+}
+```
+
+Notice what's *not* present: no `Ownable`, no `mint()` function, no upgrade mechanism. The agent understood the principles.
+
+### Automated Security Review
+
+Agents can review code against known vulnerability patterns:
+
+```
+Review this contract for:
+1. Reentrancy vulnerabilities
+2. Integer overflow (pre-0.8.0 patterns)
+3. Access control issues
+4. Centralization risks (per our CLAUDE.md principles)
+5. Gas optimization opportunities
+```
+
+The agent flags issues and explains them in the context of ETC's principles:
+
+```markdown
+## Security Review: ImmutableToken
+
+### Passed Checks
+- No reentrancy risk (no external calls before state updates)
+- Integer overflow protected (Solidity 0.8+ built-in checks)
+- No admin functions (aligns with decentralization principle)
+- No upgrade mechanism (aligns with immutability principle)
+
+### Recommendations
+1. Consider adding `unchecked` blocks for gas optimization where overflow is impossible
+2. The zero-address check in transfer could use custom errors for gas savings
+
+### Principle Alignment: PASSED
+This contract adheres to ETC's immutability and decentralization principles.
+No privileged actors, no upgrade paths, fixed supply at deployment.
+```
+
+### Test Generation
+
+Agents generate comprehensive test suites for Foundry or Hardhat:
+
+```solidity
+// test/ImmutableToken.t.sol
+pragma solidity ^0.8.24;
+
+import "forge-std/Test.sol";
+import "../src/ImmutableToken.sol";
+
+contract ImmutableTokenTest is Test {
+    ImmutableToken token;
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+    uint256 constant INITIAL_SUPPLY = 1_000_000 ether;
+
+    function setUp() public {
+        token = new ImmutableToken(INITIAL_SUPPLY);
+    }
+
+    function test_InitialSupply() public view {
+        assertEq(token.totalSupply(), INITIAL_SUPPLY);
+        assertEq(token.balanceOf(address(this)), INITIAL_SUPPLY);
+    }
+
+    function test_Transfer() public {
+        token.transfer(alice, 100 ether);
+        assertEq(token.balanceOf(alice), 100 ether);
+        assertEq(token.balanceOf(address(this)), INITIAL_SUPPLY - 100 ether);
+    }
+
+    function test_TransferInsufficientBalance() public {
+        vm.expectRevert("Insufficient balance");
+        vm.prank(alice);
+        token.transfer(bob, 1 ether);
+    }
+
+    function testFuzz_Transfer(uint256 amount) public {
+        amount = bound(amount, 1, INITIAL_SUPPLY);
+        token.transfer(alice, amount);
+        assertEq(token.balanceOf(alice), amount);
+    }
+
+    // Verify immutability - no mint function exists
+    function test_NoMintFunction() public {
+        // This test documents the design decision
+        // The contract has no mint() function by design
+        // Attempting to call it would fail at compile time
+        assertTrue(true, "No mint function - immutability preserved");
+    }
+}
+```
+
+## Infrastructure Development
+
+ETC's infrastructure—clients, tooling, documentation—is maintained by a small team. Agentic development amplifies their effectiveness.
+
+### Case Study: Core Geth Maintenance
+
+Core Geth is ETC's primary execution client, maintained as a downstream fork of go-ethereum. The challenge: keep up with upstream Geth changes while preserving ETC-specific modifications.
+
+**The agentic workflow:**
+
+1. **Upstream monitoring** — Agent tracks new Geth releases
+2. **Diff analysis** — Agent identifies which changes affect ETC-specific code
+3. **Compatibility testing** — Agent generates test cases for ETC features
+4. **Documentation updates** — Agent updates docs for new features
+
+```markdown
+# CLAUDE.md for Core Geth Development
+
+You are maintaining Core Geth, Ethereum Classic's execution client.
+
+## Context
+- Core Geth is a downstream fork of go-ethereum (Geth)
+- We track upstream changes but maintain ETC-specific modifications
+- ChainConfig includes ETC's fork schedule (ECIP-1099, ECIP-1103, etc.)
+
+## Key Differences from Upstream Geth
+- ETCHash instead of Ethash (DAG size adjustment)
+- No beacon chain integration (PoW only)
+- ETC-specific opcodes: DIFFICULTY returns actual difficulty
+- Different fork activation blocks
+
+## When Reviewing Upstream Changes
+1. Check if change affects consensus-critical code
+2. Verify ETC fork schedule compatibility
+3. Ensure ETCHash remains functional
+4. Test on Mordor before mainnet release
+```
+
+### Documentation Generation
+
+Agents maintain documentation in sync with code changes:
+
+```typescript
+// After modifying RPC methods
+"Update the JSON-RPC documentation to reflect the new
+eth_getBlockReceipts method. Include ETC-specific notes
+about PoW fields (difficulty, nonce, mixHash) that differ
+from PoS Ethereum."
+```
+
+The agent generates accurate, principle-aligned documentation without manual effort.
+
+## Multi-Agent Workflows
+
+Complex tasks benefit from multiple specialized agents working in sequence:
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Code Generator │ ──▶ │ Security Review │ ──▶ │  Test Generator │
+│     Agent       │     │     Agent       │     │     Agent       │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+    Initial Code          Security Report          Test Suite
+                                 │
+                                 ▼
+                    ┌─────────────────────┐
+                    │  Human Review Point │
+                    └─────────────────────┘
+```
+
+Each agent has a specialized CLAUDE.md:
+
+**Code Generator**: Focus on correct implementation, gas efficiency, documentation
+**Security Reviewer**: Focus on vulnerabilities, centralization risks, principle alignment
+**Test Generator**: Focus on edge cases, fuzzing, invariant testing
+
+Human developers review at checkpoints, focusing on architecture and strategic decisions rather than line-by-line code review.
+
+## Encoding Network Values
+
+The power of agentic development lies in translating philosophical principles into concrete instructions:
+
+| Principle | Generic Instruction | ETC-Specific Instruction |
+|-----------|---------------------|--------------------------|
+| Immutability | "Write secure code" | "Never use proxy patterns. No upgrade mechanisms. If it's deployed, it's permanent." |
+| Decentralization | "Follow best practices" | "Flag any owner/admin pattern. Explain why it's necessary or remove it." |
+| PoW Compatibility | — | "Use DIFFICULTY opcode, not PREVRANDAO. Consider 13-second block times." |
+| Backward Compatibility | "Don't break things" | "Test against deployed ETC contracts. Additive changes only." |
+
+### Example: Principle Violation Detection
+
+An agent reviewing code that violates principles:
+
+```solidity
+// Developer submits this code
+contract Upgradeable {
+    address public implementation;
+    address public admin;
+
+    function upgrade(address newImpl) external {
+        require(msg.sender == admin, "Not admin");
+        implementation = newImpl;
+    }
+}
+```
+
+Agent response (with ETC CLAUDE.md):
+
+```markdown
+## Principle Violation Detected
+
+This contract violates ETC's core principles:
+
+1. **Immutability Violation**: The `upgrade()` function allows changing
+   the implementation address after deployment. On ETC, deployed code
+   should be permanent.
+
+2. **Centralization Risk**: The `admin` address has privileged control.
+   This creates a trusted party, violating decentralization principles.
+
+### Recommendation
+For ETC deployment, use a non-upgradeable pattern:
+
+```solidity
+contract Immutable {
+    // Logic is fixed at deployment
+    // No admin, no upgrades
+}
+```
+
+If upgradeability is truly required, consider:
+- A new deployment with migration
+- Versioned contracts (V1, V2) that users choose between
+- Document clearly that this pattern doesn't align with ETC philosophy
+```
+
+## Integration with Development Tools
+
+Agentic development integrates with existing EVM tooling.
+
+### Foundry Integration
+
+```toml
+# foundry.toml
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+
+[rpc_endpoints]
+mordor = "https://rpc.mordor.etccooperative.org"
+etc = "https://etc.rivet.link"
+
+# Agent can read this config and understand the project context
+```
+
+Claude Code can:
+- Run `forge build` and interpret errors
+- Execute `forge test` and analyze failures
+- Deploy with `forge script` to Mordor
+- Verify contracts on Blockscout
+
+### Hardhat Integration
+
+```typescript
+// hardhat.config.ts
+const config: HardhatUserConfig = {
+  solidity: "0.8.24",
+  networks: {
+    mordor: {
+      url: "https://rpc.mordor.etccooperative.org",
+      chainId: 63,
+    },
+    etc: {
+      url: "https://etc.rivet.link",
+      chainId: 61,
+    },
+  },
+};
+```
+
+Agents understand the Hardhat ecosystem—Ignition deployments, test patterns, plugin usage.
+
+### MCP Servers for On-Chain Data
+
+The Model Context Protocol (MCP) connects agents to external data sources. For EVM development:
+
+```json
+{
+  "mcpServers": {
+    "ethereum": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-ethereum"],
+      "env": {
+        "RPC_URL": "https://rpc.mordor.etccooperative.org"
+      }
+    }
+  }
+}
+```
+
+With MCP, agents can:
+- Query on-chain state
+- Fetch contract code and verify deployments
+- Check transaction receipts
+- Monitor mempool activity
+
+## Security Considerations
+
+AI-assisted development introduces new considerations:
+
+### Agent Limitations
+
+1. **Hallucination risk** — Agents may generate plausible but incorrect code
+2. **Training cutoff** — Knowledge of recent EIPs/ECIPs may be incomplete
+3. **Context limits** — Complex contracts may exceed context windows
+4. **Non-determinism** — Same prompt may produce different outputs
+
+### Mitigation Strategies
+
+1. **Human review for production** — All mainnet deployments require human sign-off
+2. **Testnet-first** — Deploy to Mordor, test extensively, then mainnet
+3. **Principle verification** — Automated checks that generated code aligns with CLAUDE.md
+4. **Incremental trust** — Start with simple contracts, build confidence over time
+
+### The Trust Hierarchy
+
+```
+Most Trust:    Formal verification (when possible)
+               │
+               ├── Human expert review
+               │
+               ├── Agent review + human spot-check
+               │
+               ├── Agent review only
+               │
+Least Trust:   Unreviewed generated code
+```
+
+For ETC's critical infrastructure, the bar remains high: agent-generated code accelerates development, but humans remain accountable for what reaches production.
+
+## The Decentralization Benefit
+
+Agentic development democratizes contribution:
+
+- **No gatekeeping** — Anyone with Claude Code can contribute meaningfully
+- **Principles, not credentials** — CLAUDE.md encodes what matters, not who you are
+- **Global participation** — Contributors worldwide, working asynchronously
+- **Reduced coordination costs** — Agents handle routine work; humans focus on decisions
+
+This aligns with ETC's ethos: permissionless participation in the network extends to permissionless contribution to its development.
+
+## ETC vs ETH: Agentic Differences
+
+<Callout type="note" title="ETC vs ETH">
+When developing with agents for ETC vs ETH, key differences apply:
+
+**Consensus:**
+- ETC: PoW (ETCHash) — `DIFFICULTY` opcode returns actual difficulty
+- ETH: PoS — `PREVRANDAO` (same opcode, 0x44) returns randomness
+
+**Upgrades:**
+- ETC: Conservative, backward-compatible (ECIP process)
+- ETH: More aggressive upgrade schedule (EIP process)
+
+**Agent configuration:**
+- ETC CLAUDE.md: Emphasize immutability, PoW awareness
+- ETH CLAUDE.md: May include PoS considerations, L2 integration
+
+The principles-first approach works for both—just encode the right principles.
+</Callout>
+
+## Exercises
+
+1. **Create a CLAUDE.md** — Write a project configuration file for an ETC DeFi protocol. Include principles for handling user funds, oracle integration, and emergency procedures (that don't violate decentralization).
+
+2. **Generate and Review** — Use Claude Code to generate an ERC-721 NFT contract. Then have it review the code for principle alignment. Document any conflicts between standard patterns and ETC principles.
+
+3. **Multi-Agent Workflow** — Set up a workflow where one agent generates code, another reviews for security, and a third generates tests. Compare the output to a single-agent approach.
+
+4. **Principle Violation Hunt** — Take an existing popular contract (like a DAO or lending protocol) and have an agent analyze it against ETC principles. Document which patterns would need modification for ETC deployment.
+
+5. **Infrastructure Task** — Use agentic development to write a script that monitors Mordor testnet for contract deployments and automatically fetches their verified source code.
+
+## Summary
+
+Agentic development isn't about replacing developers—it's about amplifying them. For resource-constrained networks like Ethereum Classic, this amplification is strategic:
+
+- **Encode principles** into agents, ensuring every line of generated code aligns with network values
+- **Multiply effectiveness** — Small teams produce at the scale of large ones
+- **Maintain decentralization** — Permissionless contribution through principled agents
+- **Preserve quality** — Agents handle routine work; humans focus on what matters
+
+The EVM is the constant. The tools are evolving. Networks that embrace agentic development while staying true to their principles will thrive in the next era of blockchain development.

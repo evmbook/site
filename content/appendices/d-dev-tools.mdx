@@ -536,6 +536,113 @@ helpeth parseTx <tx>          # Parse raw transaction
 helpeth unitConvert 1 ether wei  # Convert units
 ```
 
+## Agentic Development Tools
+
+AI-assisted development is transforming EVM development. These tools enable small teams to achieve what previously required large engineering organizations.
+
+### Claude Code
+
+Claude Code is Anthropic's official CLI for AI-assisted development. It integrates directly with your development workflow.
+
+- **Documentation**: [docs.anthropic.com/claude-code](https://docs.anthropic.com/en/docs/claude-code)
+- **Installation**: `npm install -g @anthropic-ai/claude-code`
+
+**Key features for EVM development:**
+
+- Direct integration with Foundry and Hardhat
+- Contract generation, review, and testing
+- On-chain data access via MCP servers
+- Project-specific configuration via CLAUDE.md
+
+#### Setting Up for EVM Projects
+
+Create a `CLAUDE.md` file in your project root:
+
+```markdown
+# CLAUDE.md - EVM Development
+
+You are developing smart contracts for Ethereum Classic and Ethereum.
+
+## Project Context
+- Framework: Foundry (or Hardhat)
+- Networks: Mordor (ETC testnet), Sepolia (ETH testnet)
+- Solidity version: 0.8.24
+
+## Development Principles
+- Prioritize security over convenience
+- Test thoroughly before deployment
+- Document all external interactions
+- Consider gas optimization for production
+
+## Network Details
+- ETC Mainnet: chainId 61, https://etc.rivet.link
+- Mordor Testnet: chainId 63, https://rpc.mordor.etccooperative.org
+```
+
+#### MCP Servers for On-Chain Data
+
+The Model Context Protocol (MCP) connects Claude to external data sources. Configure in `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "ethereum": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-ethereum"],
+      "env": {
+        "RPC_URL": "https://rpc.mordor.etccooperative.org"
+      }
+    }
+  }
+}
+```
+
+With MCP enabled, Claude can:
+- Query on-chain state and balances
+- Fetch and analyze deployed contract code
+- Check transaction receipts and logs
+- Verify contract deployments
+
+### Agentic Workflows
+
+Effective patterns for AI-assisted EVM development:
+
+**Contract Generation:**
+```
+Generate an ERC-20 token with fixed supply, no admin functions,
+and full NatSpec documentation. Include Foundry tests.
+```
+
+**Security Review:**
+```
+Review this contract for reentrancy, access control issues,
+and centralization risks. Check against common vulnerability patterns.
+```
+
+**Test Generation:**
+```
+Generate comprehensive Foundry tests including:
+- Unit tests for each function
+- Fuzz tests for input validation
+- Invariant tests for critical properties
+```
+
+**Deployment Verification:**
+```
+Verify the deployed contract at <address> on Mordor matches
+the source code. Check constructor arguments and initialization.
+```
+
+### Best Practices
+
+1. **Encode project principles** in CLAUDE.md for consistent output
+2. **Review generated code** before deployment—agents can hallucinate
+3. **Test on Mordor/Sepolia** before mainnet deployment
+4. **Use agents for routine tasks**, humans for architecture decisions
+5. **Combine AI review with human review** for production code
+
+See Chapter 18: Agentic Development for comprehensive coverage of AI-assisted blockchain development.
+
 ## Resources
 
 - **Hardhat**: [hardhat.org](https://hardhat.org)
@@ -543,3 +650,4 @@ helpeth unitConvert 1 ether wei  # Convert units
 - **OpenZeppelin**: [docs.openzeppelin.com](https://docs.openzeppelin.com)
 - **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
 - **viem**: [viem.sh](https://viem.sh)
+- **Claude Code**: [docs.anthropic.com/claude-code](https://docs.anthropic.com/en/docs/claude-code)

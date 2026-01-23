@@ -89,6 +89,11 @@
       "slug": "17-zero-knowledge",
       "title": "Zero-Knowledge Proofs",
       "chapter": 17
+    },
+    {
+      "slug": "18-agentic-development",
+      "title": "Agentic Development",
+      "chapter": 18
     }
   ],
   "appendices": [
