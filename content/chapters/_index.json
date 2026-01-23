@@ -1,0 +1,116 @@
+{
+  "chapters": [
+    {
+      "slug": "00-preface",
+      "title": "Preface",
+      "chapter": 0
+    },
+    {
+      "slug": "01-what-is-evm",
+      "title": "What is the EVM?",
+      "chapter": 1
+    },
+    {
+      "slug": "02-getting-started",
+      "title": "Getting Started",
+      "chapter": 2
+    },
+    {
+      "slug": "03-clients",
+      "title": "EVM Clients",
+      "chapter": 3
+    },
+    {
+      "slug": "04-cryptography",
+      "title": "Cryptography",
+      "chapter": 4
+    },
+    {
+      "slug": "05-wallets",
+      "title": "Wallets",
+      "chapter": 5
+    },
+    {
+      "slug": "06-transactions",
+      "title": "Transactions",
+      "chapter": 6
+    },
+    {
+      "slug": "07-solidity",
+      "title": "Smart Contracts with Solidity",
+      "chapter": 7
+    },
+    {
+      "slug": "08-vyper",
+      "title": "Smart Contracts with Vyper",
+      "chapter": 8
+    },
+    {
+      "slug": "09-security",
+      "title": "Smart Contract Security",
+      "chapter": 9
+    },
+    {
+      "slug": "10-tokens",
+      "title": "Tokens",
+      "chapter": 10
+    },
+    {
+      "slug": "11-oracles",
+      "title": "Oracles",
+      "chapter": 11
+    },
+    {
+      "slug": "12-dapps",
+      "title": "Decentralized Applications",
+      "chapter": 12
+    },
+    {
+      "slug": "13-evm-deep-dive",
+      "title": "The EVM in Depth",
+      "chapter": 13
+    },
+    {
+      "slug": "14-consensus",
+      "title": "Consensus Mechanisms",
+      "chapter": 14
+    },
+    {
+      "slug": "15-defi",
+      "title": "DeFi Protocols",
+      "chapter": 15
+    },
+    {
+      "slug": "16-scaling",
+      "title": "Scaling Solutions",
+      "chapter": 16
+    },
+    {
+      "slug": "17-zero-knowledge",
+      "title": "Zero-Knowledge Proofs",
+      "chapter": 17
+    }
+  ],
+  "appendices": [
+    {
+      "slug": "a-fork-history",
+      "title": "Fork History"
+    },
+    {
+      "slug": "b-eip-standards",
+      "title": "EIP Standards Reference"
+    },
+    {
+      "slug": "c-opcodes",
+      "title": "EVM Opcodes"
+    },
+    {
+      "slug": "d-dev-tools",
+      "title": "Development Tools"
+    },
+    {
+      "slug": "e-glossary",
+      "title": "Glossary"
+    }
+  ]
+}

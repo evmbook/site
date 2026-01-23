@@ -1,0 +1,98 @@
+---
+title: Preface
+description: Introduction to Mastering EVM
+chapter: 0
+---
+
+# Preface
+
+Welcome to *Mastering EVM*.
+
+The Ethereum Virtual Machine has become the de facto standard for programmable blockchains. Whether you're building on Ethereum, Ethereum Classic, or any of the dozens of EVM-compatible chains, understanding the EVM is essential.
+
+## Why We Wrote This Book
+
+When we started our blockchain journey, we struggled to find comprehensive, modern resources. The technology moves fast—what was cutting-edge in 2020 is often outdated by 2025. We wrote the book we wished existed.
+
+This isn't just another "intro to Ethereum" guide. We go deep. You'll understand not just *how* to write smart contracts, but *why* they work the way they do. You'll learn the EVM's internals, security considerations, and how to build production-ready decentralized applications.
+
+## The Dual-Chain Perspective
+
+A unique aspect of this book is our dual-chain approach. We cover both:
+
+- **Ethereum (ETH)** — The original, now proof-of-stake after The Merge
+- **Ethereum Classic (ETC)** — The continuation of proof-of-work Ethereum
+
+These two chains share the same origin but have diverged philosophically and technically. Understanding both gives you a complete picture of the EVM ecosystem. Where implementations differ, we clearly note the distinctions.
+
+## Who This Book Is For
+
+We wrote Mastering EVM for developers who want more than surface-level knowledge:
+
+- **Blockchain newcomers** — Start from Chapter 1 and work through sequentially
+- **Experienced developers** — Jump to specific topics like security or the EVM deep dive
+- **Architects** — Focus on consensus, scaling, and system design chapters
+- **Security researchers** — The security chapter and EVM internals are essential reading
+
+We assume you have programming experience. Knowledge of JavaScript helps for the code examples, though Solidity syntax is self-explanatory enough to follow along.
+
+## How to Read This Book
+
+The chapters build on each other, but you don't need to read sequentially:
+
+**Part I: Foundations (Chapters 1-6)**
+Start here if you're new. We cover what the EVM is, how to set up your environment, cryptographic fundamentals, wallets, and transactions.
+
+**Part II: Development (Chapters 7-12)**
+The meat of smart contract development. Solidity, Vyper, security patterns, tokens, oracles, and building complete dApps.
+
+**Part III: Deep Dives (Chapters 13-17)**
+For those who want mastery. The EVM's internals, consensus mechanisms, DeFi protocols, scaling solutions, and zero-knowledge proofs.
+
+**Appendices**
+Reference material: fork history, EIP standards, opcode tables, and development tools.
+
+## Conventions Used
+
+Throughout this book, you'll see:
+
+<Callout type="info">
+Information boxes highlight important concepts or tips.
+</Callout>
+
+<Callout type="warning">
+Warning boxes flag common pitfalls and security concerns.
+</Callout>
+
+<Callout type="note" title="ETC vs ETH">
+Where Ethereum and Ethereum Classic differ, we explicitly note the distinction.
+</Callout>
+
+Code examples appear in highlighted blocks:
+
+```solidity
+// Solidity example
+contract HelloWorld {
+    string public message = "Hello, EVM!";
+}
+```
+
+```javascript
+// JavaScript example
+const provider = new ethers.JsonRpcProvider("https://rpc.example.com");
+```
+
+## Acknowledgments
+
+This book builds upon the foundational work of the Ethereum community. We particularly acknowledge *Mastering Ethereum* by Andreas M. Antonopoulos and Gavin Wood, which pioneered comprehensive EVM education. Our work is a derivative under CC BY-SA 4.0, substantially rewritten for 2025.
+
+We thank the countless developers who've contributed to the EVM ecosystem—the client teams, the standards authors, the tooling maintainers, and the community educators. This book exists because of your work.
+
+## Let's Begin
+
+The EVM is a remarkable piece of technology. It enables trustless computation, programmable money, and decentralized applications that were impossible just a decade ago.
+
+Let's master it together.
+
+— *Nakamoto Wei*
+January 2025
