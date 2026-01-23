@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { getChapter, getChapters } from '@/lib/content'
 import { ChapterNav } from '@/components/content/ChapterNav'
 
@@ -16,7 +15,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
-  const chapter = getChapter(slug)
+  const chapter = await getChapter(slug)
   if (!chapter) {
     return { title: 'Not Found' }
   }
@@ -28,7 +27,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ChapterPage({ params }: PageProps) {
   const { slug } = await params
-  const chapter = getChapter(slug)
+  const chapter = await getChapter(slug)
 
   if (!chapter) {
     notFound()
@@ -41,17 +40,16 @@ export default async function ChapterPage({ params }: PageProps) {
 
   return (
     <article>
-      <div className="prose dark:prose-invert max-w-none">
+      <div className="prose max-w-none">
         <h1>{chapter.title}</h1>
         {chapter.description && (
-          <p className="lead text-xl text-slate-600 dark:text-slate-400">
+          <p className="lead">
             {chapter.description}
           </p>
         )}
         <hr />
         <div
           dangerouslySetInnerHTML={{ __html: chapter.content }}
-          className="[&>h2]:mt-12 [&>h2]:mb-4 [&>h3]:mt-8 [&>h3]:mb-3"
         />
       </div>
 
