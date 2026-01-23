@@ -16,6 +16,8 @@ npm install          # install deps
 npm run dev          # dev server (localhost:3000)
 npm run build        # production build → out/
 npm run lint         # eslint check
+npm run format       # format all files with prettier
+npm run format:check # check formatting without writing
 ```
 
 ## Structure
@@ -50,7 +52,7 @@ out/             # Build output (gitignored)
 
 1. **Use `/plan`** before multi-file changes — get alignment first
 2. **Keep diffs small** — one concern per change
-3. **Run `npm run lint`** after edits to catch issues early
+3. **Formatting is automatic** — hooks run Prettier on edited files
 4. **Use `/review`** for code review before finalizing
 5. **Cite file paths** with line numbers when discussing code
 6. **Don't create new files** unless necessary — prefer editing existing ones

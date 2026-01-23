@@ -20,7 +20,7 @@ const eslintConfig = [
       "*.config.mjs",
     ],
   },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends("next/core-web-vitals", "next/typescript", "prettier"),
   {
     rules: {
       // Allow unused vars with underscore prefix
