@@ -1,44 +1,57 @@
 @import "tailwindcss";
 
 /* =============================================
-   Mastering EVM - Synthwave Theme
-   ETC Green + ETH Pink/Purple dual-chain palette
+   Mastering EVM - Sci-Fi Mountain Landscape Theme
+   Inspired by red moon rising over dark mountains
    ============================================= */
 
 :root {
-  /* Primary Neon Colors (use prominently) */
-  --neon-green: #39FF14;      /* ETC - Electric lime (PRIMARY) */
-  --neon-orange: #FF6B00;     /* Warning/highlight/hover */
-  --neon-yellow: #FFE600;     /* Accent/highlight */
-  --neon-blue: #00A8FF;       /* Info/secondary links */
+  /* Moon Colors (warm accent) */
+  --moon-coral: #E85A5A;        /* Main moon color */
+  --moon-glow: #FF7B7B;         /* Moon outer glow */
+  --moon-core: #FFB4B4;         /* Moon bright center */
 
-  /* Accent Colors (use sparingly) */
-  --neon-pink: #FF2D95;       /* ETH indicator only */
-  --neon-purple: #BD00FF;     /* Subtle accents, borders */
-  --neon-cyan: #00F5FF;       /* Links, EVM combined */
+  /* Sky Colors */
+  --sky-deep: #0A1419;          /* Deepest sky (top) */
+  --sky-mid: #0F1E24;           /* Mid sky */
+  --sky-horizon: #1A2830;       /* Horizon sky */
+
+  /* Mountain Colors */
+  --mountain-far: #152028;      /* Distant mountains */
+  --mountain-mid: #0D1518;      /* Middle layer */
+  --mountain-near: #080D0F;     /* Foreground */
+
+  /* Road Colors */
+  --road-surface: #0C1215;      /* Asphalt base */
+
+  /* Accent Colors (for UI) */
+  --accent-cyan: #00D4D4;       /* Links, highlights */
+  --accent-teal: #2DD4BF;       /* ETC indicator */
+  --accent-coral: #E85A5A;      /* ETH indicator, emphasis */
+  --accent-amber: #F59E0B;      /* Warnings */
 
   /* Background Colors */
-  --void-black: #0a0a0f;      /* Deepest background */
-  --dark-purple: #1a0a2e;     /* Cards, panels */
-  --dark-blue: #0f0f23;       /* Alternative dark */
-  --midnight: #12091f;        /* Section backgrounds */
+  --void-black: #080D0F;        /* Deepest background */
+  --dark-slate: #0F1518;        /* Cards, panels */
+  --dark-teal: #0A1419;         /* Alternative dark */
+  --midnight: #0D1518;          /* Section backgrounds */
 
   /* Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #b4a7d6;  /* Lavender */
-  --text-muted: #6b5b95;      /* Muted purple */
+  --text-primary: #E8E4E0;      /* Warm white */
+  --text-secondary: #A8B4BC;    /* Muted blue-gray */
+  --text-muted: #5E6B73;        /* Very muted */
 
   /* Semantic Colors */
-  --etc-glow: var(--neon-green);
-  --eth-glow: var(--neon-pink);
-  --evm-glow: var(--neon-cyan);
+  --etc-glow: var(--accent-teal);
+  --eth-glow: var(--accent-coral);
+  --evm-glow: var(--accent-cyan);
 
   /* Section backgrounds (semi-transparent for background system) */
   --section-default: transparent;
-  --section-alt: rgba(18, 9, 31, 0.75);
+  --section-alt: rgba(15, 30, 36, 0.75);
 
   /* Base */
-  --background: var(--void-black);
+  --background: var(--sky-deep);
   --foreground: var(--text-primary);
 }
 
@@ -48,17 +61,18 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-neon-green: var(--neon-green);
-  --color-neon-orange: var(--neon-orange);
-  --color-neon-yellow: var(--neon-yellow);
-  --color-neon-blue: var(--neon-blue);
-  --color-neon-pink: var(--neon-pink);
-  --color-neon-purple: var(--neon-purple);
-  --color-neon-cyan: var(--neon-cyan);
+  --color-moon-coral: var(--moon-coral);
+  --color-moon-glow: var(--moon-glow);
+  --color-moon-core: var(--moon-core);
+
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-coral: var(--accent-coral);
+  --color-accent-amber: var(--accent-amber);
 
   --color-void-black: var(--void-black);
-  --color-dark-purple: var(--dark-purple);
-  --color-dark-blue: var(--dark-blue);
+  --color-dark-slate: var(--dark-slate);
+  --color-dark-teal: var(--dark-teal);
   --color-midnight: var(--midnight);
 
   --color-text-primary: var(--text-primary);
@@ -101,7 +115,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Selection */
 ::selection {
-  background-color: var(--neon-pink);
+  background-color: var(--accent-coral);
   color: var(--void-black);
 }
 
@@ -112,7 +126,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--dark-purple);
+  background: var(--dark-slate);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -121,35 +135,35 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-cyan);
+  background: var(--accent-cyan);
 }
 
 /* Links */
 a {
-  color: var(--neon-cyan);
+  color: var(--accent-cyan);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 a:hover {
-  color: var(--neon-pink);
-  text-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+  color: var(--moon-coral);
+  text-shadow: 0 0 8px rgba(0, 212, 212, 0.4);
 }
 
 /* Code */
 code {
   font-family: var(--font-mono);
-  background-color: var(--dark-purple);
+  background-color: rgba(0, 212, 212, 0.08);
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-size: 0.9em;
-  color: var(--neon-green);
+  color: var(--accent-teal);
 }
 
 pre {
   font-family: var(--font-mono);
-  background-color: var(--dark-purple);
-  border: 1px solid rgba(189, 0, 255, 0.2);
+  background-color: rgba(10, 20, 25, 0.95);
+  border: 1px solid rgba(0, 212, 212, 0.15);
   border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;
@@ -164,7 +178,7 @@ pre code {
 
 /* Focus states */
 :focus-visible {
-  outline: 2px solid var(--neon-cyan);
+  outline: 2px solid var(--accent-cyan);
   outline-offset: 2px;
 }
 
@@ -175,25 +189,25 @@ pre code {
 /* Grid patterns */
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(189, 0, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(189, 0, 255, 0.06) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 212, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 212, 212, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .bg-grid-sm {
   background-image:
-    linear-gradient(to right, rgba(189, 0, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(189, 0, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 212, 212, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 212, 212, 0.03) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 /* Gradient utilities */
 .bg-gradient-radial {
-  background: radial-gradient(ellipse at center, rgba(189, 0, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(232, 90, 90, 0.1) 0%, transparent 70%);
 }
 
 .bg-gradient-hero {
-  background: linear-gradient(180deg, var(--void-black) 0%, var(--dark-purple) 100%);
+  background: linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-mid) 100%);
 }
 
 /* Text gradients */
@@ -204,83 +218,71 @@ pre code {
   -webkit-text-fill-color: transparent;
 }
 
-.text-gradient-neon {
-  background: linear-gradient(135deg, var(--neon-green) 0%, var(--neon-yellow) 50%, var(--neon-orange) 100%);
+.text-gradient-warm {
+  background: linear-gradient(135deg, var(--moon-coral) 0%, var(--moon-glow) 50%, var(--moon-core) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-etc {
-  background: linear-gradient(135deg, var(--neon-green) 0%, #7fff00 100%);
+  background: linear-gradient(135deg, var(--accent-teal) 0%, #5EEAD4 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-eth {
-  background: linear-gradient(135deg, var(--neon-pink) 0%, var(--neon-purple) 100%);
+  background: linear-gradient(135deg, var(--moon-coral) 0%, var(--moon-glow) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.text-gradient-warm {
-  background: linear-gradient(135deg, var(--neon-orange) 0%, var(--neon-yellow) 100%);
+.text-gradient-cool {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Glow effects */
-.glow-green {
-  box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+.glow-coral {
+  box-shadow: 0 0 20px rgba(232, 90, 90, 0.3);
 }
 
-.glow-pink {
-  box-shadow: 0 0 20px rgba(255, 45, 149, 0.3);
-}
-
-.glow-purple {
-  box-shadow: 0 0 20px rgba(189, 0, 255, 0.3);
+.glow-teal {
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
 }
 
 .glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 212, 212, 0.3);
 }
 
-.glow-orange {
-  box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
-}
-
-.glow-yellow {
-  box-shadow: 0 0 20px rgba(255, 230, 0, 0.3);
-}
-
-.glow-blue {
-  box-shadow: 0 0 20px rgba(0, 168, 255, 0.3);
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
 /* Text glow */
-.text-glow-green {
-  text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+.text-glow-coral {
+  text-shadow: 0 0 10px rgba(232, 90, 90, 0.5);
 }
 
-.text-glow-pink {
-  text-shadow: 0 0 10px rgba(255, 45, 149, 0.5);
+.text-glow-teal {
+  text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+  text-shadow: 0 0 10px rgba(0, 212, 212, 0.5);
 }
 
 /* Pulse glow animation */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(189, 0, 255, 0.3);
+    box-shadow: 0 0 20px rgba(232, 90, 90, 0.2);
   }
   50% {
-    box-shadow: 0 0 35px rgba(0, 245, 255, 0.5);
+    box-shadow: 0 0 35px rgba(0, 212, 212, 0.4);
   }
 }
 
@@ -290,15 +292,15 @@ pre code {
 
 /* Panel styles */
 .panel {
-  background: rgba(26, 10, 46, 0.6);
-  border: 1px solid rgba(189, 0, 255, 0.2);
+  background: rgba(15, 21, 24, 0.7);
+  border: 1px solid rgba(0, 212, 212, 0.12);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(12px);
 }
 
 .panel-strong {
-  background: rgba(26, 10, 46, 0.8);
-  border: 1px solid rgba(0, 245, 255, 0.25);
+  background: rgba(15, 21, 24, 0.85);
+  border: 1px solid rgba(0, 212, 212, 0.2);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(16px);
 }
@@ -308,15 +310,15 @@ pre code {
    ============================================= */
 
 .reading-panel {
-  background: rgba(10, 10, 15, 0.88);
+  background: rgba(10, 20, 25, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(189, 0, 255, 0.08);
+  border: 1px solid rgba(0, 212, 212, 0.08);
   border-radius: 16px;
   padding: 2.5rem 3rem;
   box-shadow:
     0 0 60px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 @media (max-width: 768px) {
@@ -332,13 +334,13 @@ pre code {
 
 /* Base prose styling for Tailwind v4 */
 .prose {
-  --tw-prose-body: #d4c8e8;
+  --tw-prose-body: var(--text-secondary);
   --tw-prose-headings: var(--text-primary);
-  --tw-prose-links: var(--neon-cyan);
-  --tw-prose-code: #7fff7f;
-  --tw-prose-pre-bg: rgba(10, 10, 15, 0.95);
-  --tw-prose-hr: rgba(189, 0, 255, 0.15);
-  color: #d4c8e8;
+  --tw-prose-links: var(--accent-cyan);
+  --tw-prose-code: var(--accent-teal);
+  --tw-prose-pre-bg: rgba(10, 20, 25, 0.95);
+  --tw-prose-hr: rgba(0, 212, 212, 0.12);
+  color: var(--text-secondary);
   font-size: 1.0625rem;
   line-height: 1.8;
 }
@@ -351,7 +353,7 @@ pre code {
   margin-top: 0;
   margin-bottom: 1rem;
   line-height: 1.2;
-  text-shadow: 0 0 40px rgba(189, 0, 255, 0.12);
+  text-shadow: 0 0 40px rgba(232, 90, 90, 0.1);
 }
 
 .prose h2 {
@@ -362,9 +364,9 @@ pre code {
   margin-top: 2.5rem;
   margin-bottom: 1rem;
   line-height: 1.3;
-  text-shadow: 0 0 30px rgba(189, 0, 255, 0.1);
+  text-shadow: 0 0 30px rgba(232, 90, 90, 0.08);
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(189, 0, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 212, 212, 0.1);
 }
 
 .prose h3 {
@@ -374,7 +376,7 @@ pre code {
   font-weight: 600;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
-  text-shadow: 0 0 25px rgba(189, 0, 255, 0.08);
+  text-shadow: 0 0 25px rgba(232, 90, 90, 0.06);
 }
 
 .prose h4 {
@@ -392,14 +394,14 @@ pre code {
 }
 
 .prose a {
-  color: var(--neon-cyan);
+  color: var(--accent-cyan);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .prose a:hover {
-  color: var(--neon-orange);
-  text-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
+  color: var(--moon-coral);
+  text-shadow: 0 0 8px rgba(0, 212, 212, 0.4);
 }
 
 .prose strong {
@@ -412,25 +414,25 @@ pre code {
 }
 
 .prose code {
-  color: #7fff7f;
-  background: rgba(57, 255, 20, 0.08);
+  color: var(--accent-teal);
+  background: rgba(45, 212, 191, 0.08);
   padding: 0.15em 0.45em;
   border-radius: 5px;
   font-size: 0.875em;
   font-family: var(--font-mono);
-  border: 1px solid rgba(57, 255, 20, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.1);
 }
 
 .prose pre {
-  background: rgba(10, 10, 15, 0.95);
-  border: 1px solid rgba(57, 255, 20, 0.12);
+  background: rgba(10, 20, 25, 0.95);
+  border: 1px solid rgba(45, 212, 191, 0.1);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   overflow-x: auto;
   margin: 1.75rem 0;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(57, 255, 20, 0.05);
+    inset 0 1px 0 rgba(45, 212, 191, 0.03);
 }
 
 .prose pre code {
@@ -459,12 +461,12 @@ pre code {
 }
 
 .prose hr {
-  border-color: rgba(189, 0, 255, 0.2);
+  border-color: rgba(0, 212, 212, 0.15);
   margin: 2rem 0;
 }
 
 .prose blockquote {
-  border-left: 4px solid var(--neon-purple);
+  border-left: 4px solid var(--moon-coral);
   padding-left: 1rem;
   margin: 1.5rem 0;
   color: var(--text-secondary);
@@ -473,7 +475,7 @@ pre code {
 
 /* Lead paragraph */
 .prose .lead {
-  color: #d4c8e8;
+  color: var(--text-secondary);
   font-size: 1.25rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
@@ -488,11 +490,11 @@ pre code {
 }
 
 .prose thead {
-  background: rgba(189, 0, 255, 0.08);
+  background: rgba(0, 212, 212, 0.06);
 }
 
 .prose th {
-  border: 1px solid rgba(189, 0, 255, 0.15);
+  border: 1px solid rgba(0, 212, 212, 0.12);
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
@@ -501,57 +503,57 @@ pre code {
 }
 
 .prose td {
-  border: 1px solid rgba(189, 0, 255, 0.1);
+  border: 1px solid rgba(0, 212, 212, 0.08);
   padding: 0.75rem 1rem;
-  color: #d4c8e8;
+  color: var(--text-secondary);
 }
 
 .prose tbody tr:nth-child(even) {
-  background: rgba(189, 0, 255, 0.03);
+  background: rgba(0, 212, 212, 0.02);
 }
 
 .prose tbody tr:hover {
-  background: rgba(189, 0, 255, 0.06);
+  background: rgba(0, 212, 212, 0.04);
 }
 
 /* Callout boxes */
 .callout {
-  background: rgba(26, 10, 46, 0.5);
-  border-left: 3px solid var(--neon-cyan);
+  background: rgba(15, 21, 24, 0.6);
+  border-left: 3px solid var(--accent-cyan);
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
   border-radius: 0 10px 10px 0;
 }
 
 .callout-info {
-  border-left-color: var(--neon-cyan);
+  border-left-color: var(--accent-cyan);
 }
 
 .callout-warning {
-  border-left-color: var(--neon-orange);
-  background: rgba(255, 107, 0, 0.05);
+  border-left-color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.05);
 }
 
 .callout-note {
-  border-left-color: var(--neon-purple);
+  border-left-color: var(--moon-coral);
 }
 
 .callout-tip {
-  border-left-color: var(--neon-green);
-  background: rgba(57, 255, 20, 0.03);
+  border-left-color: var(--accent-teal);
+  background: rgba(45, 212, 191, 0.03);
 }
 
 /* Diagram containers */
 .diagram {
-  background: rgba(10, 10, 15, 0.9);
-  border: 1px solid rgba(0, 245, 255, 0.12);
+  background: rgba(10, 20, 25, 0.9);
+  border: 1px solid rgba(0, 212, 212, 0.1);
   border-radius: 12px;
   padding: 1.5rem;
   margin: 2rem 0;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: var(--neon-cyan);
+  color: var(--accent-cyan);
   overflow-x: auto;
   white-space: pre;
 }

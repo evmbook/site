@@ -3,340 +3,327 @@
 import { motion, useReducedMotion } from 'framer-motion';
 
 /**
- * BackgroundSystem - Synthwave Neural Network Background
- * Dual-chain themed: ETC (green) + ETH (pink/purple) = EVM (cyan)
+ * BackgroundSystem - Sci-Fi Mountain Landscape
  *
  * Visual concept:
- * - Deep purple-black void as base
- * - Diamond/hexagonal grid pattern
- * - Neural pathways with flowing data
- * - Processing nodes with alternating green/pink glow
- * - Dual orbits representing the two chains
- * - Retrowave scan lines
+ * - Deep teal night sky gradient
+ * - Large coral/red moon at horizon
+ * - Layered mountain silhouettes creating depth
+ * - Road leading to the moon with subtle reflection
+ * - Scattered stars in the upper sky
+ * - Atmospheric haze near horizon
  */
 
-type Lane = {
-  top: string;
-  left: string;
-  len: string;
-  angle: number;
-  dur: number;
-  delay: number;
-  chain: 'etc' | 'eth';
-};
+// Mountain path definitions - SVG viewBox is 0 0 100 100
+const MOUNTAIN_PATHS = {
+  // Distant mountains - gentle rolling peaks (positioned higher)
+  far: 'M0,55 Q5,48 10,50 Q15,42 20,45 Q28,38 35,42 Q42,35 50,38 Q58,32 65,36 Q72,30 80,34 Q88,28 95,32 L100,35 L100,100 L0,100 Z',
 
-type Hub = {
-  top: string;
-  left: string;
-  dur: number;
-  delay: number;
-  chain: 'etc' | 'eth' | 'evm';
+  // Mid mountains - more dramatic peaks
+  mid: 'M0,62 L8,55 L15,60 L22,48 L30,54 L38,45 L48,52 L55,42 L65,50 L72,44 L80,52 L88,46 L95,55 L100,50 L100,100 L0,100 Z',
+
+  // Near mountains/hills - foreground silhouette
+  near: 'M0,75 L10,70 L20,74 L30,68 L45,72 L55,65 L70,70 L80,66 L90,72 L100,68 L100,100 L0,100 Z',
 };
 
 export function BackgroundSystem() {
   const reduceMotion = useReducedMotion();
-
-  // Neural pathway lanes - data flowing through the network
-  const lanes: readonly Lane[] = [
-    // Left side - ETC chain (green)
-    { top: '12%', left: '-20%', len: '38%', angle: -5, dur: 11, delay: 0, chain: 'etc' },
-    { top: '28%', left: '-24%', len: '42%', angle: 7, dur: 14, delay: 1.5, chain: 'etc' },
-    { top: '48%', left: '-18%', len: '36%', angle: -6, dur: 12, delay: 0.8, chain: 'etc' },
-    { top: '68%', left: '-22%', len: '40%', angle: 4, dur: 15, delay: 2.2, chain: 'etc' },
-    { top: '85%', left: '-26%', len: '44%', angle: -3, dur: 13, delay: 1.0, chain: 'etc' },
-
-    // Right side - ETH chain (pink)
-    { top: '18%', left: '58%', len: '44%', angle: 5, dur: 13, delay: 0.5, chain: 'eth' },
-    { top: '38%', left: '54%', len: '48%', angle: -7, dur: 16, delay: 2.0, chain: 'eth' },
-    { top: '58%', left: '62%', len: '40%', angle: 4, dur: 14, delay: 1.2, chain: 'eth' },
-    { top: '78%', left: '56%', len: '46%', angle: -5, dur: 15, delay: 2.8, chain: 'eth' },
-  ] as const;
-
-  // Processing hubs - nodes in the neural network
-  const hubs: readonly Hub[] = [
-    { top: '18%', left: '22%', dur: 6, delay: 0.2, chain: 'etc' },
-    { top: '35%', left: '75%', dur: 7, delay: 1.0, chain: 'eth' },
-    { top: '52%', left: '28%', dur: 6.5, delay: 0.5, chain: 'etc' },
-    { top: '68%', left: '70%', dur: 7.5, delay: 1.5, chain: 'eth' },
-    { top: '45%', left: '50%', dur: 8, delay: 0, chain: 'evm' }, // Central EVM hub
-  ] as const;
-
-  const getChainColors = (chain: 'etc' | 'eth' | 'evm') => {
-    switch (chain) {
-      case 'etc':
-        return { primary: 'rgba(57, 255, 20, 0.6)', glow: 'rgba(57, 255, 20, 0.25)' };
-      case 'eth':
-        return { primary: 'rgba(255, 45, 149, 0.6)', glow: 'rgba(255, 45, 149, 0.25)' };
-      case 'evm':
-        return { primary: 'rgba(0, 245, 255, 0.8)', glow: 'rgba(0, 245, 255, 0.35)' };
-    }
-  };
 
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
     >
-      {/* Base layer - void gradient */}
+      {/* Sky gradient - deep teal to horizon */}
       <div
         className="absolute inset-0"
         style={{
-          background: `
-            linear-gradient(180deg, #0a0a0f 0%, #12091f 50%, #0f0f23 100%)
-          `,
+          background: `linear-gradient(180deg,
+            #0A1419 0%,
+            #0D1A20 25%,
+            #0F1E24 45%,
+            #152530 65%,
+            #1A2830 80%,
+            #1E2E38 100%
+          )`,
         }}
       />
 
-      {/* Atmosphere - multi-colored glows */}
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(900px 500px at 15% 20%, rgba(57, 255, 20, 0.06), transparent 55%),
-            radial-gradient(800px 500px at 85% 25%, rgba(255, 45, 149, 0.05), transparent 50%),
-            radial-gradient(1000px 600px at 50% 80%, rgba(189, 0, 255, 0.08), transparent 60%),
-            radial-gradient(700px 400px at 25% 70%, rgba(0, 245, 255, 0.04), transparent 45%),
-            radial-gradient(600px 400px at 75% 65%, rgba(255, 45, 149, 0.04), transparent 50%)
-          `,
-        }}
-        animate={reduceMotion ? undefined : { opacity: [0.5, 0.8, 0.5] }}
-        transition={
-          reduceMotion
-            ? undefined
-            : { duration: 12, repeat: Infinity, ease: 'easeInOut' }
-        }
-      />
-
-      {/* Dot lattice */}
-      <motion.div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            'radial-gradient(rgba(189, 0, 255, 0.3) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-          maskImage:
-            'radial-gradient(ellipse at center, black 35%, transparent 70%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse at center, black 35%, transparent 70%)',
-        }}
-        animate={
-          reduceMotion
-            ? undefined
-            : {
-                backgroundPositionX: ['0px', '16px', '0px'],
-                backgroundPositionY: ['0px', '16px', '0px'],
-              }
-        }
-        transition={
-          reduceMotion
-            ? undefined
-            : { duration: 20, repeat: Infinity, ease: 'easeInOut' }
-        }
-      />
-
-      {/* Diamond grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage: `
-            linear-gradient(30deg, rgba(189, 0, 255, 0.4) 1px, transparent 1px),
-            linear-gradient(150deg, rgba(189, 0, 255, 0.4) 1px, transparent 1px),
-            linear-gradient(270deg, rgba(0, 245, 255, 0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 104px',
-        }}
-      />
-
-      {/* Processing hubs */}
+      {/* Stars layer - scattered dots in upper portion */}
       <div className="absolute inset-0">
-        {hubs.map((h, idx) => {
-          const colors = getChainColors(h.chain);
-          const isCenter = h.chain === 'evm';
-
-          return (
-            <motion.div
-              key={`hub-${idx}`}
-              className="absolute rounded-full"
-              style={{
-                left: h.left,
-                top: h.top,
-                width: isCenter ? 12 : 6,
-                height: isCenter ? 12 : 6,
-                transform: 'translate(-50%, -50%)',
-                background: colors.primary,
-                boxShadow: `0 0 ${isCenter ? 50 : 25}px ${colors.glow}`,
-              }}
-              animate={
-                reduceMotion ? undefined : { opacity: [0.4, 0.9, 0.4] }
-              }
-              transition={
-                reduceMotion
-                  ? undefined
-                  : {
-                      duration: h.dur,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                      delay: h.delay,
-                    }
-              }
-            />
-          );
-        })}
+        {/* Large stars */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(1.5px 1.5px at 15% 8%, rgba(255,255,255,0.6), transparent),
+              radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.4), transparent),
+              radial-gradient(1.5px 1.5px at 55% 5%, rgba(255,255,255,0.5), transparent),
+              radial-gradient(1px 1px at 75% 12%, rgba(255,255,255,0.4), transparent),
+              radial-gradient(1.5px 1.5px at 88% 8%, rgba(255,255,255,0.5), transparent),
+              radial-gradient(1px 1px at 25% 22%, rgba(255,255,255,0.3), transparent),
+              radial-gradient(1px 1px at 65% 18%, rgba(255,255,255,0.35), transparent),
+              radial-gradient(1px 1px at 92% 20%, rgba(255,255,255,0.3), transparent)
+            `,
+            backgroundSize: '100% 100%',
+            opacity: 0.9,
+            maskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 55%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 55%)',
+          }}
+        />
+        {/* Small stars - dense field */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(0.5px 0.5px at center, rgba(255,255,255,0.25), transparent)',
+            backgroundSize: '45px 35px',
+            opacity: 0.7,
+            maskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 50%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 50%)',
+          }}
+        />
       </div>
 
-      {/* Neural pathways with data flow */}
-      {!reduceMotion &&
-        lanes.map((l, idx) => {
-          const colors = getChainColors(l.chain);
-          const isEth = l.chain === 'eth';
-          const from = isEth ? '110%' : '-10%';
-          const to = isEth ? '-10%' : '110%';
+      {/* Moon - large coral/red sphere at horizon */}
+      <div className="absolute inset-0">
+        {/* Moon outer atmosphere glow */}
+        <motion.div
+          className="absolute"
+          style={{
+            left: '50%',
+            top: '42%',
+            width: '500px',
+            height: '500px',
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(circle, rgba(232,90,90,0.08) 0%, rgba(232,90,90,0.03) 40%, transparent 70%)',
+          }}
+          animate={reduceMotion ? undefined : {
+            scale: [1, 1.05, 1],
+            opacity: [0.8, 1, 0.8]
+          }}
+          transition={reduceMotion ? undefined : {
+            duration: 15,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
 
-          return (
-            <div
-              key={`lane-${idx}`}
-              className="absolute"
-              style={{
-                left: l.left,
-                top: l.top,
-                width: l.len,
-                height: 10,
-                transform: `rotate(${l.angle}deg)`,
-                transformOrigin: 'left center',
-              }}
-            >
-              {/* Faint lane trace */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${colors.glow}, transparent)`,
-                  filter: 'blur(0.5px)',
-                  opacity: 0.3,
-                }}
-              />
+        {/* Moon middle glow */}
+        <div
+          className="absolute"
+          style={{
+            left: '50%',
+            top: '42%',
+            width: '320px',
+            height: '320px',
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(circle, rgba(255,123,123,0.12) 0%, rgba(232,90,90,0.06) 50%, transparent 75%)',
+          }}
+        />
 
-              {/* Traveling data packet */}
-              <motion.div
-                className="absolute top-1/2 h-[2px] -translate-y-1/2"
-                style={{
-                  width: '35%',
-                  background: isEth
-                    ? 'linear-gradient(90deg, transparent, rgba(255, 45, 149, 0.5), rgba(189, 0, 255, 0.6), transparent)'
-                    : 'linear-gradient(90deg, transparent, rgba(57, 255, 20, 0.5), rgba(0, 245, 255, 0.4), transparent)',
-                  filter: 'blur(0.3px)',
-                }}
-                initial={{ x: from, opacity: 0 }}
-                animate={{ x: [from, to], opacity: [0, 0.8, 0.8, 0] }}
-                transition={{
-                  duration: l.dur,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: l.delay,
-                  times: [0, 0.1, 0.85, 1],
-                }}
-              />
-            </div>
-          );
-        })}
+        {/* Moon body */}
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            left: '50%',
+            top: '42%',
+            width: '180px',
+            height: '180px',
+            transform: 'translate(-50%, -50%)',
+            background: `radial-gradient(circle at 40% 35%,
+              #FFB4B4 0%,
+              #FF9B9B 15%,
+              #E85A5A 45%,
+              #D04545 70%,
+              #B83838 100%
+            )`,
+            boxShadow: `
+              0 0 60px rgba(232,90,90,0.4),
+              0 0 120px rgba(232,90,90,0.2),
+              inset -15px -10px 40px rgba(0,0,0,0.15)
+            `,
+          }}
+          animate={reduceMotion ? undefined : {
+            scale: [1, 1.02, 1]
+          }}
+          transition={reduceMotion ? undefined : {
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
+      </div>
 
-      {/* Processing pulses around hubs */}
-      {!reduceMotion &&
-        hubs.map((h, idx) => {
-          const colors = getChainColors(h.chain);
-          const isCenter = h.chain === 'evm';
-
-          return (
-            <motion.div
-              key={`pulse-${idx}`}
-              className="absolute rounded-full"
-              style={{
-                left: h.left,
-                top: h.top,
-                width: isCenter ? 24 : 16,
-                height: isCenter ? 24 : 16,
-                transform: 'translate(-50%, -50%)',
-                border: `1px solid ${colors.primary}`,
-                boxShadow: `0 0 15px ${colors.glow}`,
-              }}
-              animate={{ opacity: [0, 0.6, 0], scale: [1, 3, 4.5] }}
-              transition={{
-                duration: h.dur,
-                repeat: Infinity,
-                ease: 'easeOut',
-                delay: h.delay + 1,
-              }}
-            />
-          );
-        })}
-
-      {/* Dual orbit rings */}
-      {!reduceMotion && (
-        <>
-          {/* ETC orbit (green, clockwise) */}
-          <motion.div
-            className="absolute left-1/2 top-[45%] h-[180px] w-[180px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(57,255,20,0.12)]"
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 50,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            <motion.div
-              className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-[rgba(57,255,20,0.7)]"
-              style={{ boxShadow: '0 0 12px rgba(57, 255, 20, 0.5)' }}
-            />
-          </motion.div>
-
-          {/* ETH orbit (pink, counter-clockwise) */}
-          <motion.div
-            className="absolute left-1/2 top-[45%] h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(255,45,149,0.08)]"
-            animate={{ rotate: -360 }}
-            transition={{
-              duration: 75,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            <motion.div
-              className="absolute -top-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[rgba(255,45,149,0.6)]"
-              style={{ boxShadow: '0 0 10px rgba(255, 45, 149, 0.4)' }}
-            />
-          </motion.div>
-        </>
-      )}
-
-      {/* Scan shimmer effect */}
-      <motion.div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'linear-gradient(to bottom, transparent, rgba(189, 0, 255, 0.2), transparent)',
-          backgroundSize: '100% 300px',
-        }}
-        animate={
-          reduceMotion
-            ? undefined
-            : { backgroundPositionY: ['0px', '300px'] }
-        }
-        transition={
-          reduceMotion
-            ? undefined
-            : { duration: 15, repeat: Infinity, ease: 'linear' }
-        }
-      />
-
-      {/* Bottom glow anchor */}
+      {/* Atmospheric haze at horizon */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[35vh]"
+        className="absolute inset-x-0 bottom-0 h-[50%]"
         style={{
-          background:
-            'radial-gradient(900px 350px at 50% 100%, rgba(189, 0, 255, 0.1), transparent 60%)',
+          background: `linear-gradient(to top,
+            rgba(26,40,48,0.6) 0%,
+            rgba(26,40,48,0.3) 30%,
+            transparent 70%
+          )`,
         }}
       />
 
-      {/* Vignette overlay */}
-      <div className="absolute inset-0 [background:radial-gradient(circle_at_center,transparent_25%,rgba(10,10,15,0.7)_100%)]" />
+      {/* Mountain layers */}
+      <svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        {/* Far mountains - lightest, with subtle moon glow */}
+        <defs>
+          <linearGradient id="farMountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1A2830" />
+            <stop offset="100%" stopColor="#152028" />
+          </linearGradient>
+          <linearGradient id="midMountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#121C22" />
+            <stop offset="100%" stopColor="#0D1518" />
+          </linearGradient>
+          <linearGradient id="nearMountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0A1114" />
+            <stop offset="100%" stopColor="#080D0F" />
+          </linearGradient>
+        </defs>
+
+        <path
+          d={MOUNTAIN_PATHS.far}
+          fill="url(#farMountainGradient)"
+          opacity="0.95"
+        />
+        <path
+          d={MOUNTAIN_PATHS.mid}
+          fill="url(#midMountainGradient)"
+          opacity="0.98"
+        />
+        <path
+          d={MOUNTAIN_PATHS.near}
+          fill="url(#nearMountainGradient)"
+        />
+      </svg>
+
+      {/* Road surface */}
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2"
+        style={{
+          width: '100%',
+          height: '35%',
+          clipPath: 'polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%)',
+          background: `linear-gradient(to bottom,
+            #0C1215 0%,
+            #0A0F12 50%,
+            #080C0E 100%
+          )`,
+        }}
+      >
+        {/* Road center line with glow */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 h-full"
+          style={{
+            width: '2px',
+            background: `linear-gradient(to bottom,
+              rgba(232,90,90,0.5) 0%,
+              rgba(232,90,90,0.2) 50%,
+              rgba(232,90,90,0.05) 100%
+            )`,
+            boxShadow: '0 0 15px rgba(232,90,90,0.3)',
+          }}
+        />
+
+        {/* Moon reflection on road */}
+        <motion.div
+          className="absolute left-1/2 -translate-x-1/2"
+          style={{
+            width: '60px',
+            height: '100%',
+            background: `linear-gradient(to bottom,
+              rgba(232,90,90,0.15) 0%,
+              rgba(232,90,90,0.08) 30%,
+              rgba(232,90,90,0.02) 70%,
+              transparent 100%
+            )`,
+            filter: 'blur(8px)',
+          }}
+          animate={reduceMotion ? undefined : {
+            opacity: [0.6, 0.9, 0.6]
+          }}
+          transition={reduceMotion ? undefined : {
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
+
+        {/* Road edge lines */}
+        <div
+          className="absolute left-0 h-full"
+          style={{
+            width: '1px',
+            background: 'linear-gradient(to bottom, rgba(168,180,188,0.1), transparent 80%)',
+          }}
+        />
+        <div
+          className="absolute right-0 h-full"
+          style={{
+            width: '1px',
+            background: 'linear-gradient(to bottom, rgba(168,180,188,0.1), transparent 80%)',
+          }}
+        />
+      </div>
+
+      {/* Power/telephone poles silhouettes */}
+      <div className="absolute inset-0">
+        {/* Left pole */}
+        <div
+          className="absolute"
+          style={{
+            left: '18%',
+            bottom: '25%',
+            width: '2px',
+            height: '15%',
+            background: 'linear-gradient(to bottom, #0A0F12, #080C0E)',
+          }}
+        >
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2"
+            style={{
+              width: '20px',
+              height: '1px',
+              background: '#0A0F12',
+            }}
+          />
+        </div>
+        {/* Right pole */}
+        <div
+          className="absolute"
+          style={{
+            right: '20%',
+            bottom: '22%',
+            width: '2px',
+            height: '12%',
+            background: 'linear-gradient(to bottom, #0A0F12, #080C0E)',
+          }}
+        >
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2"
+            style={{
+              width: '16px',
+              height: '1px',
+              background: '#0A0F12',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Subtle vignette */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 40%, transparent 30%, rgba(8,13,15,0.4) 100%)',
+        }}
+      />
     </div>
   );
 }
