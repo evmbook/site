@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+  eslint: {
+    // Use ESLint CLI directly instead of Next.js built-in linting
+    ignoreDuringBuilds: true,
+  },
 }
 
 const withMDX = createMDX({
