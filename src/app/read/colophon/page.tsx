@@ -27,7 +27,7 @@ export default function ColophonPage() {
           <strong>Mastering EVM</strong> is a comprehensive guide to the Ethereum Virtual Machine
           ecosystem, covering both Ethereum (ETH) and Ethereum Classic (ETC). This work is a
           derivative of <em>Mastering Ethereum</em> by Andreas M. Antonopoulos and Gavin Wood,
-          substantially rewritten, reorganized, and updated for 2025.
+          substantially rewritten, reorganized, and updated for 2026.
         </p>
 
         <h2>Technology Stack</h2>
@@ -70,14 +70,14 @@ export default function ColophonPage() {
           The build process produces optimized HTML, CSS, and JavaScript bundles.
         </p>
 
-        <h2>Development Tools</h2>
-        <p>This project was developed with assistance from:</p>
-        <ul>
-          <li><strong>Claude Code</strong> — AI-assisted development (claude-opus-4-5-20251101)</li>
-          <li><strong>VS Code</strong> — Code editor</li>
-          <li><strong>Git</strong> — Version control</li>
-          <li><strong>pnpm/npm</strong> — Package management</li>
-        </ul>
+        <h2>Development</h2>
+        <p>
+          This project was developed by{' '}
+          <a href="https://github.com/claude" target="_blank" rel="noopener noreferrer">
+            Claude
+          </a>{' '}
+          using Claude Code (claude-opus-4-5-20251101).
+        </p>
 
         <h2>License</h2>
         <p>

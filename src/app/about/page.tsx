@@ -71,7 +71,7 @@ export default function AboutPage() {
               International License (CC BY-SA 4.0).
             </p>
             <p>
-              Mastering EVM has been substantially rewritten, reorganized, and updated for 2025.
+              Mastering EVM has been substantially rewritten, reorganized, and updated for 2026.
               While we build upon the foundational concepts of the original work, all content has
               been reformulated with:
             </p>

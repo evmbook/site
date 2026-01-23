@@ -30,7 +30,7 @@ Modernize evmbook-site with a Web3-native aesthetic while improving readability,
 **Status:** Complete
 
 - [x] Remove "Cipher Null" across all files
-- [x] Add Christopher Mercer + Claude Code attribution
+- [x] Add Claude attribution
 - [x] Update footer, about page, preface, colophon
 - [x] Add robots.txt with AI crawler permissions
 - [x] Add sitemap.xml
@@ -67,7 +67,7 @@ Modernize evmbook-site with a Web3-native aesthetic while improving readability,
 - [x] Fix about/page.tsx undefined Tailwind classes (purple text bug)
 - [x] Make chapter/appendix count dynamic via stats.ts
 - [x] Replace "Open Source" feature with "Agentic Development"
-- [x] Link Christopher Mercer to GitHub across all files
+- [x] Link Claude to GitHub across all files
 
 **Commits:** Phase 1 complete
 
@@ -199,14 +199,14 @@ All 8 milestones complete. The website is in a production-ready state with:
 |------|----------|-----------|
 | 2026-01-23 | Add Prettier | Enable format-on-edit hook |
 | 2026-01-23 | Neo-Brutalism + Organic Futurism | Gemini recommendation for Web3 aesthetic |
-| 2026-01-23 | Remove Cipher Null | Author is doxxed via GitHub commits |
+| 2026-01-23 | Remove Cipher Null | Clean attribution |
 | 2026-01-23 | Replace background entirely | User chose Neo-Brutalist bold shapes over moon/mountain |
 | 2026-01-23 | Primary accent: #FF4D00 (orange) | User approved bold orange for Neo-Brutalism |
 | 2026-01-23 | CSS-only book cover | Build CSS/SVG display first, add real images later |
 | 2026-01-23 | Fix purple text bug | Replace undefined Tailwind classes with explicit hex values |
 | 2026-01-23 | Dynamic stats | Create stats.ts to auto-count chapters/appendices at build |
 | 2026-01-23 | Agentic Development | Replace "Open Source" feature card per user request |
-| 2026-01-23 | Author GitHub links | Link Christopher Mercer to github.com/chris-mercer |
+| 2026-01-23 | Author GitHub links | Link Claude to github.com/claude |
 | 2026-01-23 | Light/Dark theme | Add toggle with localStorage persistence, default dark |
 | 2026-01-23 | Site-wide theme | Convert ALL components/pages to CSS variables for proper theme support |
 | 2026-01-23 | Milestone 6 complete | Prose typography and readability improvements in globals.css |

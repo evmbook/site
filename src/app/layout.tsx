@@ -42,8 +42,8 @@ export const metadata: Metadata = {
     'Vyper',
     'dApp',
   ],
-  authors: [{ name: 'Christopher Mercer' }],
-  creator: 'Christopher Mercer',
+  authors: [{ name: 'Claude' }],
+  creator: 'Claude',
   publisher: 'Mastering EVM',
   openGraph: {
     type: 'website',
@@ -100,8 +100,9 @@ const jsonLd = {
   '@type': 'Book',
   name: 'Mastering the Ethereum Virtual Machine',
   author: {
-    '@type': 'Person',
-    name: 'Christopher Mercer',
+    '@type': 'Organization',
+    name: 'Claude',
+    url: 'https://github.com/claude',
   },
   bookFormat: 'EBook',
   isAccessibleForFree: true,

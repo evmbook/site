@@ -17,14 +17,13 @@ export function Footer() {
             <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
               Modernized and maintained by{' '}
               <a
-                href="https://github.com/chris-mercer"
+                href="https://github.com/claude"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--link-color)] hover:text-[var(--link-hover)] transition-colors duration-150"
               >
-                Christopher Mercer
-              </a>{' '}
-              with Claude Code (claude-opus-4-5-20251101).
+                Claude
+              </a>.{' '}
             </p>
           </div>
 

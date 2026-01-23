@@ -89,12 +89,12 @@ export function BookDisplay() {
               {/* Author section */}
               <div className="mt-auto pt-4 border-t border-[var(--accent-primary)]/30">
                 <a
-                  href="https://github.com/chris-mercer"
+                  href="https://github.com/claude"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider hover:text-[var(--link-hover)] transition-colors duration-150"
                 >
-                  Christopher Mercer
+                  Claude
                 </a>
               </div>
 
