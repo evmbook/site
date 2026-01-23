@@ -14,8 +14,9 @@ export function Footer() {
               A comprehensive guide to the Ethereum Virtual Machine ecosystem.
               Free to read online, download, and share.
             </p>
-            <p className="mt-4 text-xs text-text-muted">
-              Written by Cipher Null
+            <p className="mt-4 text-xs text-text-muted leading-relaxed">
+              Modernized and maintained by Christopher Mercer with
+              Claude Code (claude-opus-4-5-20251101).
             </p>
           </div>
 

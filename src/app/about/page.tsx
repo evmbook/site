@@ -59,9 +59,10 @@ export default function AboutPage() {
               technically. Understanding both gives you a complete picture of the EVM ecosystem.
             </p>
 
-            <h2>Author</h2>
+            <h2>Maintainer</h2>
             <p>
-              Mastering EVM is written by <strong>Cipher Null</strong>.
+              This derivative work has been modernized and maintained by <strong>Christopher Mercer</strong> with
+              the heavy lifting by our trusted Claude Code (claude-opus-4-5-20251101).
             </p>
 
             <h2>Attribution</h2>

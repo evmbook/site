@@ -1,0 +1,23 @@
+# Mastering EVM - robots.txt
+# Allow all crawlers including AI
+
+User-agent: *
+Allow: /
+
+# AI Crawlers - explicitly allow
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://masteringevm.com/sitemap.xml
