@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import clsx from 'clsx';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'minimal' | 'outline' | 'soft';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
@@ -16,33 +16,55 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: `
-    bg-gradient-to-r from-neon-pink to-neon-purple
-    text-white font-semibold
-    shadow-lg shadow-neon-pink/25
-    hover:shadow-xl hover:shadow-neon-pink/40
-    hover:from-neon-pink/90 hover:to-neon-purple/90
+  // Minimal: text only, very subtle hover
+  minimal: `
+    bg-transparent
+    text-[#d4c8e8] font-medium
+    hover:text-[#00f5ff]
   `,
+  // Outline: thin border, no fill
+  outline: `
+    bg-transparent
+    text-[#d4c8e8] font-medium
+    border border-white/10
+    hover:border-[#bd00ff]/25 hover:text-white
+  `,
+  // Soft: subtle background
+  soft: `
+    bg-white/[0.03]
+    text-[#d4c8e8] font-medium
+    hover:bg-white/[0.07] hover:text-white
+  `,
+  // Primary: subtle gradient background (not harsh neon)
+  primary: `
+    bg-gradient-to-r from-[#bd00ff]/20 to-[#ff2d95]/15
+    text-white font-medium
+    border border-[#bd00ff]/20
+    hover:from-[#bd00ff]/30 hover:to-[#ff2d95]/25
+    hover:border-[#bd00ff]/30
+  `,
+  // Secondary: border emphasis
   secondary: `
     bg-transparent
-    border border-neon-cyan
-    text-neon-cyan font-medium
-    shadow-md shadow-neon-cyan/10
-    hover:bg-neon-cyan/10
-    hover:shadow-lg hover:shadow-neon-cyan/25
+    border border-[#00f5ff]/20
+    text-[#d4c8e8] font-medium
+    hover:bg-[#00f5ff]/5
+    hover:border-[#00f5ff]/30
+    hover:text-[#00f5ff]
   `,
+  // Ghost: for nav items
   ghost: `
     bg-transparent
-    text-neon-cyan font-medium
-    hover:text-neon-pink
-    hover:bg-white/5
+    text-[#d4c8e8] font-medium
+    hover:text-[#00f5ff]
+    hover:bg-white/[0.03]
   `,
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'px-4 py-2 text-sm rounded-md',
-  md: 'px-6 py-3 text-base rounded-lg',
-  lg: 'px-8 py-4 text-lg rounded-lg',
+  md: 'px-5 py-2.5 text-sm rounded-lg',
+  lg: 'px-6 py-3 text-base rounded-lg',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -59,9 +81,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles = `
-      inline-flex items-center justify-center
+      inline-flex items-center justify-center gap-2
       transition-all duration-200 ease-out
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-void-black
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00f5ff]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]
       disabled:opacity-50 disabled:cursor-not-allowed
     `;
 
@@ -69,8 +91,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <motion.button
         ref={ref}
         className={clsx(baseStyles, variantStyles[variant], sizeStyles[size], className)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
         {...props}
       >
         {children}
@@ -86,8 +108,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <motion.a
           href={href}
           className={clsx(baseStyles, variantStyles[variant], sizeStyles[size], className)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
           {...linkProps}
         >
           {children}

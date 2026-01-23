@@ -8,15 +8,15 @@ interface ChapterNavProps {
 
 export function ChapterNav({ prev, next }: ChapterNavProps) {
   return (
-    <nav className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800">
+    <nav className="mt-12 pt-8 border-t border-[#bd00ff]/10">
       <div className="flex justify-between items-center">
         {prev ? (
           <Link
             href={`/read/${prev.slug}`}
-            className="group flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            className="group flex items-center gap-3 text-[#b4a7d6] hover:text-[#00f5ff] transition-colors"
           >
             <svg
-              className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform"
+              className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
@@ -25,10 +25,10 @@ export function ChapterNav({ prev, next }: ChapterNavProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             <div className="text-left">
-              <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-[#6b5b95] mb-0.5">
                 Previous
               </div>
-              <div className="font-medium">{prev.title}</div>
+              <div className="font-medium text-sm">{prev.title}</div>
             </div>
           </Link>
         ) : (
@@ -38,16 +38,16 @@ export function ChapterNav({ prev, next }: ChapterNavProps) {
         {next ? (
           <Link
             href={`/read/${next.slug}`}
-            className="group flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            className="group flex items-center gap-3 text-[#b4a7d6] hover:text-[#00f5ff] transition-colors"
           >
             <div className="text-right">
-              <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-[#6b5b95] mb-0.5">
                 Next
               </div>
-              <div className="font-medium">{next.title}</div>
+              <div className="font-medium text-sm">{next.title}</div>
             </div>
             <svg
-              className="h-5 w-5 transform group-hover:translate-x-1 transition-transform"
+              className="h-4 w-4 transform group-hover:translate-x-1 transition-transform"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
