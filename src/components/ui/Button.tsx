@@ -16,55 +16,58 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  // Minimal: text only, very subtle hover
-  minimal: `
-    bg-transparent
-    text-[#A8B4BC] font-medium
-    hover:text-[#00D4D4]
-  `,
-  // Outline: thin border, no fill
-  outline: `
-    bg-transparent
-    text-[#A8B4BC] font-medium
-    border border-white/10
-    hover:border-[#00D4D4]/25 hover:text-[#E8E4E0]
-  `,
-  // Soft: subtle background
-  soft: `
-    bg-white/[0.03]
-    text-[#A8B4BC] font-medium
-    hover:bg-white/[0.07] hover:text-[#E8E4E0]
-  `,
-  // Primary: coral/moon accent gradient
+  // Primary: Bold orange accent - Neo-Brutalist hero button
   primary: `
-    bg-gradient-to-r from-[#E85A5A]/20 to-[#FF7B7B]/15
-    text-[#E8E4E0] font-medium
-    border border-[#E85A5A]/20
-    hover:from-[#E85A5A]/30 hover:to-[#FF7B7B]/25
-    hover:border-[#E85A5A]/30
+    bg-[var(--accent-primary)]
+    text-white font-bold uppercase tracking-wider
+    border-4 border-[var(--brutalist-black)]
+    shadow-[var(--shadow-brutal)]
+    hover:shadow-[var(--shadow-brutal-sm)]
+    hover:translate-x-[2px] hover:translate-y-[2px]
   `,
-  // Secondary: cyan/teal accent
+  // Secondary: Teal outline - readable accent
   secondary: `
     bg-transparent
-    border border-[#00D4D4]/20
-    text-[#A8B4BC] font-medium
-    hover:bg-[#00D4D4]/5
-    hover:border-[#00D4D4]/30
-    hover:text-[#00D4D4]
+    text-[var(--text-primary)] font-bold uppercase tracking-wider
+    border-4 border-[var(--accent-secondary)]
+    shadow-[4px_4px_0_0_var(--accent-secondary)]
+    hover:shadow-[2px_2px_0_0_var(--accent-secondary)]
+    hover:translate-x-[2px] hover:translate-y-[2px]
+    hover:bg-[var(--accent-secondary)] hover:text-[#060606]
   `,
-  // Ghost: for nav items
+  // Outline: Subtle border, theme-aware
+  outline: `
+    bg-transparent
+    text-[var(--text-secondary)] font-medium
+    border-2 border-[var(--border-default)]
+    hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]
+  `,
+  // Ghost: Minimal hover effect
   ghost: `
     bg-transparent
-    text-[#A8B4BC] font-medium
-    hover:text-[#00D4D4]
-    hover:bg-white/[0.03]
+    text-[var(--text-secondary)] font-medium
+    hover:text-[var(--accent-primary)]
+    hover:bg-[var(--surface-elevated)]
+  `,
+  // Minimal: Text only
+  minimal: `
+    bg-transparent
+    text-[var(--text-secondary)] font-medium
+    hover:text-[var(--accent-primary)]
+  `,
+  // Soft: Subtle background with glass effect
+  soft: `
+    bg-[var(--glass-bg)]
+    backdrop-blur-sm
+    text-[var(--text-secondary)] font-medium
+    hover:text-[var(--text-primary)]
   `,
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-4 py-2 text-sm rounded-md',
-  md: 'px-5 py-2.5 text-sm rounded-lg',
-  lg: 'px-6 py-3 text-base rounded-lg',
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-6 py-3 text-sm',
+  lg: 'px-8 py-4 text-base',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -82,8 +85,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const baseStyles = `
       inline-flex items-center justify-center gap-2
-      transition-all duration-200 ease-out
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4D4]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A1419]
+      transition-all duration-150 ease-out
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-base)]
       disabled:opacity-50 disabled:cursor-not-allowed
     `;
 

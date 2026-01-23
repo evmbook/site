@@ -8,12 +8,12 @@ interface ChapterNavProps {
 
 export function ChapterNav({ prev, next }: ChapterNavProps) {
   return (
-    <nav className="mt-12 pt-8 border-t border-[#00D4D4]/10">
+    <nav className="mt-12 pt-8 border-t-4 border-[var(--accent-primary)]/20">
       <div className="flex justify-between items-center">
         {prev ? (
           <Link
             href={`/read/${prev.slug}`}
-            className="group flex items-center gap-3 text-[#A8B4BC] hover:text-[#00D4D4] transition-colors"
+            className="group flex items-center gap-3 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
           >
             <svg
               className="h-4 w-4 transform group-hover:-translate-x-1 transition-transform"
@@ -25,7 +25,7 @@ export function ChapterNav({ prev, next }: ChapterNavProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             <div className="text-left">
-              <div className="text-xs uppercase tracking-wider text-[#5E6B73] mb-0.5">
+              <div className="text-xs uppercase tracking-wider text-[var(--text-muted)] mb-0.5">
                 Previous
               </div>
               <div className="font-medium text-sm">{prev.title}</div>
@@ -38,10 +38,10 @@ export function ChapterNav({ prev, next }: ChapterNavProps) {
         {next ? (
           <Link
             href={`/read/${next.slug}`}
-            className="group flex items-center gap-3 text-[#A8B4BC] hover:text-[#00D4D4] transition-colors"
+            className="group flex items-center gap-3 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
           >
             <div className="text-right">
-              <div className="text-xs uppercase tracking-wider text-[#5E6B73] mb-0.5">
+              <div className="text-xs uppercase tracking-wider text-[var(--text-muted)] mb-0.5">
                 Next
               </div>
               <div className="font-medium text-sm">{next.title}</div>

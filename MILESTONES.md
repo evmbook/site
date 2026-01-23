@@ -25,161 +25,171 @@ Modernize evmbook-site with a Web3-native aesthetic while improving readability,
 
 ---
 
-## Milestone 2: Theme Redesign 🔄
+## Milestone 2: Attribution & SEO ✅
 
-**Status:** Planning
+**Status:** Complete
 
-### Goals
-Adopt a modern Web3 aesthetic per Gemini's recommendations:
-- **Neo-Brutalism** with **Organic Futurism** accents
-- High-contrast colors, thick borders, bold typography
-- Glassmorphism for code blocks and panels
-- Maintain dark mode focus
+- [x] Remove "Cipher Null" across all files
+- [x] Add Christopher Mercer + Claude Code attribution
+- [x] Update footer, about page, preface, colophon
+- [x] Add robots.txt with AI crawler permissions
+- [x] Add sitemap.xml
+- [x] Add favicon.svg
+- [x] Enhanced metadata with JSON-LD
+
+**Commit:** `ec7920a` — feat(theme): neo-brutalist redesign phase 1
+
+---
+
+## Milestone 3: Theme Foundation ✅
+
+**Status:** Complete
+
+- [x] Neo-Brutalist color palette (orange #FF4D00, Ethereum blue, ETC green)
+- [x] Pure black base (#0A0A0A)
+- [x] Replace BackgroundSystem with minimal brutalist design
+- [x] Add noise texture, grid overlay, geometric accents
+
+**Commit:** `ec7920a` — feat(theme): neo-brutalist redesign phase 1
+
+---
+
+## Milestone 4: Component Updates ✅
+
+**Status:** Complete
 
 ### Tasks
-- [ ] Update color palette in `globals.css`
-- [ ] Revise `BackgroundSystem.tsx` (simplify or evolve)
-- [ ] Update component styling (Hero, Features, Cards)
-- [ ] Improve code block styling (glass texture)
-- [ ] Test readability and contrast
+- [x] Update Hero.tsx with Neo-Brutalist styling
+- [x] Update Features.tsx with thick borders, shadow offset
+- [x] Update DownloadCTA.tsx
+- [x] Create BookDisplay component (CSS-only)
+- [x] Update button styles
+- [x] Fix about/page.tsx undefined Tailwind classes (purple text bug)
+- [x] Make chapter/appendix count dynamic via stats.ts
+- [x] Replace "Open Source" feature with "Agentic Development"
+- [x] Link Christopher Mercer to GitHub across all files
 
-### Files to Modify
-- `src/styles/globals.css`
-- `src/components/BackgroundSystem.tsx`
-- `src/components/home/Hero.tsx`
-- `src/components/home/Features.tsx`
-- `src/components/home/DownloadCTA.tsx`
-
----
-
-## Milestone 3: Attribution Update 🔄
-
-**Status:** Planning
-
-### Goals
-Remove "Cipher Null" pseudonym, update to real attribution:
-> "This derivative work has been modernized and maintained by Christopher Mercer with the heavy lifting by our trusted Claude Code (claude-opus-4-5-20251101)."
-
-### Files to Update
-- `src/app/layout.tsx` (metadata.authors, metadata.creator)
-- `src/components/layout/Footer.tsx` (author credit)
-- `src/app/about/page.tsx` (about section)
-- `content/chapters/00-preface.mdx` (signature)
-- `content/meta/colophon.mdx` (author description)
-- `content/meta/about.mdx` (author section)
+**Commits:** Phase 1 complete
 
 ---
 
-## Milestone 4: Readability Improvements 🔄
+## Milestone 5: Light/Dark Theme Toggle ✅
 
-**Status:** Planning
+**Status:** Complete
 
-### Goals
-Optimize the "Read Online" section for long-form technical reading:
-- Improve typography (line height, font sizes, spacing)
-- Better heading hierarchy
-- Enhanced code block styling
-- Improved table styling
-- Better callout/note boxes
+### Implementation
+- [x] Create ThemeProvider (context + localStorage persistence)
+- [x] Create ThemeToggle component (sun/moon icons)
+- [x] Add light theme CSS variables to globals.css
+- [x] Wrap layout.tsx with ThemeProvider
+- [x] Add ThemeToggle to Header (desktop + mobile)
+- [x] Update Header to use CSS variables for theme adaptability
+- [x] Keep code blocks dark in light mode for readability
+- [x] **Site-wide CSS variable implementation** (all pages and components)
 
-### Files to Review
-- `src/styles/globals.css` (prose styling, lines 336-517)
-- `src/app/read/layout.tsx`
-- `src/components/content/ChapterNav.tsx`
-- `.reading-panel` class styling
+### Files Created
+- `src/components/theme/ThemeProvider.tsx`
+- `src/components/theme/ThemeToggle.tsx`
+- `src/components/theme/index.ts`
 
----
-
-## Milestone 5: Book Cover & Physical Display 🔄
-
-**Status:** Planning
-
-### Goals
-Create visual assets showing a physical book representation:
-- Design book cover image ("Mastering the Ethereum Virtual Machine")
-- Create 3D book mockup similar to masteringmonero.com
-- Add to homepage hero section
-
-### Reference
-- https://masteringmonero.com/ (book display style)
-
-### Assets to Create
-- `public/images/book-cover.png` (flat cover)
-- `public/images/book-3d.png` (3D mockup)
-- Component to display book with shadow/perspective
+### Files Modified (Site-wide Theme)
+- `src/styles/globals.css` (light theme variables, callout backgrounds)
+- `src/app/layout.tsx` (ThemeProvider wrapper)
+- `src/components/layout/Header.tsx` (ThemeToggle + CSS variables)
+- `src/components/layout/Footer.tsx` (CSS variables)
+- `src/components/layout/Sidebar.tsx` (CSS variables)
+- `src/components/home/Hero.tsx` (CSS variables)
+- `src/components/home/Features.tsx` (CSS variables)
+- `src/components/home/DownloadCTA.tsx` (CSS variables)
+- `src/components/home/BookDisplay.tsx` (CSS variables)
+- `src/components/content/ChapterNav.tsx` (migrated from legacy to neo-brutalist)
+- `src/components/content/Callout.tsx` (CSS variables)
+- `src/components/ui/Button.tsx` (migrated to neo-brutalist theme)
+- `src/app/download/page.tsx` (full neo-brutalist restyle)
+- `src/app/about/page.tsx` (button CSS variables)
+- `src/app/read/page.tsx` (fixed undefined Tailwind classes)
 
 ---
 
-## Milestone 6: SEO & Meta System 🔄
+## Milestone 6: Readability Improvements ✅
 
-**Status:** Planning
+**Status:** Complete
 
-### Goals
-Comprehensive SEO and social sharing optimization:
-- Favicon (multiple sizes)
-- OpenGraph images (1200x630)
-- Twitter cards
-- Structured data (JSON-LD)
-- AI crawler optimization (robots.txt, meta tags)
+### Implementation
+- [x] Improved typography in `.prose` (line height 1.85, max-width 75ch)
+- [x] Better heading hierarchy with larger sizes and bottom borders
+- [x] Enhanced code block styling (glassmorphism effect, dark in light mode)
+- [x] Neo-Brutalist table styling (thick borders, colored headers)
+- [x] Better callout/note boxes with CSS variable support
+- [x] ChapterNav migrated to neo-brutalist theme
+- [x] `.reading-panel` styling with brutal shadow
 
-### Files to Create
-- `public/favicon.ico`
-- `public/favicon-16x16.png`
-- `public/favicon-32x32.png`
-- `public/apple-touch-icon.png`
-- `public/og-image.png`
-- `public/twitter-card.png`
-- `src/app/robots.ts`
-- `src/app/sitemap.ts`
-
-### Files to Update
-- `src/app/layout.tsx` (complete metadata)
+### Files Updated
+- `src/styles/globals.css` (comprehensive prose styling)
+- `src/components/content/ChapterNav.tsx` (neo-brutalist design)
+- `src/components/content/Callout.tsx` (CSS variable support)
 
 ---
 
-## Current Exploration Findings
+## Milestone 7: Book Cover & Physical Display ✅
 
-### Project Structure
-```
-src/
-  app/           # Next.js pages
-  components/    # React components
-    home/        # Hero, Features, DownloadCTA
-    layout/      # Header, Footer, Sidebar
-    content/     # ChapterNav, Callout
-  lib/           # Utilities (content.ts, animations.ts)
-  styles/        # globals.css
-content/
-  chapters/      # 18+ MDX chapter files
-  meta/          # about.mdx, colophon.mdx
-public/
-  downloads/     # Empty (for PDF/EPUB)
-  fonts/         # Empty
-  images/        # Empty (needs assets)
-```
+**Status:** Complete (CSS-only version)
 
-### Current Author References (Cipher Null)
-1. `src/app/layout.tsx:31-32` — metadata.authors, metadata.creator
-2. `src/components/layout/Footer.tsx:18` — "Written by Cipher Null"
-3. `src/app/about/page.tsx:64` — about page content
-4. `content/chapters/00-preface.mdx` — signature
-5. `content/meta/colophon.mdx` — author description
-6. `content/meta/about.mdx` — author section
+### Implementation
+- [x] CSS-only 3D book display component (BookDisplay.tsx)
+- [x] Book spine with text and accents
+- [x] Interactive hover effects with Framer Motion
+- [x] "Free" badge animation
+- [x] Integrated in homepage hero section
 
-### Current Color Palette
-- Void black: `#080D0F`
-- Accent cyan: `#00D4D4`
-- Accent teal: `#2DD4BF`
-- Moon coral: `#E85A5A`
-- Text primary: `#E8E4E0`
-- Text secondary: `#A8B4BC`
+### Decision
+CSS-only book display is acceptable for initial release. Actual image assets deferred to future work.
 
-### Missing Assets
-- No favicon
-- No OG image
-- No Twitter card
-- No book cover images
-- Empty public/images/ directory
+### Files
+- `src/components/home/BookDisplay.tsx` (existing CSS-only implementation)
+
+---
+
+## Milestone 8: SEO & Meta System ✅
+
+**Status:** Complete (code portion)
+
+### Implementation
+- [x] favicon.svg exists
+- [x] robots.txt exists (static file with AI crawler permissions)
+- [x] sitemap.xml exists (static file)
+- [x] JSON-LD structured data in layout.tsx
+- [x] Comprehensive metadata in layout.tsx
+
+### Deferred Assets (image files)
+- [ ] favicon.ico, PNG favicons
+- [ ] apple-touch-icon.png
+- [ ] og-image.png (1200x630)
+- [ ] twitter-card.png
+
+### Files
+- `public/favicon.svg`
+- `public/robots.txt`
+- `public/sitemap.xml`
+- `src/app/layout.tsx` (metadata + JSON-LD)
+
+---
+
+## v0.1 Release Summary
+
+**Release Date:** 2026-01-23
+
+All 8 milestones complete. The website is in a production-ready state with:
+- Full Neo-Brutalist + Organic Futurism design system
+- Complete light/dark theme support across all pages and components
+- SEO metadata and structured data
+- Responsive design for all screen sizes
+
+### Deferred to Future Releases
+- Image assets (og-image.png, twitter-card.png, favicon.ico, apple-touch-icon.png)
+- Book content review (evmbook-v1 repo)
+- PDF/EPUB download files
+- Actual book cover image
 
 ---
 
@@ -193,38 +203,17 @@ public/
 | 2026-01-23 | Replace background entirely | User chose Neo-Brutalist bold shapes over moon/mountain |
 | 2026-01-23 | Primary accent: #FF4D00 (orange) | User approved bold orange for Neo-Brutalism |
 | 2026-01-23 | CSS-only book cover | Build CSS/SVG display first, add real images later |
-
----
-
-## Approved Implementation Order
-
-```
-Phase 1: Attribution Update (first priority)
-    ↓
-Phase 2: SEO & Meta Foundation
-    ↓ (parallel with Phase 3A-B)
-Phase 3: Theme Redesign
-  A. Color palette update
-  B. Replace BackgroundSystem
-  C. Typography updates
-  D. Component styling
-    ↓
-Phase 4: Readability Improvements
-    ↓
-Phase 5: Book Cover Display (CSS-only)
-    ↓
-Phase 6: Polish & Testing
-```
-
----
-
-## New Color Palette (Approved)
-
-```css
-/* Neo-Brutalist */
---brutalist-black: #0A0A0A;
---brutalist-white: #FAFAFA;
---accent-primary: #FF4D00;     /* Bold orange */
---accent-secondary: #627EEA;   /* Ethereum blue */
---accent-tertiary: #3AB83A;    /* ETC green */
-```
+| 2026-01-23 | Fix purple text bug | Replace undefined Tailwind classes with explicit hex values |
+| 2026-01-23 | Dynamic stats | Create stats.ts to auto-count chapters/appendices at build |
+| 2026-01-23 | Agentic Development | Replace "Open Source" feature card per user request |
+| 2026-01-23 | Author GitHub links | Link Christopher Mercer to github.com/chris-mercer |
+| 2026-01-23 | Light/Dark theme | Add toggle with localStorage persistence, default dark |
+| 2026-01-23 | Site-wide theme | Convert ALL components/pages to CSS variables for proper theme support |
+| 2026-01-23 | Milestone 6 complete | Prose typography and readability improvements in globals.css |
+| 2026-01-23 | Milestone 7 complete | CSS-only BookDisplay.tsx is acceptable for initial release |
+| 2026-01-23 | Milestone 8 complete | SEO metadata complete, image assets deferred |
+| 2026-01-23 | Readability fix | Replaced #627EEA (Ethereum blue) with #5eead4 (bright teal) for text/links |
+| 2026-01-23 | Organic Futurism | Added glass effects (backdrop-blur, glass-bg variables) to Header, Hero, cards |
+| 2026-01-23 | Ethereum brand color | #627EEA now only for decorative elements, never for text (readability) |
+| 2026-01-23 | Color palette v2 | Black/Orange/Green/Teal scheme - Alloy Orange #C36312, Teal Green #02807D, Sage Green #0E7F6C |
+| 2026-01-23 | v0.1 complete | All milestones complete, codebase cleaned of legacy variables, ready for deployment |

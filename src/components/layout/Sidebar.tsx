@@ -50,23 +50,28 @@ export function Sidebar() {
     <nav className="space-y-8">
       {/* Chapters */}
       <div>
-        <h3 className="text-xs font-semibold text-[#5E6B73] uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-bold text-[var(--accent-primary)] uppercase tracking-wider mb-4">
           Chapters
         </h3>
-        <ul className="space-y-0.5">
+        <ul className="space-y-1">
           {chapters.map((chapter) => (
             <li key={chapter.slug}>
               <Link
                 href={`/read/${chapter.slug}`}
                 className={clsx(
-                  'block px-3 py-1.5 text-sm rounded-md transition-all duration-200',
+                  'block px-3 py-2 text-sm transition-all duration-150',
                   isActive(chapter.slug)
-                    ? 'bg-[#00D4D4]/5 border-l-2 border-[#00D4D4] text-[#00D4D4] font-medium'
-                    : 'text-[#A8B4BC] hover:text-[#E8E4E0] hover:bg-white/[0.02]'
+                    ? 'bg-[var(--accent-primary)] text-white font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
                 )}
                 onClick={() => setMobileOpen(false)}
               >
-                <span className="text-[#5E6B73] mr-2">
+                <span
+                  className={clsx(
+                    'mr-2',
+                    isActive(chapter.slug) ? 'text-white' : 'text-[var(--text-muted)]'
+                  )}
+                >
                   {chapter.chapter === 0 ? '' : `${chapter.chapter}.`}
                 </span>
                 {chapter.title}
@@ -78,23 +83,30 @@ export function Sidebar() {
 
       {/* Appendices */}
       <div>
-        <h3 className="text-xs font-semibold text-[#5E6B73] uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-bold text-[var(--accent-tertiary)] uppercase tracking-wider mb-4">
           Appendices
         </h3>
-        <ul className="space-y-0.5">
+        <ul className="space-y-1">
           {appendices.map((appendix, index) => (
             <li key={appendix.slug}>
               <Link
                 href={`/read/appendix/${appendix.slug}`}
                 className={clsx(
-                  'block px-3 py-1.5 text-sm rounded-md transition-all duration-200',
+                  'block px-3 py-2 text-sm transition-all duration-150',
                   isActive(appendix.slug, true)
-                    ? 'bg-[#00D4D4]/5 border-l-2 border-[#00D4D4] text-[#00D4D4] font-medium'
-                    : 'text-[#A8B4BC] hover:text-[#E8E4E0] hover:bg-white/[0.02]'
+                    ? 'bg-[var(--accent-tertiary)] text-white font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
                 )}
                 onClick={() => setMobileOpen(false)}
               >
-                <span className="text-[#5E6B73] mr-2">
+                <span
+                  className={clsx(
+                    'mr-2',
+                    isActive(appendix.slug, true)
+                      ? 'text-white'
+                      : 'text-[var(--text-muted)]'
+                  )}
+                >
                   {String.fromCharCode(65 + index)}.
                 </span>
                 {appendix.title}
@@ -108,14 +120,24 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle - subtle styling */}
+      {/* Mobile toggle - Neo-Brutalist */}
       <button
         type="button"
-        className="lg:hidden fixed bottom-4 right-4 z-50 bg-[#E85A5A]/15 border border-[#E85A5A]/20 text-[#A8B4BC] p-3 rounded-full hover:bg-[#E85A5A]/25 hover:text-[#E8E4E0] transition-all"
+        className="lg:hidden fixed bottom-4 right-4 z-50 bg-[var(--accent-primary)] text-white p-3 border-4 border-[var(--brutalist-black)] shadow-[var(--shadow-brutal)] hover:shadow-[var(--shadow-brutal-sm)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="2.5"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
         </svg>
       </button>
 
@@ -127,25 +149,38 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#0A1419]/85 backdrop-blur-sm"
+              transition={{ duration: 0.15 }}
+              className="absolute inset-0 bg-[var(--surface-base)]/90 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
               initial={{ x: -288 }}
               animate={{ x: 0 }}
               exit={{ x: -288 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute left-0 top-0 bottom-0 w-72 bg-[#0A1419]/95 border-r border-[#00D4D4]/10 p-6 overflow-y-auto backdrop-blur-xl"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute left-0 top-0 bottom-0 w-72 bg-[var(--glass-bg-strong)] backdrop-blur-xl border-r-4 border-[var(--accent-primary)] p-6 overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold text-[#E8E4E0]">Contents</h2>
+                <h2 className="text-lg font-extrabold uppercase tracking-wider text-[var(--text-primary)]">
+                  Contents
+                </h2>
                 <button
                   type="button"
-                  className="text-[#5E6B73] hover:text-[#00D4D4] transition-colors"
+                  className="text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors duration-150"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -156,7 +191,7 @@ export function Sidebar() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-72 flex-shrink-0 border-r border-[#00D4D4]/10 bg-[#0A1419]/50 backdrop-blur-sm">
+      <aside className="hidden lg:block w-72 flex-shrink-0 border-r-4 border-[var(--accent-primary)]/30 bg-[var(--surface-base)]">
         <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto p-6">
           <SidebarContent />
         </div>

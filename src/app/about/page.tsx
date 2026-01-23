@@ -4,7 +4,12 @@ import { Footer } from '@/components/layout/Footer'
 
 export const metadata = {
   title: 'About',
-  description: 'Learn about the Mastering EVM project and how to contribute',
+  description: 'Learn about the Mastering EVM project, its origins, and how to contribute to this free EVM development guide.',
+  openGraph: {
+    title: 'About Mastering EVM',
+    description: 'Learn about the Mastering EVM project, its origins, and how to contribute to this free EVM development guide.',
+    url: 'https://masteringevm.com/about',
+  },
 }
 
 export default function AboutPage() {
@@ -51,18 +56,12 @@ export default function AboutPage() {
               A unique aspect of this book is our coverage of both:
             </p>
             <ul>
-              <li><strong>Ethereum (ETH)</strong> — The original smart contract platform, now running proof-of-stake after The Merge</li>
-              <li><strong>Ethereum Classic (ETC)</strong> — The continuation of proof-of-work Ethereum, preserving immutability</li>
+              <li><strong>Ethereum Classic (ETC)</strong> — The open and permissionless continuation of the original smart contract platform, perserving immutability from the July 30, 2015 genesis block. Now positioned as the Ethereum Virtual Machine ecosystem&apos;s Proof-of-Work anchor chain.</li>
+              <li><strong>Ethereum (ETH)</strong> — The Ethereum Foundation operated chain which forked from Ethereum Classic at block 1,920,000 on July 20, 2016, innovating and growing to become the most widely used smart contract platform. Now positioned as the Ethereum Virtual Machine ecosystem&apos;s Proof-of-Stake anchor chain.</li>
             </ul>
             <p>
               These two chains share the same origin but have diverged philosophically and
               technically. Understanding both gives you a complete picture of the EVM ecosystem.
-            </p>
-
-            <h2>Maintainer</h2>
-            <p>
-              This derivative work has been modernized and maintained by <strong>Christopher Mercer</strong> with
-              the heavy lifting by our trusted Claude Code (claude-opus-4-5-20251101).
             </p>
 
             <h2>Attribution</h2>
@@ -126,10 +125,10 @@ export default function AboutPage() {
             </ul>
           </div>
 
-          <div className="mt-12 flex justify-center gap-4">
+          <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/read"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-green to-neon-yellow px-6 py-3 text-base font-semibold text-void-black shadow-lg shadow-neon-green/25 hover:shadow-xl hover:shadow-neon-green/40 hover:scale-105 transition-all duration-200"
+              className="inline-flex items-center justify-center px-6 py-3 text-base font-bold uppercase tracking-wider bg-transparent text-[var(--text-primary)] border-4 border-[var(--accent-primary)] shadow-[4px_4px_0_0_var(--accent-primary)] hover:shadow-[2px_2px_0_0_var(--accent-primary)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[var(--accent-primary)] hover:text-[#060606] transition-all duration-150"
             >
               Start Reading
             </Link>
@@ -137,7 +136,7 @@ export default function AboutPage() {
               href="https://github.com/evmbook"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-lg bg-transparent border border-neon-blue px-6 py-3 text-base font-semibold text-neon-blue shadow-md shadow-neon-blue/10 hover:bg-neon-blue/10 hover:shadow-lg hover:shadow-neon-blue/25 transition-all duration-200"
+              className="inline-flex items-center justify-center px-6 py-3 text-base font-bold uppercase tracking-wider bg-transparent text-[var(--text-primary)] border-4 border-[var(--text-primary)] shadow-[4px_4px_0_0_var(--text-primary)] hover:shadow-[2px_2px_0_0_var(--text-primary)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[var(--text-primary)] hover:text-[var(--surface-base)] transition-all duration-150"
             >
               View on GitHub
             </a>

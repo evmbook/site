@@ -1,62 +1,76 @@
 @import 'tailwindcss';
 
 /* =============================================
-   Mastering EVM - Neo-Brutalist Theme
+   Mastering EVM - Neo-Brutalist + Organic Futurism Theme
    Bold orange accents, high contrast, thick borders
+   with glass-textured elements and organic glow effects
    ============================================= */
 
 :root {
-  /* Neo-Brutalist Core */
-  --brutalist-black: #0a0a0a;
+  /* Neo-Brutalist Core - Black, Orange, Green, Teal */
+  --brutalist-black: #060606;
+  /* Vampire Black */
   --brutalist-white: #fafafa;
 
-  /* Primary Accent - Bold Orange */
-  --accent-primary: #ff4d00;
-  --accent-primary-hover: #ff6a2a;
-  --accent-primary-glow: rgba(255, 77, 0, 0.4);
+  /* Primary Accent - Alloy Orange (energetic, used sparingly) */
+  --accent-primary: #c36312;
+  --accent-primary-dark: #9a4e0e;
+  --accent-primary-hover: #dd904f;
+  /* Jasper Orange */
+  --accent-primary-glow: rgba(195, 99, 18, 0.4);
 
-  /* Secondary Accents */
-  --accent-secondary: #627eea; /* Ethereum blue */
-  --accent-tertiary: #3ab83a; /* ETC green */
-  --accent-warning: #fbbf24;
+  /* Secondary Accents - Teal & Green for cool balance */
+  --accent-secondary: #02807d;
+  /* Teal Green - high contrast for links */
+  --accent-tertiary: #0e7f6c;
+  /* Sage Green - ETC/natural accent */
+  --accent-info: #095d66;
+  /* Tropical Rain Forest - for info elements */
+  --accent-warning: #dd904f;
+  /* Jasper Orange for warnings */
   --accent-error: #ef4444;
 
-  /* Legacy accent mappings for compatibility */
-  --accent-cyan: var(--accent-secondary);
-  --accent-teal: var(--accent-tertiary);
-  --accent-coral: var(--accent-primary);
-  --accent-amber: var(--accent-warning);
+  /* Ethereum brand color - decorative only */
+  --eth-brand: #627eea;
+  --eth-brand-glow: rgba(98, 126, 234, 0.3);
 
-  /* Surface Colors */
-  --surface-base: #0a0a0a;
-  --surface-elevated: #141414;
-  --surface-overlay: #1a1a1a;
-  --surface-glass: rgba(26, 26, 26, 0.8);
+  /* Ethereum Classic brand color - decorative only */
+  --etc-brand: #669073;
+  --etc-brand-glow: rgba(102, 144, 115, 0.3);
 
-  /* Legacy background mappings */
-  --void-black: var(--surface-base);
-  --dark-slate: var(--surface-elevated);
-  --dark-teal: var(--surface-elevated);
-  --midnight: var(--surface-overlay);
+  /* Surface Colors - Deep Black base */
+  --surface-base: #060606;
+  /* Vampire Black */
+  --surface-elevated: #151515;
+  /* Chinese Black */
+  --surface-overlay: #1c1c1c;
+  --surface-glass: rgba(21, 21, 21, 0.7);
+  --surface-glass-strong: rgba(21, 21, 21, 0.85);
 
   /* Text Colors */
   --text-primary: #fafafa;
-  --text-secondary: #a3a3a3;
-  --text-muted: #525252;
+  --text-secondary: #d4d4d4;
+  --text-muted: #737373;
+
+  /* Link Colors - Teal for harmony with orange accents */
+  --link-color: #2dd4bf;
+  /* Bright teal for links (readable on dark) */
+  --link-hover: var(--accent-primary);
 
   /* Border Colors */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.12);
-  --border-bold: rgba(255, 77, 0, 0.5);
+  --border-bold: rgba(195, 99, 18, 0.5);
+  --border-glass: rgba(255, 255, 255, 0.1);
 
   /* Semantic Colors */
   --etc-glow: var(--accent-tertiary);
-  --eth-glow: var(--accent-secondary);
+  --eth-glow: var(--eth-brand);
   --evm-glow: var(--accent-primary);
 
   /* Section backgrounds */
   --section-default: transparent;
-  --section-alt: rgba(20, 20, 20, 0.9);
+  --section-alt: rgba(21, 21, 21, 0.9);
 
   /* Base */
   --background: var(--surface-base);
@@ -64,8 +78,118 @@
 
   /* Neo-Brutalist specific */
   --border-width-bold: 4px;
-  --shadow-brutal: 4px 4px 0 0 var(--brutalist-black);
-  --shadow-brutal-sm: 2px 2px 0 0 var(--brutalist-black);
+  --shadow-brutal: 4px 4px 0 0 rgba(0, 0, 0, 0.8);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(0, 0, 0, 0.8);
+  --shadow-brutal-color: 4px 4px 0 0 var(--accent-primary);
+
+  /* Organic Futurism - Glass effects with teal glow */
+  --glass-blur: 16px;
+  --glass-blur-strong: 24px;
+  --glass-bg: rgba(21, 21, 21, 0.6);
+  --glass-bg-strong: rgba(21, 21, 21, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-glow: 0 0 40px rgba(2, 128, 125, 0.2);
+  /* Teal glow */
+
+  /* Callout backgrounds - using new palette */
+  --callout-warning-bg: rgba(221, 144, 79, 0.1);
+  /* Jasper Orange */
+  --callout-tip-bg: rgba(14, 127, 108, 0.1);
+  /* Sage Green */
+  --callout-info-bg: rgba(2, 128, 125, 0.1);
+  /* Teal Green */
+}
+
+/* Light theme overrides */
+html.light {
+  /* Swap base colors */
+  --brutalist-black: #fafafa;
+  --brutalist-white: #060606;
+
+  /* Surface Colors - Light (off-white backgrounds) */
+  --surface-base: #fafafa;
+  --surface-elevated: #f5f5f5;
+  --surface-overlay: #ebebeb;
+  --surface-glass: rgba(255, 255, 255, 0.7);
+  --surface-glass-strong: rgba(255, 255, 255, 0.85);
+
+  /* Text Colors - Light */
+  --text-primary: #060606;
+  --text-secondary: #404040;
+  --text-muted: #737373;
+
+  /* Secondary accents - teal/green remain primary UI elements in light mode */
+  --accent-secondary: #026c69;
+  /* Darker teal for light bg */
+  --accent-tertiary: #00563e;
+  /* Castleton Green for light bg */
+  --accent-info: #095d66;
+  /* Tropical Rain Forest */
+
+  /* Link Colors - teal for light mode */
+  --link-color: #026c69;
+  --link-hover: var(--accent-primary);
+
+  /* Border Colors - Light */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-bold: rgba(195, 99, 18, 0.5);
+  --border-glass: rgba(0, 0, 0, 0.08);
+
+  /* Base */
+  --background: var(--surface-base);
+  --foreground: var(--text-primary);
+
+  /* Shadow adjusts for light mode */
+  --shadow-brutal: 4px 4px 0 0 rgba(0, 0, 0, 0.15);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(0, 0, 0, 0.15);
+  --shadow-brutal-color: 4px 4px 0 0 var(--accent-primary);
+
+  /* Organic Futurism - Glass effects for light mode */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-strong: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-glow: 0 0 40px rgba(2, 128, 125, 0.15);
+  /* Teal glow */
+
+  /* Callout backgrounds - using new palette */
+  --callout-warning-bg: rgba(221, 144, 79, 0.15);
+  /* Jasper Orange */
+  --callout-tip-bg: rgba(0, 86, 62, 0.1);
+  /* Castleton Green */
+  --callout-info-bg: rgba(2, 108, 105, 0.1);
+  /* Darker teal */
+}
+
+/* Keep code blocks dark in light mode for readability */
+html.light pre,
+html.light .prose pre {
+  background-color: #1a1a1a;
+  color: #fafafa;
+}
+
+html.light pre code,
+html.light .prose pre code {
+  color: #a3a3a3;
+}
+
+/* Scrollbar in light mode */
+html.light ::-webkit-scrollbar-track {
+  background: #e5e5e5;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #a3a3a3;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* Selection in light mode */
+html.light ::selection {
+  background-color: var(--accent-primary);
+  color: #fafafa;
 }
 
 /* Tailwind 4 theme extension */
@@ -80,17 +204,14 @@
   --color-accent-primary: var(--accent-primary);
   --color-accent-secondary: var(--accent-secondary);
   --color-accent-tertiary: var(--accent-tertiary);
+  --color-accent-info: var(--accent-info);
 
-  /* Legacy compatibility */
-  --color-accent-cyan: var(--accent-cyan);
-  --color-accent-teal: var(--accent-teal);
-  --color-accent-coral: var(--accent-coral);
-  --color-accent-amber: var(--accent-amber);
+  /* Link colors */
+  --color-link: var(--link-color);
+  --color-link-hover: var(--link-hover);
 
-  --color-void-black: var(--void-black);
-  --color-dark-slate: var(--dark-slate);
-  --color-dark-teal: var(--dark-teal);
-  --color-midnight: var(--midnight);
+  /* Ethereum brand (decorative only) */
+  --color-eth-brand: var(--eth-brand);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -103,6 +224,7 @@
   --color-surface-base: var(--surface-base);
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-overlay: var(--surface-overlay);
+  --color-surface-glass: var(--surface-glass);
 
   /* Typography - using CSS variables from next/font */
   --font-sans: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -131,14 +253,19 @@ body {
 }
 
 /* Headers use Space Grotesk */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-sans);
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--accent-coral);
-  color: var(--void-black);
+  background-color: var(--accent-primary);
+  color: var(--surface-base);
 }
 
 /* Scrollbar (webkit) */
@@ -148,7 +275,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--dark-slate);
+  background: var(--surface-elevated);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -157,35 +284,35 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-cyan);
+  background: var(--accent-secondary);
 }
 
-/* Links */
+/* Links - Using high-contrast readable colors */
 a {
-  color: var(--accent-cyan);
+  color: var(--link-color);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 a:hover {
-  color: var(--moon-coral);
-  text-shadow: 0 0 8px rgba(0, 212, 212, 0.4);
+  color: var(--link-hover);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 /* Code */
 code {
   font-family: var(--font-mono);
-  background-color: rgba(0, 212, 212, 0.08);
+  background-color: rgba(14, 127, 108, 0.1);
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-size: 0.9em;
-  color: var(--accent-teal);
+  color: var(--accent-tertiary);
 }
 
 pre {
   font-family: var(--font-mono);
-  background-color: rgba(10, 20, 25, 0.95);
-  border: 1px solid rgba(0, 212, 212, 0.15);
+  background-color: var(--surface-elevated);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;
@@ -200,7 +327,7 @@ pre code {
 
 /* Focus states */
 :focus-visible {
-  outline: 2px solid var(--accent-cyan);
+  outline: 2px solid var(--accent-secondary);
   outline-offset: 2px;
 }
 
@@ -211,25 +338,25 @@ pre code {
 /* Grid patterns */
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(0, 212, 212, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 212, 212, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(2, 128, 125, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(2, 128, 125, 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .bg-grid-sm {
   background-image:
-    linear-gradient(to right, rgba(0, 212, 212, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 212, 212, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(2, 128, 125, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(2, 128, 125, 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 /* Gradient utilities */
 .bg-gradient-radial {
-  background: radial-gradient(ellipse at center, rgba(232, 90, 90, 0.1) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(195, 99, 18, 0.1) 0%, transparent 70%);
 }
 
 .bg-gradient-hero {
-  background: linear-gradient(180deg, var(--sky-deep) 0%, var(--sky-mid) 100%);
+  background: linear-gradient(180deg, var(--surface-base) 0%, var(--surface-elevated) 100%);
 }
 
 /* Text gradients */
@@ -241,70 +368,73 @@ pre code {
 }
 
 .text-gradient-warm {
-  background: linear-gradient(135deg, var(--moon-coral) 0%, var(--moon-glow) 50%, var(--moon-core) 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-warning) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-etc {
-  background: linear-gradient(135deg, var(--accent-teal) 0%, #5EEAD4 100%);
+  background: linear-gradient(135deg, var(--accent-tertiary) 0%, var(--etc-brand) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-eth {
-  background: linear-gradient(135deg, var(--moon-coral) 0%, var(--moon-glow) 100%);
+  background: linear-gradient(135deg, var(--eth-brand) 0%, #8B9FEF 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-cool {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%);
+  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-tertiary) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Glow effects */
-.glow-coral {
-  box-shadow: 0 0 20px rgba(232, 90, 90, 0.3);
+.glow-primary {
+  box-shadow: 0 0 20px var(--accent-primary-glow);
 }
 
-.glow-teal {
-  box-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
+.glow-secondary {
+  box-shadow: 0 0 20px rgba(2, 128, 125, 0.3);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 212, 212, 0.3);
+.glow-tertiary {
+  box-shadow: 0 0 20px rgba(14, 127, 108, 0.3);
 }
 
-.glow-amber {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+.glow-warning {
+  box-shadow: 0 0 20px rgba(221, 144, 79, 0.3);
 }
 
 /* Text glow */
-.text-glow-coral {
-  text-shadow: 0 0 10px rgba(232, 90, 90, 0.5);
+.text-glow-primary {
+  text-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
-.text-glow-teal {
-  text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+.text-glow-secondary {
+  text-shadow: 0 0 10px rgba(2, 128, 125, 0.5);
 }
 
-.text-glow-cyan {
-  text-shadow: 0 0 10px rgba(0, 212, 212, 0.5);
+.text-glow-tertiary {
+  text-shadow: 0 0 10px rgba(14, 127, 108, 0.5);
 }
 
 /* Pulse glow animation */
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(232, 90, 90, 0.2);
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--accent-primary-glow);
   }
+
   50% {
-    box-shadow: 0 0 35px rgba(0, 212, 212, 0.4);
+    box-shadow: 0 0 35px rgba(2, 128, 125, 0.4);
   }
 }
 
@@ -312,276 +442,364 @@ pre code {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Panel styles */
+/* =============================================
+   Organic Futurism - Glass Panel Styles
+   ============================================= */
+
 .panel {
-  background: rgba(15, 21, 24, 0.7);
-  border: 1px solid rgba(0, 212, 212, 0.12);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .panel-strong {
-  background: rgba(15, 21, 24, 0.85);
-  border: 1px solid rgba(0, 212, 212, 0.2);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+}
+
+/* Glass card - combines brutalist borders with glass interior */
+.glass-card {
+  background: var(--glass-bg);
+  border: 4px solid var(--accent-primary);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-glow);
+}
+
+/* Glass button effect */
+.glass-button {
+  background: var(--glass-bg);
+  border: 2px solid var(--border-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--accent-primary);
+  box-shadow: var(--glass-glow);
 }
 
 /* =============================================
    Reading Panel - Content Container
+   Neo-Brutalist Style
    ============================================= */
 
 .reading-panel {
-  background: rgba(10, 20, 25, 0.92);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(0, 212, 212, 0.08);
-  border-radius: 16px;
-  padding: 2.5rem 3rem;
-  box-shadow:
-    0 0 60px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  background: var(--surface-elevated);
+  border: 4px solid rgba(255, 77, 0, 0.3);
+  padding: 3rem 3.5rem;
+  box-shadow: 8px 8px 0 0 rgba(255, 77, 0, 0.1);
 }
 
 @media (max-width: 768px) {
   .reading-panel {
     padding: 1.5rem 1.25rem;
-    border-radius: 12px;
+    border-width: 3px;
+    box-shadow: 4px 4px 0 0 rgba(255, 77, 0, 0.1);
   }
 }
 
 /* =============================================
    Typography for Prose Content
+   Neo-Brutalist Readability Optimizations
    ============================================= */
 
-/* Base prose styling for Tailwind v4 */
+/* Base prose styling - optimized for reading */
 .prose {
   --tw-prose-body: var(--text-secondary);
   --tw-prose-headings: var(--text-primary);
-  --tw-prose-links: var(--accent-cyan);
-  --tw-prose-code: var(--accent-teal);
-  --tw-prose-pre-bg: rgba(10, 20, 25, 0.95);
-  --tw-prose-hr: rgba(0, 212, 212, 0.12);
+  --tw-prose-links: var(--accent-secondary);
+  --tw-prose-code: var(--accent-tertiary);
+  --tw-prose-pre-bg: var(--surface-glass);
+  --tw-prose-hr: rgba(255, 77, 0, 0.2);
   color: var(--text-secondary);
   font-size: 1.0625rem;
-  line-height: 1.8;
+  line-height: 1.85;
+  /* Increased for better readability */
+  max-width: 75ch;
+  /* Optimal line length */
 }
 
 .prose h1 {
   font-family: var(--font-sans);
   color: var(--text-primary);
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   margin-top: 0;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  text-shadow: 0 0 40px rgba(232, 90, 90, 0.1);
+  margin-bottom: 1.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 .prose h2 {
   font-family: var(--font-sans);
   color: var(--text-primary);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  line-height: 1.3;
-  text-shadow: 0 0 30px rgba(232, 90, 90, 0.08);
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(0, 212, 212, 0.1);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 3rem;
+  /* Increased spacing */
+  margin-bottom: 1.25rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  padding-bottom: 0.75rem;
+  border-bottom: 4px solid var(--accent-primary);
 }
 
 .prose h3 {
   font-family: var(--font-sans);
   color: var(--text-primary);
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  text-shadow: 0 0 25px rgba(232, 90, 90, 0.06);
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .prose h4 {
   font-family: var(--font-sans);
-  color: var(--text-primary);
+  color: var(--accent-primary);
   font-size: 1.125rem;
-  font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .prose p {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .prose a {
-  color: var(--accent-cyan);
+  color: var(--link-color);
   text-decoration: none;
-  transition: color 0.2s ease;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
 }
 
 .prose a:hover {
-  color: var(--moon-coral);
-  text-shadow: 0 0 8px rgba(0, 212, 212, 0.4);
+  color: var(--link-hover);
+  border-bottom-color: var(--link-hover);
 }
 
 .prose strong {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .prose em {
   font-style: italic;
+  color: var(--text-primary);
 }
 
+/* Inline code - Neo-Brutalist */
 .prose code {
-  color: var(--accent-teal);
-  background: rgba(45, 212, 191, 0.08);
-  padding: 0.15em 0.45em;
-  border-radius: 5px;
+  color: var(--accent-tertiary);
+  background: rgba(58, 184, 58, 0.1);
+  padding: 0.2em 0.5em;
   font-size: 0.875em;
   font-family: var(--font-mono);
-  border: 1px solid rgba(45, 212, 191, 0.1);
+  border: 2px solid rgba(58, 184, 58, 0.3);
 }
 
+/* Code blocks - Organic Futurism Glassmorphism */
 .prose pre {
-  background: rgba(10, 20, 25, 0.95);
-  border: 1px solid rgba(45, 212, 191, 0.1);
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 2px solid var(--glass-border);
+  padding: 1.5rem;
   overflow-x: auto;
-  margin: 1.75rem 0;
+  margin: 2rem 0;
   box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(45, 212, 191, 0.03);
+    var(--shadow-brutal-sm),
+    var(--glass-glow);
 }
 
 .prose pre code {
   background: none;
   padding: 0;
-  color: inherit;
+  color: var(--text-secondary);
   border: none;
   font-size: 0.875rem;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .prose ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  margin: 1rem 0;
+  list-style-type: none;
+  padding-left: 0;
+  margin: 1.5rem 0;
+}
+
+.prose ul>li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin: 0.75rem 0;
+}
+
+.prose ul>li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-primary);
 }
 
 .prose ol {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin: 1rem 0;
+  list-style-type: none;
+  padding-left: 0;
+  margin: 1.5rem 0;
+  counter-reset: list-counter;
 }
 
-.prose li {
-  margin: 0.5rem 0;
+.prose ol>li {
+  position: relative;
+  padding-left: 2.5rem;
+  margin: 0.75rem 0;
+  counter-increment: list-counter;
+}
+
+.prose ol>li::before {
+  content: counter(list-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-primary);
+  color: var(--brutalist-black);
+  font-weight: 700;
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
 }
 
 .prose hr {
-  border-color: rgba(0, 212, 212, 0.15);
-  margin: 2rem 0;
+  border: none;
+  height: 4px;
+  background: var(--accent-primary);
+  margin: 3rem 0;
 }
 
 .prose blockquote {
-  border-left: 4px solid var(--moon-coral);
-  padding-left: 1rem;
-  margin: 1.5rem 0;
+  border-left: 4px solid var(--accent-secondary);
+  background: rgba(98, 126, 234, 0.05);
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
   color: var(--text-secondary);
-  font-style: italic;
+  font-style: normal;
+}
+
+.prose blockquote p {
+  margin: 0;
 }
 
 /* Lead paragraph */
 .prose .lead {
   color: var(--text-secondary);
   font-size: 1.25rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  line-height: 1.7;
+  margin-bottom: 2rem;
 }
 
-/* Tables */
+/* Tables - Neo-Brutalist */
 .prose table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1.75rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2rem 0;
   font-size: 0.9375rem;
+  border: 4px solid var(--accent-secondary);
 }
 
 .prose thead {
-  background: rgba(0, 212, 212, 0.06);
+  background: var(--accent-secondary);
 }
 
 .prose th {
-  border: 1px solid rgba(0, 212, 212, 0.12);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--brutalist-black);
   font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8125rem;
+  border-bottom: 4px solid var(--brutalist-black);
 }
 
 .prose td {
-  border: 1px solid rgba(0, 212, 212, 0.08);
-  padding: 0.75rem 1rem;
+  border-bottom: 2px solid rgba(98, 126, 234, 0.2);
+  padding: 1rem 1.25rem;
   color: var(--text-secondary);
 }
 
-.prose tbody tr:nth-child(even) {
-  background: rgba(0, 212, 212, 0.02);
+.prose tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .prose tbody tr:hover {
-  background: rgba(0, 212, 212, 0.04);
+  background: rgba(98, 126, 234, 0.05);
 }
 
-/* Callout boxes */
+/* Callout boxes - Neo-Brutalist */
 .callout {
-  background: rgba(15, 21, 24, 0.6);
-  border-left: 3px solid var(--accent-cyan);
-  padding: 1rem 1.25rem;
-  margin: 1.5rem 0;
-  border-radius: 0 10px 10px 0;
+  background: var(--surface-elevated);
+  border-left: 4px solid var(--accent-secondary);
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
 }
 
 .callout-info {
-  border-left-color: var(--accent-cyan);
+  border-left-color: var(--accent-secondary);
 }
 
 .callout-warning {
-  border-left-color: var(--accent-amber);
-  background: rgba(245, 158, 11, 0.05);
+  border-left-color: var(--accent-warning);
+  background: rgba(251, 191, 36, 0.08);
 }
 
 .callout-note {
-  border-left-color: var(--moon-coral);
+  border-left-color: var(--accent-primary);
 }
 
 .callout-tip {
-  border-left-color: var(--accent-teal);
-  background: rgba(45, 212, 191, 0.03);
+  border-left-color: var(--accent-tertiary);
+  background: rgba(58, 184, 58, 0.05);
 }
 
 /* Diagram containers */
 .diagram {
-  background: rgba(10, 20, 25, 0.9);
-  border: 1px solid rgba(0, 212, 212, 0.1);
-  border-radius: 12px;
+  background: var(--surface-elevated);
+  border: 2px solid var(--border-default);
+  border-radius: 8px;
   padding: 1.5rem;
   margin: 2rem 0;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: var(--accent-cyan);
+  color: var(--accent-secondary);
   overflow-x: auto;
   white-space: pre;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

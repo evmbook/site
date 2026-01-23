@@ -1,0 +1,27 @@
+{
+  "name": "Mastering the Ethereum Virtual Machine",
+  "short_name": "Mastering EVM",
+  "description": "A comprehensive guide to the Ethereum Virtual Machine ecosystem",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060606",
+  "theme_color": "#C36312",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
