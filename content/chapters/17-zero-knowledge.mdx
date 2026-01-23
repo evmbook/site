@@ -1,0 +1,420 @@
+---
+title: Zero-Knowledge Proofs
+description: Privacy and scalability through cryptographic proofs
+chapter: 17
+---
+
+# Zero-Knowledge Proofs
+
+Zero-knowledge proofs (ZKPs) are cryptographic methods that allow one party (the prover) to convince another party (the verifier) that a statement is true, without revealing any information beyond the validity of the statement itself.
+
+In the EVM ecosystem, ZKPs enable both **privacy** (hiding transaction details) and **scalability** (ZK rollups).
+
+## What is a Zero-Knowledge Proof?
+
+A zero-knowledge proof must satisfy three properties:
+
+1. **Completeness** — If the statement is true, an honest prover can convince an honest verifier
+2. **Soundness** — If the statement is false, no cheating prover can convince the verifier
+3. **Zero-knowledge** — The verifier learns nothing beyond the truth of the statement
+
+### The Classic Example: The Cave
+
+Imagine a cave with a ring-shaped tunnel and a magic door in the middle:
+
+```
+         Entrance
+            |
+            v
+         ┌──────┐
+         │      │
+     A ──┤      ├── B
+         │      │
+         └──┬───┘
+            │
+         Magic Door
+         (needs password)
+```
+
+Alice wants to prove to Bob she knows the password without revealing it:
+
+1. Bob waits outside
+2. Alice enters and takes path A or B randomly
+3. Bob enters and shouts "Come out via A" or "Come out via B"
+4. If Alice knows the password, she can always exit the requested side
+
+After many rounds, Bob becomes convinced Alice knows the password, but learned nothing about what it is.
+
+## ZKP Systems
+
+### zk-SNARKs
+
+**S**uccinct **N**on-interactive **AR**guments of **K**nowledge
+
+- **Succinct** — Small proof size, fast verification
+- **Non-interactive** — No back-and-forth required
+- **Arguments** — Computationally sound (not information-theoretically)
+- **Knowledge** — Prover must know the witness
+
+**Properties:**
+- Proof size: ~200 bytes
+- Verification time: ~10ms
+- Requires trusted setup
+- Used in: Zcash, zkSync Era, Aztec
+
+### zk-STARKs
+
+**S**calable **T**ransparent **AR**guments of **K**nowledge
+
+- **Scalable** — Proof generation scales better with computation size
+- **Transparent** — No trusted setup required
+
+**Properties:**
+- Proof size: ~100 KB
+- Verification time: ~50ms
+- No trusted setup (transparent)
+- Used in: StarkNet, StarkEx
+
+### Comparison
+
+| Aspect | zk-SNARKs | zk-STARKs |
+|--------|-----------|-----------|
+| Proof size | ~200 B | ~100 KB |
+| Verification time | Fast | Slower |
+| Trusted setup | Required | Not needed |
+| Quantum resistant | No | Yes |
+| Prover time | Slower | Faster for large circuits |
+
+## How ZK Proofs Work (Simplified)
+
+### Arithmetic Circuits
+
+Computations are converted to arithmetic circuits:
+
+```
+// Prove: I know x such that x * x = 9
+// Without revealing x = 3
+
+x ──┬──►[×]──► 9
+    │    ▲
+    └────┘
+```
+
+### R1CS (Rank-1 Constraint System)
+
+Circuits are converted to constraints:
+
+```
+// For x² = y
+// Constraint: x * x - y = 0
+
+A · B = C
+where:
+  A = [x]
+  B = [x]
+  C = [y]
+```
+
+### The Proving Process
+
+1. Write computation as circuit
+2. Convert to polynomial equations
+3. Commit to polynomial
+4. Generate proof using randomness
+5. Verifier checks proof
+
+## ZK in Ethereum
+
+### ZK Rollups
+
+ZK rollups use validity proofs instead of fraud proofs:
+
+```solidity
+// Simplified ZK rollup verification
+interface IZKVerifier {
+    function verify(
+        uint256[] calldata proof,
+        uint256[] calldata publicInputs
+    ) external view returns (bool);
+}
+
+contract ZKRollup {
+    IZKVerifier public verifier;
+    bytes32 public stateRoot;
+
+    function submitBatch(
+        bytes32 newStateRoot,
+        uint256[] calldata proof,
+        uint256[] calldata publicInputs
+    ) external {
+        // Public inputs include old and new state roots
+        require(publicInputs[0] == uint256(stateRoot), "Invalid old state");
+        require(publicInputs[1] == uint256(newStateRoot), "State mismatch");
+
+        // Verify the ZK proof
+        require(verifier.verify(proof, publicInputs), "Invalid proof");
+
+        // Update state immediately (no challenge period!)
+        stateRoot = newStateRoot;
+    }
+}
+```
+
+### Privacy Protocols
+
+ZKPs enable private transactions:
+
+**Tornado Cash pattern:**
+1. Deposit: Add commitment to Merkle tree
+2. Withdraw: Prove membership without revealing which commitment
+
+```solidity
+// Simplified Tornado Cash-like mixer
+contract Mixer {
+    mapping(bytes32 => bool) public commitments;
+    mapping(bytes32 => bool) public nullifiers;
+
+    function deposit(bytes32 commitment) external payable {
+        require(msg.value == 1 ether);
+        commitments[commitment] = true;
+    }
+
+    function withdraw(
+        bytes32 nullifier,
+        bytes32 root,
+        uint256[] calldata proof
+    ) external {
+        require(!nullifiers[nullifier], "Already withdrawn");
+        require(verifyMerkleRoot(root), "Invalid root");
+
+        // Verify ZK proof that prover:
+        // 1. Knows a commitment in the tree
+        // 2. Correctly derived the nullifier
+        require(verifier.verify(proof, [nullifier, root]), "Invalid proof");
+
+        nullifiers[nullifier] = true;
+        payable(msg.sender).transfer(1 ether);
+    }
+}
+```
+
+### Identity & Credentials
+
+Prove attributes without revealing full identity:
+
+```solidity
+// Age verification without revealing birth date
+interface IAgeVerifier {
+    function verifyOver18(
+        uint256[] calldata proof,
+        bytes32 identityCommitment
+    ) external view returns (bool);
+}
+
+contract AgeGatedContract {
+    IAgeVerifier public verifier;
+
+    function accessAdultContent(uint256[] calldata proof) external view {
+        // Prove you're over 18 without revealing your actual age
+        require(
+            verifier.verifyOver18(proof, userCommitment),
+            "Must be over 18"
+        );
+        // Allow access
+    }
+}
+```
+
+## Writing ZK Circuits
+
+### Circom
+
+Circom is a domain-specific language for ZK circuits:
+
+```circom
+pragma circom 2.0.0;
+
+// Prove knowledge of factors
+template Factorize() {
+    signal input a;     // Private: factor 1
+    signal input b;     // Private: factor 2
+    signal output c;    // Public: product
+
+    c <== a * b;
+
+    // Constraint: neither factor is 1
+    signal a_minus_1;
+    signal b_minus_1;
+    a_minus_1 <== a - 1;
+    b_minus_1 <== b - 1;
+
+    // Both must be non-zero
+    signal a_check;
+    signal b_check;
+    a_check <== a_minus_1 * a_minus_1;
+    b_check <== b_minus_1 * b_minus_1;
+}
+
+component main {public [c]} = Factorize();
+```
+
+### Noir
+
+Noir is a Rust-like language for ZK circuits:
+
+```rust
+// Noir example: prove knowledge of hash preimage
+fn main(x: Field, hash: pub Field) {
+    let computed_hash = std::hash::pedersen([x]);
+    assert(hash == computed_hash);
+}
+```
+
+### Compile and Use
+
+```bash
+# Compile Circom circuit
+circom circuit.circom --r1cs --wasm --sym
+
+# Generate proving key (trusted setup)
+snarkjs groth16 setup circuit.r1cs pot12_final.ptau circuit_final.zkey
+
+# Generate proof
+snarkjs groth16 prove circuit_final.zkey witness.wtns proof.json public.json
+
+# Verify proof
+snarkjs groth16 verify verification_key.json public.json proof.json
+```
+
+## On-Chain Verification
+
+### Groth16 Verifier
+
+```solidity
+// Auto-generated verifier contract
+contract Groth16Verifier {
+    // Elliptic curve points (from trusted setup)
+    uint256 constant IC0x = 0x...;
+    uint256 constant IC0y = 0x...;
+
+    function verify(
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[1] memory input
+    ) public view returns (bool) {
+        // Pairing check
+        // e(A, B) = e(α, β) · e(L, γ) · e(C, δ)
+        return Pairing.pairingCheck(...);
+    }
+}
+```
+
+### Gas Costs
+
+On-chain verification is expensive but constant:
+
+| Operation | Gas Cost |
+|-----------|----------|
+| Groth16 verification | ~200,000 |
+| PLONK verification | ~300,000 |
+| STARK verification | ~1,000,000 |
+
+The cost is independent of circuit complexity — you pay the same whether proving 1 operation or 1 million.
+
+## ZK Development Stack
+
+### Languages
+- **Circom** — Domain-specific, most mature
+- **Noir** — Rust-like, developer-friendly
+- **Cairo** — StarkNet's language
+- **Leo** — Aleo's language
+
+### Libraries
+- **snarkjs** — JavaScript ZK tools
+- **arkworks** — Rust ZK library
+- **gnark** — Go ZK library
+- **halo2** — Rust, used by zkSync
+
+### Services
+- **Axiom** — Historical Ethereum data proofs
+- **Herodotus** — Cross-chain state proofs
+- **Risc0** — ZK proofs for any Rust code
+
+## Practical Considerations
+
+### Trusted Setup
+
+Many ZK systems require a trusted setup ceremony:
+
+```
+Setup parameters = τ (toxic waste)
+If anyone learns τ, they can create fake proofs
+```
+
+Solutions:
+- Multi-party computation (if one participant is honest, setup is secure)
+- Universal setup (reusable for many circuits)
+- Transparent setup (STARKs, no toxic waste)
+
+### Prover Time
+
+Generating proofs is computationally intensive:
+
+| Circuit Size | Proof Time |
+|--------------|------------|
+| 2¹⁰ constraints | ~1 second |
+| 2¹⁶ constraints | ~10 seconds |
+| 2²⁰ constraints | ~2 minutes |
+| 2²⁴ constraints | ~30 minutes |
+
+**Hardware acceleration:**
+- GPU proving (10-100x speedup)
+- FPGA/ASIC proving
+- Distributed proving
+
+### Circuit Design
+
+Efficient circuits are critical:
+
+```circom
+// Bad: Uses many constraints
+template Bad() {
+    signal input x;
+    signal output y;
+    y <== x * x * x * x;  // 3 multiplications = 3 constraints
+}
+
+// Good: Fewer constraints
+template Good() {
+    signal input x;
+    signal output y;
+    signal x2;
+    x2 <== x * x;         // 1 constraint
+    y <== x2 * x2;        // 1 constraint
+                          // Total: 2 constraints
+}
+```
+
+## Conclusions
+
+Zero-knowledge proofs are transformative technology for blockchains:
+
+**For Privacy:**
+- Hide transaction amounts and participants
+- Prove identity attributes without revealing data
+- Enable confidential DeFi
+
+**For Scalability:**
+- ZK rollups provide fast finality
+- Constant verification cost regardless of batch size
+- No fraud proof challenge period
+
+**Key Takeaways:**
+- ZKPs prove statements without revealing underlying data
+- zk-SNARKs are small but need trusted setup
+- zk-STARKs are transparent but larger
+- Circuit design is an art — efficiency matters
+- The ecosystem is rapidly evolving
+
+ZK technology is complex but increasingly accessible through better tooling and higher-level languages.

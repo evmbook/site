@@ -1,0 +1,305 @@
+---
+title: Consensus Mechanisms
+description: Proof of Work, Proof of Stake, and how blockchains agree on state
+chapter: 14
+---
+
+# Consensus Mechanisms
+
+Consensus is how a decentralized network agrees on the state of the blockchain. It's the mechanism that allows thousands of nodes around the world to maintain the same transaction history without a central authority.
+
+This chapter explores the two primary consensus mechanisms in the EVM ecosystem: **Proof of Work (PoW)**, used by Ethereum Classic, and **Proof of Stake (PoS)**, used by Ethereum since The Merge.
+
+## The Byzantine Generals Problem
+
+Consensus mechanisms solve the Byzantine Generals Problem: how can distributed parties reach agreement when some parties may be faulty or malicious?
+
+In blockchain terms:
+- How do we know which transactions are valid?
+- How do we decide which block comes next?
+- How do we prevent double-spending?
+
+The solution involves making it economically or computationally expensive to misbehave, while rewarding honest behavior.
+
+## Proof of Work (PoW)
+
+Proof of Work was the original consensus mechanism for Bitcoin and Ethereum. It remains the consensus mechanism for Ethereum Classic.
+
+### How PoW Works
+
+Miners compete to find a nonce that, when combined with block data and hashed, produces a result below a target threshold:
+
+```
+hash(block_header, nonce) < target
+```
+
+The target adjusts to maintain a consistent block time (~13 seconds for ETC).
+
+### The Mining Process
+
+1. **Gather transactions** — Select transactions from the mempool
+2. **Build block header** — Include previous hash, merkle root, timestamp
+3. **Find valid nonce** — Brute-force search for valid hash
+4. **Broadcast block** — Share the solution with the network
+5. **Receive reward** — Earn block reward + transaction fees
+
+```solidity
+// Simplified concept
+function isValidBlock(Block memory block) public pure returns (bool) {
+    bytes32 hash = keccak256(abi.encodePacked(
+        block.previousHash,
+        block.merkleRoot,
+        block.timestamp,
+        block.nonce
+    ));
+    return uint256(hash) < block.difficulty;
+}
+```
+
+### ETCHash Algorithm
+
+Ethereum Classic uses ETCHash (a variant of Ethash) with these properties:
+
+- **Memory-hard** — Requires significant RAM (GPU friendly, ASIC resistant)
+- **DAG-based** — Uses a Directed Acyclic Graph that grows over time
+- **Adjusting difficulty** — Maintains ~13 second block times
+
+<Note>
+The DAG is the large dataset that miners must load into memory. It grows by 8MB per 30,000 blocks (about 5.2 days). The current DAG size can be found at https://minerstat.com/dag-size-calculator.
+</Note>
+
+### Chain Selection: Longest Chain Rule
+
+When nodes receive multiple valid chains, they follow the one with the most accumulated work (highest total difficulty):
+
+```
+Chain A: Block 1 ─── Block 2 ─── Block 3
+                                    ↑
+Chain B: Block 1 ─── Block 2 ───────┘
+
+If Chain A has more total difficulty, all honest nodes will follow Chain A.
+```
+
+### PoW Security
+
+**51% Attack** — An attacker with majority hashpower can:
+- Reorder transactions
+- Double-spend
+- Censor transactions
+
+The defense is that acquiring 51% hashpower is extremely expensive.
+
+**Economics:**
+- Attacking ETC would cost millions in hardware and electricity
+- Attackers lose money if the attack reduces coin value
+- Honest mining is generally more profitable
+
+### Block Rewards
+
+Ethereum Classic's block reward schedule:
+
+| Era | Block Range | Reward |
+|-----|-------------|--------|
+| Era 1 | 0 - 5,000,000 | 5 ETC |
+| Era 2 | 5,000,001 - 10,000,000 | 4 ETC |
+| Era 3 | 10,000,001 - 15,000,000 | 3.2 ETC |
+| Era 4 | 15,000,001 - 20,000,000 | 2.56 ETC |
+| Era 5+ | 20,000,001+ | Continues decreasing by 20% |
+
+This creates a fixed monetary policy similar to Bitcoin's halving schedule.
+
+## Proof of Stake (PoS)
+
+Proof of Stake replaces computational work with economic stake. Ethereum transitioned to PoS in September 2022 ("The Merge").
+
+### How PoS Works
+
+Validators stake 32 ETH as collateral. The protocol randomly selects validators to propose and attest to blocks:
+
+1. **Proposer** — One validator is chosen to propose the next block
+2. **Attesters** — Other validators vote on the block's validity
+3. **Finality** — After enough attestations, blocks become finalized
+4. **Rewards** — Honest validators earn rewards
+5. **Slashing** — Dishonest validators lose stake
+
+### Validator Lifecycle
+
+```
+       ┌─────────────┐
+       │   Deposit   │ (32 ETH)
+       │   32 ETH    │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │   Pending   │ (wait for activation queue)
+       │   Queue     │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │   Active    │ (proposing & attesting)
+       │  Validator  │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │    Exit     │ (voluntary or slashed)
+       │             │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │  Withdraw   │ (get stake back)
+       │             │
+       └─────────────┘
+```
+
+### Slots and Epochs
+
+Time is divided into:
+- **Slots** — 12 seconds each, one block per slot
+- **Epochs** — 32 slots (6.4 minutes)
+
+Each slot, one validator proposes a block and ~1/32 of validators attest.
+
+### Finality
+
+Unlike PoW (probabilistic finality), PoS provides:
+- **Justified** — After 1 epoch (~6.4 min), very hard to revert
+- **Finalized** — After 2 epochs (~12.8 min), economically impossible to revert
+
+### Slashing Conditions
+
+Validators are slashed (lose stake) for:
+
+1. **Double voting** — Attesting to two different blocks in the same slot
+2. **Surround voting** — Attesting in a way that contradicts prior attestations
+3. **Proposer equivocation** — Proposing two different blocks in the same slot
+
+Slashing burns 1/32 of stake immediately, with more burned if many validators are slashed simultaneously.
+
+### PoS Security
+
+**34% Attack** — An attacker with 34%+ stake can:
+- Prevent finality
+- Censor transactions
+
+**51%+ Attack** — An attacker with 51%+ stake can:
+- Control block production
+- Reorder transactions
+
+**Defense:**
+- Slashing makes attacks expensive
+- Social layer can coordinate responses
+- Inactivity leak degrades inactive validators
+
+## PoW vs PoS Comparison
+
+| Aspect | PoW (Ethereum Classic) | PoS (Ethereum) |
+|--------|------------------------|----------------|
+| **Block time** | ~13 seconds | 12 seconds |
+| **Finality** | Probabilistic (~10 min) | Economic (~13 min) |
+| **Energy use** | High | Low (~99.95% less) |
+| **Entry cost** | Mining hardware | 32 ETH stake |
+| **Centralization risk** | Mining pools | Staking pools |
+| **Attack cost** | Hardware + electricity | Stake at risk |
+| **Philosophy** | Immutable, original Ethereum | Sustainable, evolving |
+
+## The Fork: ETH vs ETC
+
+In 2016, The DAO hack led to a contentious hard fork:
+
+- **Ethereum (ETH)** — Forked to return stolen funds, later moved to PoS
+- **Ethereum Classic (ETC)** — Maintained original chain, stayed on PoW
+
+Both chains share the same EVM specification and can run the same smart contracts. The difference is in consensus, not computation.
+
+<Note>
+This philosophical difference is fundamental:
+- **ETH** prioritizes adaptability and sustainability
+- **ETC** prioritizes immutability and original principles
+
+Neither is "wrong" — they represent different values in decentralized systems.
+</Note>
+
+## Smart Contract Implications
+
+Consensus mechanisms affect smart contract development in subtle ways:
+
+### Timestamp Manipulation
+
+- **PoW**: Miners can manipulate timestamps by ~15 seconds
+- **PoS**: Validators have less flexibility, slots are 12 seconds
+
+### Block Producer Behavior
+
+- **PoW**: Miners can front-run by including their own transactions
+- **PoS**: Proposer-Builder Separation (PBS) mitigates some MEV
+
+### Finality Considerations
+
+```solidity
+// How many confirmations to wait?
+
+// On ETC (PoW): Wait for ~50 confirmations (~10 minutes)
+// On ETH (PoS): Wait for finality (~13 minutes, or 32 blocks)
+
+function isConfirmed(uint256 blockNumber) public view returns (bool) {
+    // ETC: 50 confirmations
+    return block.number >= blockNumber + 50;
+
+    // ETH: Could check finality checkpoint
+    // return block.number >= blockNumber + 32;
+}
+```
+
+### `block.difficulty` / `block.prevrandao`
+
+```solidity
+// This behaves differently on PoW vs PoS!
+
+function getSomeValue() public view returns (uint256) {
+    // On ETC (PoW): Returns mining difficulty
+    // On ETH (PoS): Returns random value from beacon chain
+    return block.difficulty;
+}
+```
+
+## Running a Validator / Miner
+
+### Mining ETC (PoW)
+
+Requirements:
+- GPU with 4GB+ VRAM (for DAG)
+- Mining software (ethminer, T-Rex, etc.)
+- Full node or mining pool
+
+```bash
+# Start Core Geth with mining
+geth --classic --mine --miner.etherbase=0xYourAddress
+```
+
+### Staking ETH (PoS)
+
+Requirements:
+- 32 ETH per validator
+- Execution client (Geth, Nethermind, etc.)
+- Consensus client (Lighthouse, Prysm, etc.)
+- 24/7 reliable uptime
+
+Or use staking pools (Lido, Rocket Pool) for smaller amounts.
+
+## Conclusions
+
+Consensus is the foundation that makes trustless blockchains possible:
+
+- **Proof of Work** — Security through computational expense
+- **Proof of Stake** — Security through economic stake at risk
+
+Both mechanisms secure the same EVM — your smart contracts work identically on either chain. The choice between them reflects different priorities:
+
+- PoW: Proven security model, energy-intensive, original design
+- PoS: Energy-efficient, faster finality, evolving design
+
+Understanding consensus helps you write better smart contracts by knowing:
+- How block producers are selected
+- What timing guarantees exist
+- How finality affects your application
+- What attacks are possible and how to mitigate them

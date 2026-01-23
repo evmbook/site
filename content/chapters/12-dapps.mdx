@@ -1,0 +1,430 @@
+---
+title: Decentralized Applications
+description: Building frontend applications that interact with smart contracts
+chapter: 12
+---
+
+# Decentralized Applications
+
+A decentralized application (DApp) combines smart contracts on the blockchain with a user interface that allows people to interact with those contracts. While the backend (smart contracts) runs on the decentralized EVM, the frontend is typically a web application that communicates with the blockchain through a provider.
+
+## DApp Architecture
+
+A typical DApp consists of:
+
+1. **Smart Contracts** — Business logic on the blockchain
+2. **Frontend** — Web application (React, Vue, etc.)
+3. **Provider** — Connection to the blockchain (MetaMask, WalletConnect)
+4. **Backend (optional)** — Off-chain services for indexing, notifications, etc.
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│   Frontend UI   │────▶│  Wallet/Provider│────▶│  EVM Blockchain │
+│   (React/Vue)   │     │  (MetaMask)     │     │  (ETH/ETC)      │
+│                 │     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                                               │
+         │              ┌─────────────────┐              │
+         └─────────────▶│  Backend APIs   │◀─────────────┘
+                        │  (Indexing)     │
+                        └─────────────────┘
+```
+
+## Connecting to the Blockchain
+
+### The EIP-1193 Provider
+
+Modern DApps communicate with the blockchain through a standardized provider interface (EIP-1193):
+
+```javascript
+// Check if provider is available
+if (typeof window.ethereum !== 'undefined') {
+  console.log('Wallet detected!');
+}
+
+// Request account access
+const accounts = await window.ethereum.request({
+  method: 'eth_requestAccounts'
+});
+
+// Send a transaction
+const txHash = await window.ethereum.request({
+  method: 'eth_sendTransaction',
+  params: [{
+    from: accounts[0],
+    to: '0x...',
+    value: '0x' + (1e18).toString(16) // 1 ETH in hex wei
+  }]
+});
+```
+
+### Using ethers.js
+
+ethers.js provides a cleaner abstraction over the provider:
+
+```javascript
+import { ethers } from 'ethers';
+
+// Connect to the browser wallet
+const provider = new ethers.BrowserProvider(window.ethereum);
+
+// Get the signer (for transactions)
+const signer = await provider.getSigner();
+
+// Get the connected address
+const address = await signer.getAddress();
+console.log('Connected:', address);
+
+// Check balance
+const balance = await provider.getBalance(address);
+console.log('Balance:', ethers.formatEther(balance), 'ETH');
+```
+
+### Interacting with Contracts
+
+```javascript
+// Contract ABI (simplified)
+const abi = [
+  "function balanceOf(address) view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)"
+];
+
+// Connect to contract
+const contract = new ethers.Contract(contractAddress, abi, signer);
+
+// Read data (no transaction needed)
+const balance = await contract.balanceOf(address);
+
+// Write data (requires transaction)
+const tx = await contract.transfer(recipient, amount);
+await tx.wait(); // Wait for confirmation
+```
+
+## Frontend Frameworks
+
+### React + wagmi
+
+wagmi is a popular React hooks library for Ethereum:
+
+```jsx
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { InjectedConnector } from 'wagmi/connectors/injected';
+
+function ConnectButton() {
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect({
+    connector: new InjectedConnector(),
+  });
+  const { disconnect } = useDisconnect();
+
+  if (isConnected) {
+    return (
+      <div>
+        <p>Connected: {address}</p>
+        <button onClick={() => disconnect()}>Disconnect</button>
+      </div>
+    );
+  }
+
+  return <button onClick={() => connect()}>Connect Wallet</button>;
+}
+```
+
+### Reading Contract Data
+
+```jsx
+import { useContractRead } from 'wagmi';
+
+function TokenBalance({ address }) {
+  const { data: balance, isLoading } = useContractRead({
+    address: tokenContractAddress,
+    abi: tokenAbi,
+    functionName: 'balanceOf',
+    args: [address],
+  });
+
+  if (isLoading) return <span>Loading...</span>;
+  return <span>{formatUnits(balance, 18)} tokens</span>;
+}
+```
+
+### Writing to Contracts
+
+```jsx
+import { useContractWrite, usePrepareContractWrite } from 'wagmi';
+
+function TransferButton({ to, amount }) {
+  const { config } = usePrepareContractWrite({
+    address: tokenContractAddress,
+    abi: tokenAbi,
+    functionName: 'transfer',
+    args: [to, parseUnits(amount, 18)],
+  });
+
+  const { write, isLoading, isSuccess } = useContractWrite(config);
+
+  return (
+    <button onClick={() => write?.()} disabled={isLoading}>
+      {isLoading ? 'Sending...' : 'Transfer'}
+    </button>
+  );
+}
+```
+
+## Wallet Connection
+
+### MetaMask
+
+The most common way users connect to DApps:
+
+```javascript
+async function connectMetaMask() {
+  if (!window.ethereum) {
+    alert('Please install MetaMask');
+    return;
+  }
+
+  try {
+    const accounts = await window.ethereum.request({
+      method: 'eth_requestAccounts'
+    });
+    return accounts[0];
+  } catch (error) {
+    if (error.code === 4001) {
+      console.log('User rejected connection');
+    }
+  }
+}
+```
+
+### WalletConnect
+
+For mobile wallets and broader compatibility:
+
+```javascript
+import { EthereumProvider } from '@walletconnect/ethereum-provider';
+
+const provider = await EthereumProvider.init({
+  projectId: 'YOUR_PROJECT_ID',
+  chains: [1, 61], // ETH mainnet and ETC mainnet
+  showQrModal: true,
+});
+
+await provider.connect();
+```
+
+### Network Switching
+
+Prompt users to switch to the correct network:
+
+```javascript
+async function switchToEthereumClassic() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x3d' }], // 61 in hex
+    });
+  } catch (error) {
+    if (error.code === 4902) {
+      // Chain not added, add it
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x3d',
+          chainName: 'Ethereum Classic',
+          nativeCurrency: { name: 'ETC', symbol: 'ETC', decimals: 18 },
+          rpcUrls: ['https://etc.rivet.link'],
+          blockExplorerUrls: ['https://blockscout.com/etc/mainnet'],
+        }],
+      });
+    }
+  }
+}
+```
+
+## Event Listening
+
+### Historical Events
+
+```javascript
+// Get past events
+const filter = contract.filters.Transfer(null, address);
+const events = await contract.queryFilter(filter, fromBlock, toBlock);
+
+events.forEach(event => {
+  console.log('From:', event.args.from);
+  console.log('Amount:', formatEther(event.args.value));
+});
+```
+
+### Real-time Events
+
+```javascript
+// Listen for new events
+contract.on('Transfer', (from, to, value, event) => {
+  console.log(`Transfer: ${from} → ${to}: ${formatEther(value)}`);
+});
+
+// Clean up when done
+contract.removeAllListeners('Transfer');
+```
+
+## Indexing and The Graph
+
+For complex queries, use an indexer like The Graph:
+
+```graphql
+# subgraph.yaml defines what to index
+# schema.graphql defines the data model
+
+query GetRecentTransfers($user: String!) {
+  transfers(
+    where: { from: $user }
+    orderBy: timestamp
+    orderDirection: desc
+    first: 10
+  ) {
+    id
+    from
+    to
+    value
+    timestamp
+  }
+}
+```
+
+```javascript
+// Query the subgraph
+const response = await fetch(SUBGRAPH_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    query: GET_RECENT_TRANSFERS,
+    variables: { user: address.toLowerCase() }
+  })
+});
+
+const { data } = await response.json();
+```
+
+## IPFS and Decentralized Storage
+
+For truly decentralized DApps, store static assets on IPFS:
+
+```javascript
+import { create } from 'ipfs-http-client';
+
+const ipfs = create({ url: 'https://ipfs.infura.io:5001' });
+
+// Upload file
+async function uploadToIPFS(file) {
+  const result = await ipfs.add(file);
+  return `ipfs://${result.path}`;
+}
+
+// NFT metadata pattern
+const metadata = {
+  name: "My NFT",
+  description: "A unique digital asset",
+  image: "ipfs://Qm..."
+};
+const metadataUri = await uploadToIPFS(JSON.stringify(metadata));
+```
+
+## Error Handling
+
+Handle blockchain-specific errors gracefully:
+
+```javascript
+try {
+  const tx = await contract.transfer(to, amount);
+  await tx.wait();
+} catch (error) {
+  if (error.code === 'ACTION_REJECTED') {
+    alert('Transaction rejected by user');
+  } else if (error.code === 'INSUFFICIENT_FUNDS') {
+    alert('Not enough ETH for gas');
+  } else if (error.reason) {
+    // Revert reason from contract
+    alert(`Transaction failed: ${error.reason}`);
+  } else {
+    console.error('Unknown error:', error);
+  }
+}
+```
+
+## Testing DApps
+
+### With Hardhat
+
+```javascript
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+
+describe('Token', function () {
+  it('Should transfer tokens', async function () {
+    const [owner, recipient] = await ethers.getSigners();
+    const Token = await ethers.getContractFactory('Token');
+    const token = await Token.deploy(1000);
+
+    await token.transfer(recipient.address, 100);
+    expect(await token.balanceOf(recipient.address)).to.equal(100);
+  });
+});
+```
+
+### With Foundry
+
+```solidity
+// test/Token.t.sol
+contract TokenTest is Test {
+    Token token;
+    address recipient = address(0x123);
+
+    function setUp() public {
+        token = new Token(1000);
+    }
+
+    function testTransfer() public {
+        token.transfer(recipient, 100);
+        assertEq(token.balanceOf(recipient), 100);
+    }
+}
+```
+
+## Deployment
+
+### Frontend Hosting
+
+DApp frontends can be hosted on:
+- **IPFS + ENS** — Fully decentralized
+- **Vercel/Netlify** — Easy deployment, good performance
+- **Fleek** — IPFS deployment with custom domains
+
+### Contract Verification
+
+Verify contracts on block explorers for transparency:
+
+```bash
+# Hardhat
+npx hardhat verify --network mainnet DEPLOYED_ADDRESS "Constructor" "Args"
+
+# Foundry
+forge verify-contract DEPLOYED_ADDRESS Token --chain-id 1
+```
+
+## Conclusions
+
+Building DApps requires bridging the gap between traditional web development and blockchain:
+
+- Use ethers.js or viem for blockchain interactions
+- Leverage React hooks (wagmi) for clean state management
+- Handle wallet connections across providers
+- Listen for events to update UI in real-time
+- Index historical data for complex queries
+- Test thoroughly before deployment
+- Consider decentralized hosting for the frontend
+
+The same frontend code works with both Ethereum and Ethereum Classic — just change the RPC endpoint and chain ID.

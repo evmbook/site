@@ -1,0 +1,676 @@
+---
+title: Ethereum Clients
+description: Running nodes, syncing blockchains, and the JSON-RPC interface
+chapter: 3
+---
+
+# Ethereum Clients
+
+An Ethereum client is a software application that implements the Ethereum specification and communicates over the peer-to-peer network with other Ethereum clients. Different Ethereum clients *interoperate* if they comply with the reference specification and the standardized communications protocols. While these different clients are implemented by different teams and in different programming languages, they all "speak" the same protocol and follow the same rules. As such, they can all be used to operate and interact with the same Ethereum network.
+
+Ethereum is an open source project, and the source code for all the major clients is available under open source licenses (e.g., LGPL v3.0), free to download and use for any purpose. *Open source* means more than simply free to use, though. It also means that Ethereum is developed by an open community of volunteers and can be modified by anyone. More eyes means more trustworthy code.
+
+Ethereum is defined by a formal specification called the "Yellow Paper". This is in contrast to, for example, Bitcoin, which is not defined in any formal way. Where Bitcoin's "specification" is the reference implementation Bitcoin Core, Ethereum's specification is documented in a paper that combines an English and a mathematical (formal) specification. This formal specification, in addition to various Ethereum Improvement Proposals (EIPs) and Ethereum Classic Improvement Proposals (ECIPs), defines the standard behavior of an Ethereum client. The Yellow Paper is periodically updated as major changes are made to Ethereum.
+
+As a result of Ethereum's clear formal specification, there are a number of independently developed, yet interoperable, software implementations of an Ethereum client. Both Ethereum (ETH) and Ethereum Classic (ETC) maintain multiple client implementations — a strength that has proven itself as an excellent way of defending against attacks on the network, because exploitation of a particular client's implementation strategy simply hassles the developers while they patch the exploit, while other clients keep the network running almost unaffected.
+
+## Ethereum Networks
+
+There exist a variety of Ethereum-based networks that largely conform to the formal specification defined in the Ethereum Yellow Paper, but which may or may not interoperate with each other.
+
+The two primary networks are **Ethereum (ETH)** and **Ethereum Classic (ETC)**. Both share the same EVM (Ethereum Virtual Machine) and execute smart contracts identically. Their fundamental difference is consensus mechanism:
+
+- **Ethereum (ETH)**: Secured by Proof of Stake (validators)
+- **Ethereum Classic (ETC)**: Secured by Proof of Work (miners)
+
+<Tip>
+To every SDK, bot, router, and dApp — ETC should feel like "just another EVM chain." Same RPC methods, same ABI encoding, same tooling. The only differences are the `chainId` and how blocks are produced.
+</Tip>
+
+### Primary EVM Networks
+
+| Network | Chain ID | Consensus | Use Case |
+|---------|----------|-----------|----------|
+| **Mordor** | 63 | Proof of Work | ETC testnet — primary development |
+| **ETC Mainnet** | 61 | Proof of Work | Production ETC |
+| **Sepolia** | 11155111 | Proof of Stake | ETH testnet — interop testing |
+| **ETH Mainnet** | 1 | Proof of Stake | Production ETH |
+
+### Ethereum Classic Clients (2025)
+
+Ethereum Classic maintains three production-ready client implementations, all executing the same protocol:
+
+| Client | Language | Status | Notes |
+|--------|----------|--------|-------|
+| **Core Geth** | Go | Production | Primary client, go-ethereum fork with ETC support |
+| **Hyperledger Besu** | Java | Production | Enterprise-grade, added ETC support November 2019 |
+| **Fukuii** | Scala 3 | Alpha | Next-generation client, Mantis successor (production 2026-2027) |
+
+This multi-client diversity strengthens the network — if a bug affects one client, the others continue operating normally.
+
+### Ethereum (ETH) Clients (2025)
+
+Since The Merge (September 2022), Ethereum requires **two clients** running together:
+
+- **Execution client**: Processes transactions and smart contracts (the EVM)
+- **Consensus client**: Handles Proof of Stake block production and finality
+
+**ETH Execution Clients:**
+
+| Client | Language | Notes |
+|--------|----------|-------|
+| **Geth** | Go | Original reference client, most widely used |
+| **Nethermind** | C#/.NET | Fast sync, enterprise features |
+| **Besu** | Java | Hyperledger, enterprise-grade |
+| **Erigon** | Go | Optimized for archive nodes |
+| **Reth** | Rust | Newest, high performance |
+
+**ETH Consensus Clients:**
+
+| Client | Language | Notes |
+|--------|----------|-------|
+| **Lighthouse** | Rust | Sigma Prime |
+| **Prysm** | Go | Prysmatic Labs |
+| **Teku** | Java | Consensys |
+| **Nimbus** | Nim | Status, resource efficient |
+| **Lodestar** | TypeScript | ChainSafe |
+
+<Note>
+ETC does not require a consensus client — the execution client handles both transaction processing and Proof of Work block validation. This simpler architecture is one reason ETC remains attractive for learning blockchain fundamentals.
+</Note>
+
+In this chapter, we focus primarily on **Core Geth** for ETC development, with notes on Besu and Fukuii. We'll show how to set up a node, sync the Mordor testnet, and mine your own test METC.
+
+### Should I Run a Full Node?
+
+The health, resilience, and censorship resistance of blockchains depend on them having many independently operated and geographically dispersed full nodes. Each full node can help other new nodes obtain the block data to bootstrap their operation, as well as offering the operator an authoritative and independent verification of all transactions and contracts.
+
+However, running a full node will incur a cost in hardware resources and bandwidth. An ETC mainnet full node requires approximately 60-100 GB of data (as of 2025), while an ETH mainnet node requires 800+ GB for a pruned node.
+
+A full node running on a live *mainnet* network is not necessary for development. You can do almost everything you need to do with a *testnet* node (which connects you to a smaller public test blockchain), with a local blockchain simulation like Hardhat Network or Anvil, or with a cloud-based RPC provider.
+
+<Tip>
+For ETC development, we recommend running your own **Mordor testnet node**. Mordor syncs quickly (2-5 GB), and you can mine your own test METC — no faucet required. This gives you hands-on experience with Proof of Work while maintaining full sovereignty over your development environment.
+</Tip>
+
+You also have the option of running a remote client, which does not store a local copy of the blockchain or validate blocks and transactions. These clients offer the functionality of a wallet and can create and broadcast transactions. Remote clients can be used to connect to existing networks, such as your own full node, a public blockchain, a public or permissioned (proof-of-authority) testnet, or a private local blockchain. In practice, you will likely use a remote client such as MetaMask, Core, MyEtherWallet, or MyCrypto as a convenient way to switch between all of the different node options.
+
+The terms "remote client" and "wallet" are used interchangeably, though there are some differences. Usually, a remote client offers an API (such as the ethers.js API) in addition to the transaction functionality of a wallet.
+
+Do not confuse the concept of a remote wallet in Ethereum with that of a *light client* (which is analogous to a Simplified Payment Verification client in Bitcoin). Light clients validate block headers and use Merkle proofs to validate the inclusion of transactions in the blockchain and determine their effects, giving them a similar level of security to a full node. Conversely, Ethereum remote clients do not validate block headers or transactions. They entirely trust a full client to give them access to the blockchain, and hence lose significant security and anonymity guarantees. You can mitigate these problems by using a full client you run yourself.
+
+### Full Node Advantages and Disadvantages
+
+Choosing to run a full node helps with the operation of the networks you connect it to, but also incurs some mild to moderate costs for you. Let's look at some of the advantages and disadvantages.
+
+**Advantages:**
+
+- Supports the resilience and censorship resistance of Ethereum-based networks
+- Authoritatively validates all transactions
+- Can interact with any contract on the public blockchain without an intermediary
+- Can directly deploy contracts into the public blockchain without an intermediary
+- Can query (read-only) the blockchain status (accounts, contracts, etc.) offline
+- Can query the blockchain without letting a third party know the information you're reading
+- On ETC: Can mine blocks and earn rewards (real ETC on mainnet, METC on Mordor)
+
+**Disadvantages:**
+
+- Requires hardware and bandwidth resources (varies significantly by network)
+- May require hours to days to fully sync depending on the network
+- Must be maintained, upgraded, and kept online to remain synced
+
+### Public Testnet Advantages and Disadvantages
+
+Whether or not you choose to run a full node, you will probably want to run a public testnet node. Let's look at some of the advantages and disadvantages of using a public testnet.
+
+#### Mordor — The ETC Testnet
+
+For Ethereum Classic development, **Mordor** (chainId: 63) is the primary public testnet. Mordor uses the same ETCHash Proof of Work algorithm as ETC mainnet, making it ideal for testing mining setups and understanding block production.
+
+**Advantages:**
+
+- Syncs quickly — approximately 2-5 GB of data
+- A testnet node can sync fully in hours
+- **Mine your own METC** — no dependency on faucets or third parties
+- Uses real Proof of Work — experience actual mining, block times, and difficulty adjustments
+- Public blockchain with other users and contracts, running "live"
+- Same client software as mainnet — your Mordor setup translates directly to production
+
+**Disadvantages:**
+
+- Test METC has no real-world value, so you can't test security against economic adversaries
+- Network hashrate is lower than mainnet, so difficulty dynamics differ
+- Fewer deployed contracts than mainnet for integration testing
+
+#### ETH Testnets
+
+For Ethereum (ETH) development or cross-chain testing, **Sepolia** (chainId: 11155111) is the recommended testnet. Note that ETH testnets use Proof of Stake — you cannot mine test ETH and must use a faucet.
+
+<Note>
+The older ETH testnets — Ropsten, Kovan, and Rinkeby — were deprecated following The Merge. If you encounter references to these networks in legacy documentation, use Sepolia instead.
+</Note>
+
+### Local Blockchain Simulation Advantages and Disadvantages
+
+For many testing purposes, the best option is to launch a local blockchain simulation. Modern tools like **Hardhat Network** (from the Hardhat framework) and **Anvil** (from Foundry) provide fast, configurable local blockchains for development. They share many of the advantages and disadvantages of a public testnet, but also have some differences.
+
+**Advantages:**
+
+- No syncing and almost no data on disk; instant block production
+- Pre-funded test accounts — no need to obtain test ether
+- Instant transaction confirmation — faster development iteration
+- Time manipulation — advance block time for testing time-dependent contracts
+- Mainnet forking — test against real mainnet state without deploying
+
+**Disadvantages:**
+
+- No other users means it doesn't behave the same as a public blockchain. There's no competition for transaction space or sequencing of transactions.
+- No real mining or block production delays — can't test timing-sensitive scenarios
+- If forking mainnet, the fork node must be an archive node to interact with historical state
+
+#### When to Use Mordor vs Local Simulation
+
+| Scenario | Recommended Environment |
+|----------|------------------------|
+| Rapid iteration during development | Hardhat Network / Anvil |
+| Testing contract logic and unit tests | Hardhat Network / Anvil |
+| Integration testing with realistic network | Mordor testnet |
+| Testing mining and block production | Mordor testnet (mine METC) |
+| Pre-deployment verification | Mordor testnet |
+| Testing mainnet contract interactions | Hardhat/Anvil with mainnet fork |
+
+## Running an Ethereum Client
+
+If you have the time and resources, you should attempt to run a full node, even if only to learn more about the process. In this section we cover how to download, install, and run Ethereum clients — focusing on **Core Geth** for ETC development, with notes on **Besu** and **Fukuii**. This requires some familiarity with using the command-line interface on your operating system.
+
+### Hardware Requirements
+
+Before we get started, you should ensure you have a computer with sufficient resources. Requirements vary significantly by network:
+
+| Network | Disk Space | Sync Time | Notes |
+|---------|------------|-----------|-------|
+| **Mordor (ETC testnet)** | 2-5 GB | Hours | Recommended for development |
+| **ETC Mainnet** | 60-100 GB | Hours to 1 day | Much lighter than ETH |
+| **ETH Mainnet** | 800+ GB (pruned) | Days | Requires execution + consensus client |
+
+Syncing any blockchain is I/O intensive. A solid-state drive (SSD) is strongly recommended. With an HDD, you will need at least 8 GB of RAM to use as cache.
+
+**Minimum requirements (Mordor testnet):**
+
+- CPU with 2+ cores
+- 8 GB free storage space
+- 4 GB RAM with an SSD
+- 8 MBit/sec download internet service
+
+**Recommended specifications (ETC mainnet):**
+
+- Fast CPU with 4+ cores
+- 8 GB+ RAM
+- Fast SSD with at least 150 GB free space
+- 25+ MBit/sec download internet service
+
+<Note>
+The disk size requirements assume a pruned node (default). An archival node, which keeps all historical state, requires significantly more space — 500+ GB for ETC, multiple TB for ETH.
+</Note>
+
+### Software Requirements
+
+This section covers installing ETC clients. The examples assume you are using a Unix-like command-line environment (Linux or macOS). Windows users can use WSL2 (Windows Subsystem for Linux) or Docker.
+
+<Tip>
+In many of the examples in this chapter, we will be using the operating system's command-line interface (also known as a "shell"), accessed via a "terminal" application. The shell will display a prompt; you type a command, and the shell responds with some text and a new prompt for your next command. The prompt may look different on your system, but in the following examples, it is denoted by a `$` symbol. In the examples, when you see text after a `$` symbol, don't type the `$` symbol but type the command immediately following it, then press Enter to execute the command.
+</Tip>
+
+For **Core Geth** (building from source), you will need:
+
+- Git — source control (https://git-scm.com)
+- Go 1.21+ — programming language (https://golang.org)
+- Make — build tool (usually pre-installed on Linux/macOS)
+
+For **Besu**, you will need:
+
+- Java 21+ — runtime environment (https://adoptium.net)
+- Or use the official Docker image (recommended)
+
+For **Fukuii**, you will need:
+
+- JDK 21+ — Java Development Kit
+- Or use Docker (recommended for alpha software)
+
+<Note>
+Most users should use **pre-built binaries** or **Docker images** rather than building from source. Building from source is useful for development or running custom configurations.
+</Note>
+
+### Core Geth
+
+Core Geth is the primary Ethereum Classic client, maintained by the ETC Cooperative. It is a downstream fork of go-ethereum (the Ethereum Foundation's Geth) with added support for ETC-specific features like ETCHash and the Classic chain configuration. Core Geth is released under the LGPL v3.0 free software license.
+
+Core Geth supports multiple networks including ETC mainnet, Mordor testnet, and can also sync ETH networks — making it versatile for cross-chain development.
+
+#### Installing Core Geth
+
+The easiest way to install Core Geth is using pre-built binaries from the GitHub releases page: https://github.com/etclabscore/core-geth/releases
+
+For Ubuntu/Debian, you can also use the PPA:
+
+```bash
+sudo add-apt-repository ppa:etclabscore/core-geth
+sudo apt-get update
+sudo apt-get install core-geth
+```
+
+Alternatively, build from source (requires Go 1.21+):
+
+```bash
+git clone https://github.com/etclabscore/core-geth.git
+cd core-geth
+make geth
+```
+
+If all goes well, you should see:
+
+```
+build/env.sh go run build/ci.go install ./cmd/geth
+>>> /usr/local/go/bin/go install -ldflags -X main.gitCommit=...
+github.com/ethereum/go-ethereum/common/hexutil
+github.com/ethereum/go-ethereum/crypto
+[...]
+Done building.
+Run "build/bin/geth" to launch geth.
+```
+
+Verify the installation:
+
+```bash
+./build/bin/geth version
+```
+
+Output:
+```
+Geth
+Version: 1.12.19-stable
+Git Commit: ...
+Architecture: amd64
+Protocol Versions: [68 67 66]
+Go Version: go1.21.x
+Operating System: linux
+GOPATH=
+GOROOT=/usr/local/go
+CoreGeth Compatible Chains: mainnet (1), classic (61), mordor (63), ...
+```
+
+Notice the "CoreGeth Compatible Chains" line — this confirms you have the ETC-enabled version, not vanilla go-ethereum.
+
+### Hyperledger Besu
+
+Hyperledger Besu is an enterprise-grade Ethereum client written in Java, maintained by the Hyperledger Foundation (Linux Foundation). Besu added Ethereum Classic support in November 2019 and is a production-ready alternative to Core Geth.
+
+Besu is particularly suited for:
+
+- Enterprise environments requiring Java stack integration
+- Permissioned network deployments
+- Users who prefer Bonsai Tries storage format
+
+#### Installing Besu
+
+The recommended approach is Docker:
+
+```bash
+docker pull hyperledger/besu:latest
+```
+
+Or download binaries from https://github.com/hyperledger/besu/releases
+
+Verify the installation:
+
+```bash
+docker run hyperledger/besu:latest --version
+```
+
+Output:
+```
+besu/v24.x.x/linux-x86_64/openjdk-java-21
+```
+
+### Fukuii (Next-Generation Client)
+
+Fukuii is the next-generation Ethereum Classic client, written in Scala 3 and running on JDK 21. It is the spiritual successor to Mantis and is being developed with a focus on:
+
+- Modern functional programming patterns
+- Built-in TUI (terminal user interface)
+- MCP (Model Context Protocol) integration for AI tooling
+- Bootstrap checkpoints for fast sync
+
+<Warning>
+Fukuii is currently in **alpha** status (2025). It is suitable for experimentation and testnet use, but Core Geth or Besu should be used for production deployments. Fukuii is targeting production readiness in 2026-2027.
+</Warning>
+
+#### Installing Fukuii (Docker)
+
+```bash
+docker pull ghcr.io/input-output-hk/etc/fukuii:latest
+docker run ghcr.io/input-output-hk/etc/fukuii:latest --version
+```
+
+For early adopters interested in following Fukuii's development, see: https://github.com/input-output-hk/etc-client
+
+### A Note on ETH Geth
+
+The Ethereum Foundation maintains go-ethereum (Geth) for the Ethereum (ETH) network. If you need to run an ETH node for cross-chain development or interoperability testing, you can install it from https://geth.ethereum.org/.
+
+<Important>
+**Core Geth** (for ETC) and **go-ethereum** (for ETH) are different codebases. While Core Geth is forked from go-ethereum, they have diverged significantly. Do not use vanilla go-ethereum for ETC — it will not sync the Ethereum Classic chain.
+</Important>
+
+For ETH development, remember that since The Merge (September 2022), you need **both** an execution client (like Geth) **and** a consensus client (like Lighthouse, Prysm, or Teku) to run an ETH node.
+
+## The First Synchronization
+
+Traditionally, when syncing an Ethereum blockchain, your client would download and validate every block and every transaction since the genesis block.
+
+While it is possible to fully sync the blockchain this way ("full sync" or "archive sync"), this takes a very long time and requires significant resources. Most users should use "snap sync" (the default), which downloads state snapshots and validates only recent blocks.
+
+### Syncing Mordor Testnet
+
+For development, we recommend starting with the **Mordor testnet**. It syncs quickly and provides a realistic Proof of Work environment.
+
+#### With Core Geth
+
+```bash
+geth --mordor
+```
+
+That's it! Core Geth will automatically:
+
+- Connect to Mordor peers
+- Download the blockchain (~2-5 GB)
+- Begin syncing using snap sync
+
+You'll see output like:
+
+```
+INFO [01-15|10:30:00.000] Starting Geth on Mordor testnet          chainid=63
+INFO [01-15|10:30:00.500] Block synchronisation started
+INFO [01-15|10:30:05.000] Imported new chain segment               blocks=100 txs=250
+```
+
+#### With Besu (Docker)
+
+```bash
+docker run -v besu-data:/data hyperledger/besu:latest \
+    --network=mordor \
+    --data-path=/data
+```
+
+### Syncing ETC Mainnet
+
+For production or mainnet testing:
+
+```bash
+geth --classic
+```
+
+ETC mainnet sync takes longer (hours to a day) but is still much faster than ETH due to the smaller state.
+
+### Running Your Client
+
+Use the `--help` option to see all configuration parameters:
+
+```bash
+geth --help
+```
+
+The default settings are sensible for most uses. Key flags to know:
+
+- `--mordor` — Connect to Mordor testnet (chainId: 63)
+- `--classic` — Connect to ETC mainnet (chainId: 61)
+- `--http` — Enable HTTP-RPC server (for connecting wallets and tools)
+- `--http.api eth,net,web3` — Enable specific RPC APIs
+- `--mine` — Enable mining (covered in the next section)
+
+<Tip>
+Syncing Mordor takes hours on a typical connection. ETC mainnet takes hours to a day. Plan to let it run overnight for the initial sync.
+</Tip>
+
+## Mining on Mordor Testnet
+
+One of the unique advantages of developing on Ethereum Classic is the ability to **mine your own test currency**. Unlike ETH testnets (which use Proof of Stake and require faucets), Mordor uses the same ETCHash Proof of Work algorithm as ETC mainnet.
+
+Mining your own METC provides several benefits:
+
+- **Self-sovereignty** — No dependency on third-party faucets that may be rate-limited, offline, or depleted
+- **Educational value** — Experience the mining process firsthand, understand block production and difficulty
+- **Unlimited supply** — Mine as much METC as you need for testing
+- **Realistic testing** — Test contracts in an environment that mirrors mainnet's consensus mechanism
+
+### Setting Up Mining
+
+First, create an account to receive mining rewards:
+
+```bash
+geth --mordor account new
+```
+
+Output:
+```
+INFO [01-15|10:00:00.000] Maximum peer count                       ETH=50 LES=0 total=50
+Your new account is locked with a password. Please give a password. Do not forget this password.
+Password:
+Repeat password:
+
+Your new key was generated
+
+Public address of the key:   0xYourAddressHere
+Path of the secret key file: ~/.ethereum/mordor/keystore/UTC--...
+
+- You can share your public address with anyone.
+- You must NEVER share the secret key.
+```
+
+Now start Core Geth with mining enabled:
+
+```bash
+geth --mordor --mine --miner.etherbase=0xYourAddressHere
+```
+
+Or, for a more complete development setup with HTTP-RPC enabled:
+
+```bash
+geth --mordor \
+    --mine \
+    --miner.etherbase=0xYourAddressHere \
+    --http \
+    --http.api eth,net,web3,personal \
+    --http.corsdomain "*"
+```
+
+### CPU vs GPU Mining
+
+For testnet development, **CPU mining is sufficient**. Mordor's difficulty adjusts based on network hashrate, and with relatively few miners, CPU mining will find blocks regularly.
+
+```bash
+geth --mordor --mine --miner.threads=2 --miner.etherbase=0xYourAddress
+```
+
+The `--miner.threads` flag controls how many CPU cores to dedicate to mining. Start with 1-2 threads to avoid overloading your development machine.
+
+<Note>
+GPU mining is unnecessary for Mordor testnet development. Save your GPU resources for other tasks. CPU mining will produce enough METC for any development workflow.
+</Note>
+
+### Verifying Mining Success
+
+Once synced and mining, you'll see log messages when you find blocks:
+
+```
+INFO [01-15|11:30:00.000] Successfully sealed new block            number=12345 hash=0x...
+INFO [01-15|11:30:00.001] mined potential block                    number=12345 hash=0x...
+INFO [01-15|11:30:00.002] Commit new mining work                   number=12346 txs=0 ...
+```
+
+Check your balance using the Geth JavaScript console:
+
+```bash
+geth --mordor attach
+```
+
+```javascript
+> eth.getBalance(eth.coinbase)
+3200000000000000000
+
+> web3.fromWei(eth.getBalance(eth.coinbase), "ether")
+"3.2"
+```
+
+You now have 3.2 METC — mined entirely by your own node, without any faucet dependency.
+
+## The JSON-RPC Interface
+
+Ethereum clients offer an application programming interface and a set of Remote Procedure Call (RPC) commands, which are encoded as JavaScript Object Notation (JSON). You will see this referred to as the *JSON-RPC API*. Essentially, the JSON-RPC API is an interface that allows us to write programs that use an Ethereum client as a *gateway* to an Ethereum network and blockchain.
+
+Usually, the RPC interface is offered as an HTTP service on port 8545. For security reasons it is restricted, by default, to only accept connections from localhost (the IP address of your own computer, which is 127.0.0.1).
+
+To access the JSON-RPC API, you can use a specialized library (written in the programming language of your choice) that provides "stub" function calls corresponding to each available RPC command, or you can manually construct HTTP requests and send/receive JSON-encoded requests. You can even use a generic command-line HTTP client, like `curl`, to call the RPC interface. Let's try that. First, ensure that you have Core Geth up and running with `--http` to enable HTTP access to the RPC interface, then switch to a new terminal window:
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data \
+  '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' \
+  http://localhost:8545
+```
+
+Response:
+```json
+{"jsonrpc":"2.0","id":1,
+"result":"CoreGeth/v1.12.19-stable/linux-amd64/go1.21.x"}
+```
+
+In this example, we use `curl` to make an HTTP connection to the address *http://localhost:8545*. We are already running `geth`, which offers the JSON-RPC API as an HTTP service on port 8545. We instruct `curl` to use the HTTP `POST` command and to identify the content as type `application/json`. Finally, we pass a JSON-encoded request as the `data` component of our HTTP request.
+
+The JSON-RPC request is formatted according to the JSON-RPC 2.0 specification. Each request contains four elements:
+
+- **jsonrpc**: Version of the JSON-RPC protocol. This MUST be exactly "2.0".
+- **method**: The name of the method to be invoked.
+- **params**: A structured value that holds the parameter values to be used during the invocation of the method. This member MAY be omitted.
+- **id**: An identifier established by the client that MUST contain a String, Number, or NULL value if included. The server MUST reply with the same value in the response object if included. This member is used to correlate the context between the two objects.
+
+<Tip>
+The `id` parameter is used primarily when you are making multiple requests in a single JSON-RPC call, a practice called *batching*. Batching is used to avoid the overhead of a new HTTP and TCP connection for every request. In the Ethereum context, for example, we would use batching if we wanted to retrieve thousands of transactions over one HTTP connection. When batching, you set a different `id` for each request and then match it to the `id` in each response from the JSON-RPC server. The easiest way to implement this is to maintain a counter and increment the value for each request.
+</Tip>
+
+The response tells us that the JSON-RPC API is being served by Core Geth. The same RPC API works identically on both ETC and ETH — this is the "just another EVM chain" principle in action.
+
+Let's try something a bit more interesting. In the next example, we ask the JSON-RPC API for the current price of gas in wei:
+
+```bash
+curl -X POST -H "Content-Type: application/json" --data \
+  '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":4213}' \
+  http://localhost:8545
+```
+
+Response:
+```json
+{"jsonrpc":"2.0","id":4213,"result":"0x430e23400"}
+```
+
+The response, `0x430e23400`, tells us that the current gas price is 18 gwei (gigawei or billion wei). If, like us, you don't think in hexadecimal, you can convert it to decimal on the command line:
+
+```bash
+echo $((0x430e23400))
+# Output: 18000000000
+```
+
+The full JSON-RPC API specification is documented at https://ethereum.github.io/execution-apis/api-documentation/. Both ETC and ETH clients implement this same API.
+
+## Remote Ethereum Clients
+
+Remote clients offer a subset of the functionality of a full client. They do not store the full Ethereum blockchain, so they are faster to set up and require far less data storage.
+
+These clients typically provide the ability to do one or more of the following:
+
+- Manage private keys and Ethereum addresses in a wallet
+- Create, sign, and broadcast transactions
+- Interact with smart contracts, using the data payload
+- Browse and interact with DApps
+- Offer links to external services such as block explorers
+- Convert ether units and retrieve exchange rates from external sources
+- Inject an EIP-1193 provider into the web browser for DApp connectivity
+- Access RPC services on a local or remote Ethereum node
+
+Some remote clients, for example mobile (smartphone) wallets, offer only basic wallet functionality. Other remote clients are full-blown DApp browsers. Remote clients commonly offer some of the functions of a full-node Ethereum client without synchronizing a local copy of the Ethereum blockchain by connecting to a full node being run elsewhere, e.g., by you locally on your machine or on a web server, or by a third party on their servers.
+
+### Mobile (Smartphone) Wallets
+
+All mobile wallets are remote clients, because smartphones do not have adequate resources to run a full Ethereum client.
+
+Popular mobile wallets that support both ETC and ETH include (we list these merely as examples; this is not an endorsement or an indication of the security or functionality of these wallets):
+
+**Trust Wallet** — A mobile multi-currency wallet that supports Ethereum and Ethereum Classic as well as ERC20 tokens. Acquired by Binance. Available for iOS and Android.
+
+**Exodus** — A multi-currency wallet with built-in exchange, supporting both ETC and ETH along with many other assets. Available as mobile app and desktop application.
+
+**Coinbase Wallet** — A self-custody wallet (separate from the Coinbase exchange) supporting EVM chains. Available for iOS and Android.
+
+### Browser Wallets
+
+A variety of wallets and DApp browsers are available as plug-ins or extensions of web browsers such as Chrome and Firefox. These are remote clients that run inside your browser.
+
+#### MetaMask
+
+MetaMask, introduced in the Getting Started chapter, is the most widely used browser-based wallet. It is available on Chrome, Firefox, Opera, Brave, and Edge.
+
+MetaMask injects an EIP-1193 compliant provider into web pages, enabling DApps to interact with any EVM blockchain. It supports custom RPC networks, making it easy to connect to:
+
+- ETC Mainnet (chainId: 61)
+- Mordor Testnet (chainId: 63)
+- ETH Mainnet and testnets
+- Your local Core Geth or Hardhat node
+
+To add ETC networks to MetaMask:
+
+1. Click the network dropdown → "Add Network"
+2. Enter the network details:
+   - **ETC Mainnet**: RPC URL `https://etc.rivet.link`, Chain ID `61`, Symbol `ETC`
+   - **Mordor Testnet**: RPC URL `https://rpc.mordor.etccooperative.org`, Chain ID `63`, Symbol `METC`
+
+#### MyEtherWallet (MEW)
+
+MyEtherWallet is a browser-based JavaScript client that supports ETC and ETH. It offers:
+
+- Hardware wallet integration (Ledger, Trezor, GridPlus)
+- Connection to custom RPC nodes including your own Core Geth
+- Contract interaction interface
+- ENS domain support
+
+<Warning>
+Browser-based wallets are frequent targets for phishing. Always use a bookmark and verify the URL before entering any credentials. Consider hardware wallets for significant holdings.
+</Warning>
+
+#### MyCrypto
+
+MyCrypto is a fork of MyEtherWallet offering similar functionality. It provides a desktop application for enhanced security and supports both ETC and ETH networks.
+
+### RPC Providers
+
+For development without running your own node, several RPC providers offer ETC endpoints:
+
+- **Rivet** — `https://etc.rivet.link` (ETC mainnet)
+- **ETC Cooperative** — `https://rpc.mordor.etccooperative.org` (Mordor testnet)
+- **Ankr** — Public RPC endpoints for multiple EVM chains
+- **DRPC** — Decentralized RPC network with ETC support
+
+<Tip>
+For production applications, consider running your own Core Geth node or using a paid RPC provider with SLA guarantees. Free public endpoints may have rate limits or reliability issues.
+</Tip>
+
+## Conclusions
+
+In this chapter we explored Ethereum clients with a focus on Ethereum Classic development. You learned about:
+
+- **Core Geth** — The primary ETC client, forked from go-ethereum
+- **Hyperledger Besu** — Enterprise-grade Java client with ETC support
+- **Fukuii** — The next-generation Scala 3 client (alpha, production target 2026-2027)
+- **Mordor testnet** — ETC's Proof of Work testnet where you can mine your own METC
+- **Mining** — How to mine METC for self-sovereign development without faucet dependency
+- **JSON-RPC** — The standard API shared by all EVM clients
+
+By running a node and mining on Mordor, you become a participant in the Ethereum Classic network and gain hands-on understanding of Proof of Work consensus — a fundamental concept that distinguishes ETC from ETH's Proof of Stake.

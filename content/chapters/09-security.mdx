@@ -1,0 +1,387 @@
+---
+title: Smart Contract Security
+description: Common vulnerabilities, attack patterns, and defensive programming
+chapter: 9
+---
+
+# Smart Contract Security
+
+Security is perhaps the most important consideration when writing smart contracts. In the field of smart contract programming, mistakes can be very costly and easily exploited. Smart contracts are immutable once deployed — you cannot patch them like traditional software. Moreover, they often control significant financial value, making them attractive targets for attackers.
+
+This chapter covers common security vulnerabilities, attack patterns, and defensive programming techniques for smart contracts on both Ethereum Classic and Ethereum.
+
+## Security Best Practices
+
+Before diving into specific vulnerabilities, let's establish foundational security practices:
+
+### Minimalism and Reuse
+
+- Keep contracts simple. Complexity is the enemy of security.
+- Reuse well-tested code. Use established libraries like OpenZeppelin.
+- Follow the principle of least privilege — contracts should have only the capabilities they need.
+
+### Code Quality
+
+- Use the latest stable compiler version.
+- Enable all compiler warnings and address them.
+- Document all functions, state variables, and expected behaviors.
+- Use consistent naming conventions.
+
+### Testing and Auditing
+
+- Write comprehensive unit tests covering edge cases.
+- Test with fuzz testing and property-based testing (Foundry excels at this).
+- Get professional security audits for contracts handling significant value.
+- Consider formal verification for critical contracts.
+
+### Upgrade Considerations
+
+- Design contracts with upgradability in mind, or explicitly make them immutable.
+- If using proxy patterns, understand the risks they introduce.
+- Document your upgrade process and have it audited.
+
+## Common Vulnerabilities
+
+### Reentrancy
+
+Reentrancy is one of the most dangerous vulnerabilities. It occurs when a contract makes an external call to another contract before updating its state, allowing the called contract to "re-enter" the calling contract.
+
+**The DAO Hack Example:**
+
+```solidity
+// VULNERABLE - DO NOT USE
+contract VulnerableBank {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public {
+        uint256 amount = balances[msg.sender];
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success);
+        balances[msg.sender] = 0; // State updated AFTER external call
+    }
+}
+```
+
+An attacker can create a contract that calls back into `withdraw()` when it receives ether, draining the contract before the balance is set to zero.
+
+**Defense: Checks-Effects-Interactions Pattern:**
+
+```solidity
+// SECURE
+contract SecureBank {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public {
+        uint256 amount = balances[msg.sender];
+        require(amount > 0, "No balance");
+
+        // 1. Checks - verify conditions
+        // 2. Effects - update state BEFORE external call
+        balances[msg.sender] = 0;
+
+        // 3. Interactions - external call LAST
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+}
+```
+
+**Defense: ReentrancyGuard:**
+
+```solidity
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SecureBank is ReentrancyGuard {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public nonReentrant {
+        uint256 amount = balances[msg.sender];
+        balances[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success);
+    }
+}
+```
+
+### Integer Overflow and Underflow
+
+Prior to Solidity 0.8.0, arithmetic operations could overflow or underflow silently.
+
+```solidity
+// Solidity < 0.8.0 - VULNERABLE
+uint8 x = 255;
+x = x + 1; // x is now 0, not 256!
+
+uint8 y = 0;
+y = y - 1; // y is now 255, not -1!
+```
+
+**Defense:** Use Solidity 0.8.0 or later, which has built-in overflow checking:
+
+```solidity
+// Solidity >= 0.8.0 - SAFE
+pragma solidity ^0.8.0;
+
+uint8 x = 255;
+x = x + 1; // Reverts with "Arithmetic overflow"
+```
+
+For intentional wrapping behavior, use `unchecked` blocks:
+
+```solidity
+unchecked {
+    uint8 x = 255;
+    x = x + 1; // x is 0, no revert
+}
+```
+
+### Access Control Issues
+
+Insufficient access control allows unauthorized users to execute privileged functions.
+
+```solidity
+// VULNERABLE - anyone can call
+function setOwner(address newOwner) public {
+    owner = newOwner;
+}
+```
+
+**Defense: Proper Access Control:**
+
+```solidity
+// Using modifier
+modifier onlyOwner() {
+    require(msg.sender == owner, "Not owner");
+    _;
+}
+
+function setOwner(address newOwner) public onlyOwner {
+    owner = newOwner;
+}
+```
+
+**Defense: OpenZeppelin Access Control:**
+
+```solidity
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract MyContract is Ownable, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
+    function adminFunction() public onlyRole(ADMIN_ROLE) {
+        // Only addresses with ADMIN_ROLE can call
+    }
+}
+```
+
+### tx.origin Phishing
+
+Using `tx.origin` for authorization is dangerous because it refers to the original transaction sender, not the immediate caller.
+
+```solidity
+// VULNERABLE
+function transferOwnership(address newOwner) public {
+    require(tx.origin == owner); // DANGEROUS!
+    owner = newOwner;
+}
+```
+
+An attacker can trick the owner into calling a malicious contract, which then calls `transferOwnership`. Since `tx.origin` is still the owner, the check passes.
+
+**Defense: Always use `msg.sender`:**
+
+```solidity
+function transferOwnership(address newOwner) public {
+    require(msg.sender == owner);
+    owner = newOwner;
+}
+```
+
+### Denial of Service (DoS)
+
+#### DoS with Revert
+
+If a contract iterates over an array and makes external calls, a malicious recipient can cause the entire transaction to fail:
+
+```solidity
+// VULNERABLE
+function distributeRewards(address[] calldata recipients) public {
+    for (uint i = 0; i < recipients.length; i++) {
+        // If ANY recipient reverts, ALL distributions fail
+        payable(recipients[i]).transfer(reward);
+    }
+}
+```
+
+**Defense: Pull over Push:**
+
+```solidity
+// SECURE - pull pattern
+mapping(address => uint256) public pendingRewards;
+
+function calculateRewards(address[] calldata recipients) public {
+    for (uint i = 0; i < recipients.length; i++) {
+        pendingRewards[recipients[i]] += reward;
+    }
+}
+
+function claimReward() public {
+    uint256 amount = pendingRewards[msg.sender];
+    pendingRewards[msg.sender] = 0;
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success);
+}
+```
+
+#### DoS with Block Gas Limit
+
+Unbounded loops can exceed the block gas limit:
+
+```solidity
+// VULNERABLE - may exceed gas limit
+function processAll() public {
+    for (uint i = 0; i < users.length; i++) {
+        processUser(users[i]);
+    }
+}
+```
+
+**Defense: Pagination and Limits:**
+
+```solidity
+function processBatch(uint256 start, uint256 count) public {
+    uint256 end = start + count;
+    if (end > users.length) end = users.length;
+
+    for (uint i = start; i < end; i++) {
+        processUser(users[i]);
+    }
+}
+```
+
+### Front-Running
+
+On public blockchains, pending transactions are visible in the mempool. Attackers can see profitable transactions and submit their own with higher gas prices to get executed first.
+
+**Common Front-Running Attacks:**
+- DEX trades: Attacker buys before a large buy order, then sells after
+- NFT mints: Attacker mints before a specific token they want
+- Liquidations: Attacker front-runs liquidation for the reward
+
+**Defenses:**
+- Commit-reveal schemes: Hash your action first, reveal later
+- Flashbots/private mempools: Submit transactions privately
+- Slippage protection: Set maximum acceptable price impact
+- Batch auctions: Process all orders at the same price
+
+### Timestamp Dependence
+
+Block timestamps can be manipulated by block producers (miners on PoW, validators on PoS) within certain limits (typically ~15 seconds).
+
+```solidity
+// VULNERABLE - can be manipulated
+function lottery() public {
+    if (block.timestamp % 10 == 0) {
+        winner = msg.sender; // Miner can manipulate to win
+    }
+}
+```
+
+**Defense:** Don't use timestamps for randomness. Use Chainlink VRF or similar oracle-based randomness for high-value decisions.
+
+### Default Visibility
+
+In older Solidity versions, functions without visibility specifiers defaulted to `public`.
+
+```solidity
+// Solidity < 0.5.0 - this is PUBLIC by default!
+function internalLogic() {
+    // Anyone can call this!
+}
+```
+
+**Defense:** Always specify visibility explicitly. Solidity 0.5.0+ requires explicit visibility.
+
+```solidity
+function internalLogic() internal {
+    // Now properly internal
+}
+```
+
+### Uninitialized Storage Pointers
+
+Local storage variables can point to unexpected storage slots if not initialized:
+
+```solidity
+// VULNERABLE in older Solidity
+function processData(uint256 x) public {
+    uint256[] data; // Uninitialized storage pointer!
+    data.push(x);   // May overwrite slot 0 (like owner!)
+}
+```
+
+**Defense:** Always initialize storage pointers or use memory:
+
+```solidity
+function processData(uint256 x) public {
+    uint256[] storage data = myArray; // Explicit storage reference
+    // OR
+    uint256[] memory tempData = new uint256[](1); // Use memory
+}
+```
+
+## Security Tools
+
+### Static Analysis
+
+**Slither** — Fast static analysis framework:
+```bash
+slither MyContract.sol
+```
+
+**Mythril** — Security analysis tool using symbolic execution:
+```bash
+myth analyze MyContract.sol
+```
+
+### Fuzzing
+
+**Foundry Fuzz Testing:**
+```solidity
+function testFuzz_Withdraw(uint256 amount) public {
+    vm.assume(amount <= address(this).balance);
+    // Foundry will try many random values for amount
+    bank.withdraw(amount);
+}
+```
+
+### Formal Verification
+
+For critical contracts, formal verification can mathematically prove correctness:
+- Certora Prover
+- Solidity SMTChecker (built-in)
+- K Framework
+
+## Security Audit Process
+
+1. **Documentation Review** — Understand intended behavior
+2. **Architecture Review** — Identify trust boundaries and risks
+3. **Static Analysis** — Run automated tools
+4. **Manual Code Review** — Line-by-line inspection
+5. **Testing Review** — Verify test coverage and quality
+6. **Dynamic Analysis** — Fuzz testing and symbolic execution
+7. **Findings Report** — Document issues with severity ratings
+8. **Remediation** — Fix issues and verify fixes
+
+## Conclusions
+
+Smart contract security requires:
+
+- **Defense in depth** — Multiple layers of protection
+- **Secure patterns** — Checks-Effects-Interactions, pull over push
+- **Thorough testing** — Unit tests, fuzz tests, integration tests
+- **Professional audits** — For contracts handling significant value
+- **Continuous monitoring** — Watch for exploits after deployment
+
+Remember: in smart contracts, bugs are permanent and exploits are profitable. The cost of security is always less than the cost of an exploit.

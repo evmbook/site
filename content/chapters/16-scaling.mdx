@@ -1,0 +1,406 @@
+---
+title: Scaling Solutions
+description: Layer 2s, rollups, and increasing blockchain throughput
+chapter: 16
+---
+
+# Scaling Solutions
+
+Blockchain scalability is the challenge of increasing transaction throughput while maintaining decentralization and security. The base layer of Ethereum processes ~15-30 transactions per second. Scaling solutions aim to increase this by orders of magnitude.
+
+This chapter covers the major scaling approaches, with a focus on Layer 2 solutions.
+
+## The Scalability Trilemma
+
+Blockchains face tradeoffs between three properties:
+
+```
+                    Decentralization
+                          ▲
+                         / \
+                        /   \
+                       /     \
+                      /       \
+                     /_________\
+              Security ◀─────────▶ Scalability
+```
+
+- **Decentralization** — Many independent validators
+- **Security** — Resistance to attacks
+- **Scalability** — High transaction throughput
+
+Traditional databases are scalable but centralized. Bitcoin is decentralized but limited throughput. The goal is to improve scalability without sacrificing the other two.
+
+## Scaling Approaches
+
+### Layer 1 Scaling
+
+Improving the base blockchain:
+- Larger blocks (increases hardware requirements)
+- Sharding (splits the network)
+- Better consensus (more efficient validation)
+
+### Layer 2 Scaling
+
+Building on top of the base layer:
+- Rollups (execute off-chain, post data on-chain)
+- State channels (off-chain transactions, on-chain settlement)
+- Sidechains (separate chains with bridges)
+
+### Off-Chain Scaling
+
+Moving computation entirely off-chain:
+- Validiums (off-chain data and computation)
+- Plasma (off-chain with on-chain exits)
+
+## Rollups
+
+Rollups are the dominant Layer 2 scaling solution. They execute transactions off-chain but post transaction data to the main chain.
+
+### How Rollups Work
+
+1. Users submit transactions to the rollup
+2. Rollup operator batches transactions
+3. Batch is executed off-chain
+4. Compressed data posted to L1
+5. State root updated on L1
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Layer 2 Rollup                        │
+│  ┌────────┐  ┌────────┐  ┌────────┐                         │
+│  │  Tx 1  │  │  Tx 2  │  │  Tx 3  │  ... (1000s of txs)    │
+│  └────────┘  └────────┘  └────────┘                         │
+│                    │                                         │
+│                    ▼                                         │
+│              ┌──────────────────┐                           │
+│              │   Batch + Proof  │                           │
+│              └────────┬─────────┘                           │
+│                       │                                      │
+└───────────────────────┼──────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────┐
+│                     Layer 1 (Ethereum)                        │
+│              ┌──────────────────────────┐                     │
+│              │  State Root + Call Data  │                     │
+│              └──────────────────────────┘                     │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Optimistic Rollups
+
+Assume transactions are valid, but allow challenges:
+
+```solidity
+// Simplified optimistic rollup contract
+contract OptimisticRollup {
+    bytes32 public stateRoot;
+    uint256 public constant CHALLENGE_PERIOD = 7 days;
+
+    struct Batch {
+        bytes32 newStateRoot;
+        uint256 timestamp;
+        bool finalized;
+    }
+
+    mapping(uint256 => Batch) public batches;
+
+    function submitBatch(bytes32 newStateRoot, bytes calldata txData) external {
+        // Anyone can submit a batch
+        batches[batchId] = Batch(newStateRoot, block.timestamp, false);
+    }
+
+    function challengeBatch(uint256 batchId, bytes calldata fraudProof) external {
+        Batch storage batch = batches[batchId];
+        require(block.timestamp < batch.timestamp + CHALLENGE_PERIOD);
+
+        // Verify fraud proof
+        if (verifyFraud(fraudProof)) {
+            // Revert batch, slash operator
+            delete batches[batchId];
+        }
+    }
+
+    function finalizeBatch(uint256 batchId) external {
+        Batch storage batch = batches[batchId];
+        require(block.timestamp >= batch.timestamp + CHALLENGE_PERIOD);
+        require(!batch.finalized);
+
+        stateRoot = batch.newStateRoot;
+        batch.finalized = true;
+    }
+}
+```
+
+**Examples:** Optimism, Arbitrum, Base
+
+**Tradeoffs:**
+- ✅ EVM equivalent (same code works)
+- ✅ Lower gas costs than L1
+- ❌ 7-day withdrawal period (for security)
+- ❌ Relies on at least one honest challenger
+
+### ZK-Rollups
+
+Use zero-knowledge proofs to prove validity:
+
+```solidity
+// Simplified ZK rollup contract
+contract ZKRollup {
+    bytes32 public stateRoot;
+    IVerifier public verifier;
+
+    function submitBatch(
+        bytes32 newStateRoot,
+        bytes calldata txData,
+        bytes calldata proof
+    ) external {
+        // Verify ZK proof
+        require(
+            verifier.verify(stateRoot, newStateRoot, txData, proof),
+            "Invalid proof"
+        );
+
+        // Immediately update state (no challenge period!)
+        stateRoot = newStateRoot;
+    }
+}
+```
+
+**Examples:** zkSync Era, Polygon zkEVM, Scroll, Linea
+
+**Tradeoffs:**
+- ✅ Fast finality (no challenge period)
+- ✅ Strong cryptographic guarantees
+- ❌ Proving is computationally expensive
+- ❌ EVM compatibility can be challenging
+
+## Rollup Comparison
+
+| Aspect | Optimistic | ZK |
+|--------|------------|-----|
+| Finality | 7 days | Minutes |
+| Proof cost | Low (fraud proof only if challenged) | High (every batch) |
+| EVM compatibility | Excellent | Improving |
+| Maturity | Production | Production |
+| Examples | Arbitrum, Optimism | zkSync, Polygon zkEVM |
+
+## Data Availability
+
+Rollups need transaction data available to reconstruct state:
+
+**On-chain data (Rollups):**
+- Data posted to L1 calldata
+- Most secure, but expensive
+- ~16 bytes/tx after compression
+
+**Off-chain data (Validiums):**
+- Data stored off-chain (committee, DAC)
+- Cheaper, but trust assumptions
+- Examples: StarkEx, zkPorter
+
+**EIP-4844 (Proto-Danksharding):**
+- "Blobs" of data that are cheaper than calldata
+- Temporary storage (~2 weeks)
+- Significantly reduces rollup costs
+
+## State Channels
+
+State channels move transactions completely off-chain:
+
+```
+1. Open channel: Lock funds on-chain
+2. Transact: Exchange signed messages off-chain
+3. Close channel: Settle final state on-chain
+```
+
+```solidity
+contract PaymentChannel {
+    address public sender;
+    address public recipient;
+    uint256 public expiration;
+
+    function close(uint256 amount, bytes memory signature) external {
+        require(msg.sender == recipient);
+        require(verifySignature(amount, signature, sender));
+
+        // Pay recipient
+        payable(recipient).transfer(amount);
+        // Return remainder to sender
+        selfdestruct(payable(sender));
+    }
+}
+```
+
+**Examples:** Lightning Network (Bitcoin), Raiden (Ethereum)
+
+**Best for:** High-frequency transactions between known parties
+
+## Sidechains
+
+Separate blockchains connected via bridges:
+
+```
+┌─────────────────┐         Bridge         ┌─────────────────┐
+│   Main Chain    │ ◀───────────────────▶  │    Sidechain    │
+│  (Ethereum)     │   Lock ◀──▶ Mint      │  (Polygon PoS)  │
+└─────────────────┘                        └─────────────────┘
+```
+
+**Examples:** Polygon PoS, Gnosis Chain
+
+**Tradeoffs:**
+- ✅ High throughput
+- ✅ Independent consensus
+- ❌ Different security assumptions than L1
+- ❌ Bridge security is critical
+
+## Scaling Ethereum Classic
+
+Ethereum Classic, maintaining PoW consensus, has different scaling considerations:
+
+<Note>
+ETC has inherently lower demand than ETH, so congestion is less of an issue currently. However, the same L2 technologies can work on ETC:
+
+- Rollup contracts can be deployed on ETC
+- The challenge: L2s need liquidity and users
+- Cross-chain bridges can connect ETC to L2 ecosystems
+</Note>
+
+## Building for L2
+
+### Deploying to L2
+
+Most L2s are EVM-equivalent:
+
+```javascript
+// hardhat.config.js
+module.exports = {
+  networks: {
+    optimism: {
+      url: "https://mainnet.optimism.io",
+      chainId: 10,
+    },
+    arbitrum: {
+      url: "https://arb1.arbitrum.io/rpc",
+      chainId: 42161,
+    },
+    base: {
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+    },
+  },
+};
+```
+
+Your contracts deploy unchanged — same Solidity, same tools.
+
+### L1 ↔ L2 Communication
+
+Rollups have messaging systems:
+
+```solidity
+// Send message from L1 to L2 (Optimism example)
+interface ICrossDomainMessenger {
+    function sendMessage(
+        address target,
+        bytes memory message,
+        uint32 gasLimit
+    ) external;
+}
+
+function sendToL2(address l2Contract, bytes memory data) external {
+    messenger.sendMessage(l2Contract, data, 1000000);
+}
+```
+
+### Bridging Assets
+
+```solidity
+// Simplified bridge deposit
+function depositToL2(address token, uint256 amount) external {
+    // Lock tokens on L1
+    IERC20(token).transferFrom(msg.sender, address(this), amount);
+
+    // Emit event for relayer
+    emit Deposit(msg.sender, token, amount);
+
+    // L2 bridge mints equivalent tokens
+}
+```
+
+### Withdrawal Delays
+
+Optimistic rollups have 7-day withdrawals:
+
+```solidity
+struct Withdrawal {
+    address user;
+    uint256 amount;
+    uint256 timestamp;
+}
+
+function initiateWithdrawal(uint256 amount) external {
+    withdrawals[msg.sender] = Withdrawal(msg.sender, amount, block.timestamp);
+}
+
+function finalizeWithdrawal() external {
+    Withdrawal memory w = withdrawals[msg.sender];
+    require(block.timestamp >= w.timestamp + 7 days, "Too early");
+
+    delete withdrawals[msg.sender];
+    payable(msg.sender).transfer(w.amount);
+}
+```
+
+**Fast bridges** (Hop, Across) provide instant liquidity by fronting funds.
+
+## The Future: A Multi-Chain World
+
+The ecosystem is evolving toward:
+
+- **Multiple rollups** — Specialized for different use cases
+- **Shared sequencing** — Atomic cross-rollup transactions
+- **Data availability layers** — Celestia, EigenDA
+- **Account abstraction** — Seamless UX across chains
+
+```
+                    ┌─────────────────────────┐
+                    │      User Wallet        │
+                    │  (Abstract chain away)  │
+                    └───────────┬─────────────┘
+                                │
+            ┌───────────────────┼───────────────────┐
+            │                   │                   │
+            ▼                   ▼                   ▼
+    ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+    │   Rollup A    │   │   Rollup B    │   │   Rollup C    │
+    │   (DeFi)      │   │   (Gaming)    │   │   (NFTs)      │
+    └───────┬───────┘   └───────┬───────┘   └───────┬───────┘
+            │                   │                   │
+            └───────────────────┼───────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │     Ethereum (L1)       │
+                    │  Security & Settlement  │
+                    └─────────────────────────┘
+```
+
+## Conclusions
+
+Scaling blockchain technology involves tradeoffs:
+
+- **Rollups** are the dominant L2 solution, offering 10-100x throughput improvements
+- **Optimistic rollups** are EVM-equivalent but have 7-day withdrawal delays
+- **ZK rollups** offer faster finality but are more complex
+- **Data availability** is a key bottleneck being addressed by EIP-4844
+
+For developers:
+- L2s are EVM-compatible — same tools, same code
+- Consider deployment chain based on use case
+- Handle cross-chain communication carefully
+- Account for withdrawal delays in UX
+
+The same smart contract code runs on L1, L2, and ETC — the EVM is the constant.

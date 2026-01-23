@@ -1,0 +1,320 @@
+---
+title: Tokens
+description: ERC-20, ERC-721, and token standards on the EVM
+chapter: 10
+---
+
+# Tokens
+
+Tokens are a fundamental primitive of the EVM ecosystem. They represent programmable value — from fungible currencies to unique digital collectibles, from governance rights to representations of real-world assets.
+
+In this chapter, we explore the major token standards and how to implement them.
+
+## What Are Tokens?
+
+In the context of EVM-based blockchains, tokens are smart contracts that maintain a ledger of balances. Unlike ether (the native currency), tokens are not built into the protocol — they are user-created contracts that follow standardized interfaces.
+
+The value of standardization is interoperability. A wallet that understands ERC-20 can display any ERC-20 token. A DEX that supports ERC-20 can trade any ERC-20 token. This composability is a cornerstone of the EVM ecosystem.
+
+## Fungible vs Non-Fungible
+
+**Fungible tokens** are interchangeable. One USDC is exactly the same as any other USDC. These are represented by the ERC-20 standard.
+
+**Non-fungible tokens (NFTs)** are unique. Each token has distinct properties and cannot be directly exchanged for another. These are represented by the ERC-721 standard.
+
+**Semi-fungible tokens** combine both models. A single contract can manage both fungible and non-fungible tokens. This is the ERC-1155 standard.
+
+## ERC-20: Fungible Tokens
+
+ERC-20 is the most widely used token standard. It defines a common interface that allows any token to be traded on exchanges, held in wallets, and used in DeFi protocols.
+
+### The ERC-20 Interface
+
+```solidity
+interface IERC20 {
+    // Returns the total token supply
+    function totalSupply() external view returns (uint256);
+
+    // Returns the balance of an account
+    function balanceOf(address account) external view returns (uint256);
+
+    // Transfers tokens to a recipient
+    function transfer(address to, uint256 amount) external returns (bool);
+
+    // Returns the remaining allowance for a spender
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    // Sets allowance for a spender
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    // Transfers tokens on behalf of another address
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+```
+
+### Basic ERC-20 Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SimpleToken {
+    string public name = "Simple Token";
+    string public symbol = "SIMP";
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor(uint256 initialSupply) {
+        totalSupply = initialSupply * 10**decimals;
+        balanceOf[msg.sender] = totalSupply;
+        emit Transfer(address(0), msg.sender, totalSupply);
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Insufficient balance");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(balanceOf[from] >= amount, "Insufficient balance");
+        require(allowance[from][msg.sender] >= amount, "Insufficient allowance");
+
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+
+        emit Transfer(from, to, amount);
+        return true;
+    }
+}
+```
+
+<Tip>
+For production use, we recommend using OpenZeppelin's ERC-20 implementation, which includes additional security features and has been thoroughly audited.
+</Tip>
+
+### Using OpenZeppelin
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MyToken is ERC20 {
+    constructor(uint256 initialSupply) ERC20("My Token", "MTK") {
+        _mint(msg.sender, initialSupply * 10**decimals());
+    }
+}
+```
+
+### Common ERC-20 Extensions
+
+**ERC20Burnable** — Allows token holders to destroy their tokens:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+```
+
+**ERC20Pausable** — Allows pausing all transfers in emergencies:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+```
+
+**ERC20Capped** — Enforces a maximum supply:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+```
+
+**ERC20Permit** — Allows approvals via signatures (EIP-2612):
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+```
+
+## ERC-721: Non-Fungible Tokens
+
+ERC-721 defines a standard for NFTs — tokens where each unit is unique.
+
+### The ERC-721 Interface
+
+```solidity
+interface IERC721 {
+    // Returns the number of tokens owned by an address
+    function balanceOf(address owner) external view returns (uint256);
+
+    // Returns the owner of a specific token
+    function ownerOf(uint256 tokenId) external view returns (address);
+
+    // Transfers a token (with safety check)
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+
+    // Transfers a token (without safety check)
+    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    // Approves another address to transfer a specific token
+    function approve(address to, uint256 tokenId) external;
+
+    // Sets approval for all tokens owned by sender
+    function setApprovalForAll(address operator, bool approved) external;
+
+    // Returns approved address for a token
+    function getApproved(uint256 tokenId) external view returns (address);
+
+    // Checks if operator is approved for all of owner's tokens
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+}
+```
+
+### Simple ERC-721 Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract SimpleNFT is ERC721, Ownable {
+    uint256 private _nextTokenId;
+
+    constructor() ERC721("Simple NFT", "SNFT") Ownable(msg.sender) {}
+
+    function mint(address to) public onlyOwner returns (uint256) {
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(to, tokenId);
+        return tokenId;
+    }
+}
+```
+
+### ERC-721 Metadata
+
+The optional metadata extension adds name, symbol, and tokenURI:
+
+```solidity
+interface IERC721Metadata {
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function tokenURI(uint256 tokenId) external view returns (string memory);
+}
+```
+
+The `tokenURI` typically returns a URL pointing to a JSON file:
+
+```json
+{
+    "name": "My NFT #1",
+    "description": "A unique digital collectible",
+    "image": "ipfs://Qm.../image.png",
+    "attributes": [
+        {"trait_type": "Color", "value": "Blue"},
+        {"trait_type": "Rarity", "value": "Rare"}
+    ]
+}
+```
+
+## ERC-1155: Multi-Token Standard
+
+ERC-1155 allows a single contract to manage multiple token types — both fungible and non-fungible:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
+contract GameItems is ERC1155 {
+    uint256 public constant GOLD = 0;      // Fungible
+    uint256 public constant SILVER = 1;    // Fungible
+    uint256 public constant SWORD = 2;     // Non-fungible
+    uint256 public constant SHIELD = 3;    // Non-fungible
+
+    constructor() ERC1155("https://game.example/api/item/{id}.json") {
+        _mint(msg.sender, GOLD, 10**18, "");
+        _mint(msg.sender, SILVER, 10**18, "");
+        _mint(msg.sender, SWORD, 1, "");
+        _mint(msg.sender, SHIELD, 1, "");
+    }
+}
+```
+
+### Advantages of ERC-1155
+
+- **Gas efficiency** — Batch transfers in a single transaction
+- **Simplicity** — One contract for many token types
+- **Flexibility** — Mix fungible and non-fungible tokens
+
+## Token Security Considerations
+
+### Approve Race Condition
+
+The ERC-20 `approve` function has a known race condition. If you change an allowance from 5 to 3, a malicious spender could:
+1. See the pending transaction
+2. Quickly spend the 5 tokens
+3. After your transaction, spend 3 more tokens
+
+**Defense:** Use `increaseAllowance`/`decreaseAllowance` instead:
+
+```solidity
+// Instead of: token.approve(spender, newAmount)
+token.increaseAllowance(spender, additionalAmount);
+token.decreaseAllowance(spender, subtractedAmount);
+```
+
+### Reentrancy in Token Transfers
+
+Some tokens (like ERC-777) have callback hooks that can enable reentrancy attacks.
+
+**Defense:** Always follow checks-effects-interactions pattern and consider using ReentrancyGuard.
+
+### Non-Standard Tokens
+
+Some tokens don't follow the standard exactly:
+- USDT doesn't return `bool` from `transfer`
+- Some tokens have transfer fees
+- Some tokens can be paused or blacklisted
+
+**Defense:** Use SafeERC20 from OpenZeppelin:
+
+```solidity
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+using SafeERC20 for IERC20;
+
+function deposit(IERC20 token, uint256 amount) external {
+    token.safeTransferFrom(msg.sender, address(this), amount);
+}
+```
+
+## Conclusions
+
+Tokens are fundamental building blocks of the EVM ecosystem:
+
+- **ERC-20** for fungible tokens (currencies, governance tokens)
+- **ERC-721** for non-fungible tokens (art, collectibles, real estate)
+- **ERC-1155** for multi-token contracts (games, complex systems)
+
+Understanding these standards is essential for building or integrating with any EVM-based application.

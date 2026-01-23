@@ -1,0 +1,376 @@
+---
+title: The EVM in Depth
+description: Understanding the Ethereum Virtual Machine at the bytecode level
+chapter: 13
+---
+
+# The EVM in Depth
+
+The Ethereum Virtual Machine (EVM) is the runtime environment for smart contracts. Understanding how the EVM works at a low level helps you write more efficient contracts, debug complex issues, and understand security vulnerabilities.
+
+## EVM Architecture
+
+The EVM is a stack-based, 256-bit virtual machine. Key characteristics:
+
+- **Stack-based** — Operations push and pop values from a stack
+- **256-bit word size** — All values are 256 bits (32 bytes)
+- **Deterministic** — Same input always produces same output
+- **Isolated** — Contracts can't access other contracts' storage directly
+- **Metered** — Every operation costs gas
+
+### Memory Model
+
+The EVM has three main data locations:
+
+**Stack** — Temporary values during computation (max 1024 elements)
+
+**Memory** — Byte-addressable, volatile storage (cleared after execution)
+
+**Storage** — Persistent key-value store (256-bit keys, 256-bit values)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         EVM                                  │
+├─────────────────┬─────────────────┬────────────────────────┤
+│     Stack       │     Memory      │       Storage          │
+│  (1024 x 256)   │  (byte array)   │  (key → value map)     │
+│  • Temporary    │  • Volatile     │  • Persistent          │
+│  • Fast         │  • Expandable   │  • Expensive           │
+│  • Free         │  • Cheap        │  • 20,000 gas to set   │
+└─────────────────┴─────────────────┴────────────────────────┘
+```
+
+### The Stack
+
+Most EVM operations work on the stack:
+
+```
+PUSH1 0x60    // Push 0x60 onto stack
+PUSH1 0x40    // Push 0x40 onto stack
+MSTORE        // Store 0x60 at memory location 0x40
+
+Stack before MSTORE: [0x40, 0x60]
+Stack after MSTORE:  []
+```
+
+The stack is limited to 1024 elements. Stack overflow causes the transaction to fail.
+
+### Memory
+
+Memory is a byte array that expands as needed:
+
+```
+MLOAD   - Load 32 bytes from memory
+MSTORE  - Store 32 bytes to memory
+MSTORE8 - Store 1 byte to memory
+```
+
+Memory expansion costs gas based on how much is used. The cost grows quadratically with size.
+
+### Storage
+
+Storage persists between transactions. It's the most expensive data location:
+
+```
+SLOAD  - Load from storage (2,100 gas cold / 100 gas warm)
+SSTORE - Store to storage (20,000 gas new / 5,000 gas update)
+```
+
+Each contract has its own storage space, isolated from other contracts.
+
+## EVM Opcodes
+
+Opcodes are the machine instructions of the EVM. Here are the major categories:
+
+### Stack Operations
+
+| Opcode | Description |
+|--------|-------------|
+| `PUSH1`-`PUSH32` | Push N bytes onto stack |
+| `POP` | Remove top stack item |
+| `DUP1`-`DUP16` | Duplicate Nth stack item |
+| `SWAP1`-`SWAP16` | Swap top with Nth stack item |
+
+### Arithmetic
+
+| Opcode | Description |
+|--------|-------------|
+| `ADD` | Addition |
+| `MUL` | Multiplication |
+| `SUB` | Subtraction |
+| `DIV` | Integer division |
+| `MOD` | Modulo |
+| `EXP` | Exponentiation |
+| `ADDMOD` | Modular addition |
+| `MULMOD` | Modular multiplication |
+
+### Comparison & Bitwise
+
+| Opcode | Description |
+|--------|-------------|
+| `LT`, `GT` | Less than, greater than |
+| `SLT`, `SGT` | Signed comparison |
+| `EQ` | Equality |
+| `ISZERO` | Check if zero |
+| `AND`, `OR`, `XOR`, `NOT` | Bitwise operations |
+| `SHL`, `SHR`, `SAR` | Bit shifting |
+
+### Memory & Storage
+
+| Opcode | Description |
+|--------|-------------|
+| `MLOAD` | Load word from memory |
+| `MSTORE` | Store word to memory |
+| `MSTORE8` | Store byte to memory |
+| `SLOAD` | Load word from storage |
+| `SSTORE` | Store word to storage |
+
+### Contract Interaction
+
+| Opcode | Description |
+|--------|-------------|
+| `CALL` | Call another contract |
+| `DELEGATECALL` | Call with current context |
+| `STATICCALL` | Read-only call |
+| `CREATE` | Deploy new contract |
+| `CREATE2` | Deploy with deterministic address |
+| `SELFDESTRUCT` | Destroy contract |
+
+### Block Information
+
+| Opcode | Description |
+|--------|-------------|
+| `BLOCKHASH` | Hash of a recent block |
+| `COINBASE` | Block producer address |
+| `TIMESTAMP` | Block timestamp |
+| `NUMBER` | Block number |
+| `DIFFICULTY` / `PREVRANDAO` | PoW difficulty or PoS randomness |
+| `GASLIMIT` | Block gas limit |
+
+<Note>
+The `DIFFICULTY` opcode returns different values on **Ethereum Classic (PoW)** vs **Ethereum (PoS)**. After The Merge, Ethereum renamed it to `PREVRANDAO` and it returns random data from the beacon chain instead of mining difficulty.
+</Note>
+
+## Gas Mechanics
+
+Every opcode has a gas cost. Simple operations are cheap, complex operations are expensive:
+
+| Operation | Gas Cost |
+|-----------|----------|
+| `ADD`, `SUB` | 3 |
+| `MUL`, `DIV` | 5 |
+| `SLOAD` (cold) | 2,100 |
+| `SLOAD` (warm) | 100 |
+| `SSTORE` (new) | 20,000 |
+| `SSTORE` (update) | 5,000 |
+| `CALL` (cold) | 2,600 |
+| `CREATE` | 32,000 |
+
+### Gas Refunds
+
+Some operations provide refunds:
+- Setting storage to zero: 4,800 gas refund
+- `SELFDESTRUCT`: 24,000 gas refund (deprecated)
+
+### EIP-2929 Access Lists
+
+Introduced "cold" and "warm" storage:
+- First access to an address/slot is "cold" (expensive)
+- Subsequent accesses are "warm" (cheaper)
+
+```solidity
+// First access: cold (2,100 gas)
+uint256 a = someMapping[key];
+
+// Second access: warm (100 gas)
+uint256 b = someMapping[key];
+```
+
+## Bytecode Analysis
+
+### Disassembling Contracts
+
+Use tools to analyze bytecode:
+
+```bash
+# With cast (Foundry)
+cast disassemble 0x608060405234801561001057600080fd5b...
+
+# Output:
+# 0x0000: PUSH1 0x80
+# 0x0002: PUSH1 0x40
+# 0x0004: MSTORE
+# ...
+```
+
+### Contract Creation Code
+
+When you deploy a contract, you actually send "creation code" that returns the "runtime code":
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                    Creation Code                           │
+│  ┌──────────────────┐  ┌─────────────────────────────────┐ │
+│  │  Initialization  │  │       Runtime Code              │ │
+│  │  (constructor)   │  │  (actual contract logic)        │ │
+│  └──────────────────┘  └─────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────┘
+           │                          │
+           ▼                          ▼
+       Executed once            Stored on-chain
+```
+
+### Function Selectors
+
+Functions are identified by the first 4 bytes of their keccak256 hash:
+
+```javascript
+// "transfer(address,uint256)"
+keccak256("transfer(address,uint256)") = 0xa9059cbb...
+// First 4 bytes: 0xa9059cbb
+```
+
+The runtime code typically starts with a dispatcher:
+
+```
+CALLDATALOAD  // Get first 32 bytes of calldata
+PUSH1 0xe0
+SHR           // Shift right to get first 4 bytes
+DUP1
+PUSH4 0xa9059cbb  // transfer selector
+EQ
+PUSH2 0x0123  // Jump destination
+JUMPI         // Jump if match
+// ... more function checks
+```
+
+## Writing Inline Assembly
+
+Solidity allows inline assembly (Yul) for low-level operations:
+
+```solidity
+function addNumbers(uint256 a, uint256 b) public pure returns (uint256 result) {
+    assembly {
+        result := add(a, b)
+    }
+}
+
+function efficientCopy(bytes memory data) public pure returns (bytes32) {
+    bytes32 result;
+    assembly {
+        result := mload(add(data, 32))  // Skip length prefix
+    }
+    return result;
+}
+```
+
+### When to Use Assembly
+
+✅ Use for:
+- Gas optimization in hot paths
+- Operations not available in Solidity
+- Low-level memory manipulation
+
+❌ Avoid for:
+- Most contract logic (use Solidity)
+- Anything a junior developer needs to maintain
+- Unless you truly need the optimization
+
+## Gas Optimization Patterns
+
+### Storage Packing
+
+Pack multiple values into single storage slots:
+
+```solidity
+// Bad: Uses 3 storage slots
+contract Unpacked {
+    uint256 a;  // Slot 0
+    uint256 b;  // Slot 1
+    uint256 c;  // Slot 2
+}
+
+// Good: Uses 1 storage slot
+contract Packed {
+    uint128 a;  // Slot 0 (lower 128 bits)
+    uint64 b;   // Slot 0 (next 64 bits)
+    uint64 c;   // Slot 0 (upper 64 bits)
+}
+```
+
+### Caching Storage Reads
+
+```solidity
+// Bad: Multiple SLOAD operations
+function sum() public view returns (uint256) {
+    return values[0] + values[1] + values[2];  // 3 SLOADs
+}
+
+// Good: Cache in memory
+function sum() public view returns (uint256) {
+    uint256 v0 = values[0];  // 1 SLOAD
+    uint256 v1 = values[1];  // 1 SLOAD
+    uint256 v2 = values[2];  // 1 SLOAD
+    return v0 + v1 + v2;     // Operations on memory are cheap
+}
+```
+
+### Using `unchecked` for Safe Math
+
+```solidity
+// When you know overflow is impossible
+function increment(uint256 i) public pure returns (uint256) {
+    unchecked {
+        return i + 1;  // Saves ~30 gas by skipping overflow check
+    }
+}
+```
+
+### Short-Circuit Evaluation
+
+```solidity
+// Put cheaper conditions first
+if (cheapCheck && expensiveCheck) { ... }
+
+// Put likely-false conditions first
+if (likely_false || likely_true) { ... }
+```
+
+## Debugging at the EVM Level
+
+### Using Foundry's Debugger
+
+```bash
+forge test --debug "testMyFunction"
+```
+
+This opens an interactive debugger showing:
+- Current opcode
+- Stack contents
+- Memory contents
+- Storage changes
+- Gas usage
+
+### Trace Analysis
+
+```bash
+cast run <txhash> --trace
+```
+
+Shows the complete execution trace of a transaction.
+
+## Conclusions
+
+Understanding the EVM at the bytecode level helps you:
+
+- Write more gas-efficient contracts
+- Debug complex issues
+- Understand security vulnerabilities
+- Optimize critical paths
+
+Key takeaways:
+- The EVM is stack-based with 256-bit words
+- Storage is expensive, memory is cheap, stack is free
+- Function calls are dispatched by selector matching
+- Gas costs vary dramatically by operation
+- Use inline assembly sparingly and carefully

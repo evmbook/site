@@ -1,0 +1,545 @@
+---
+title: Development Tools
+description: Frameworks, libraries, and utilities for EVM development
+---
+
+# Appendix D: Development Tools
+
+This appendix covers the essential tools for EVM smart contract development in 2025.
+
+## Frameworks
+
+Frameworks automate tedious tasks and make development easier. In 2025, the two dominant frameworks for EVM development are **Hardhat** (JavaScript/TypeScript) and **Foundry** (Solidity-native). Both work identically on Ethereum Classic and Ethereum—they connect to any EVM chain via RPC.
+
+### Hardhat
+
+- **GitHub**: [github.com/NomicFoundation/hardhat](https://github.com/NomicFoundation/hardhat)
+- **Website**: [hardhat.org](https://hardhat.org)
+- **Documentation**: [hardhat.org/docs](https://hardhat.org/docs)
+
+Hardhat is the most widely used Ethereum development framework for JavaScript and TypeScript developers. It provides a flexible, extensible environment for compiling, deploying, testing, and debugging smart contracts.
+
+**Key features:**
+
+- **Hardhat Network**: Built-in local blockchain with advanced debugging (console.log in Solidity, stack traces, mainnet forking)
+- **TypeScript support**: First-class TypeScript integration with type generation
+- **Plugin ecosystem**: Rich ecosystem of plugins for testing, deployment, verification
+- **Multi-network**: Easy configuration for ETC, ETH, and testnets
+
+#### Installing Hardhat
+
+Hardhat requires Node.js v18+ and npm. Install using nvm:
+
+```bash
+nvm install --lts
+node -v  # v20.11.0
+npm -v   # 10.2.4
+```
+
+Create a project:
+
+```bash
+mkdir Faucet
+cd Faucet
+npm init -y
+npm install --save-dev hardhat
+npx hardhat init
+```
+
+Select "Create a TypeScript project" for the best experience. The project structure:
+
+```
+Faucet
+├── contracts/
+│   └── Lock.sol
+├── ignition/
+│   └── modules/
+├── test/
+│   └── Lock.ts
+├── hardhat.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+Install additional dependencies:
+
+```bash
+npm install --save-dev @nomicfoundation/hardhat-toolbox
+npm install @openzeppelin/contracts
+```
+
+#### Configuring for ETC and ETH
+
+Edit `hardhat.config.ts`:
+
+```typescript
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const config: HardhatUserConfig = {
+  solidity: {
+    version: "0.8.24",
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+      evmVersion: "shanghai",
+    },
+  },
+  networks: {
+    // ETC Networks
+    mordor: {
+      url: process.env.MORDOR_RPC || "https://rpc.mordor.etccooperative.org",
+      chainId: 63,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    etc: {
+      url: process.env.ETC_RPC || "https://etc.rivet.link",
+      chainId: 61,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    // ETH Networks
+    sepolia: {
+      url: process.env.SEPOLIA_RPC || "https://rpc.sepolia.org",
+      chainId: 11155111,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+    mainnet: {
+      url: process.env.ETH_RPC || "https://eth.llamarpc.com",
+      chainId: 1,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+  },
+};
+
+export default config;
+```
+
+Create a `.env` file (add to `.gitignore`!):
+
+```
+PRIVATE_KEY=your_private_key_here
+```
+
+#### Deploying with Hardhat Ignition
+
+Hardhat uses **Ignition** for deployments—a declarative system that tracks deployments and handles dependencies automatically.
+
+Create `ignition/modules/Faucet.ts`:
+
+```typescript
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+
+const FaucetModule = buildModule("FaucetModule", (m) => {
+  const faucet = m.contract("Faucet");
+  return { faucet };
+});
+
+export default FaucetModule;
+```
+
+Deploy:
+
+```bash
+npx hardhat compile
+npx hardhat ignition deploy ignition/modules/Faucet.ts --network mordor
+```
+
+#### Using the Hardhat Console
+
+```bash
+npx hardhat console --network mordor
+```
+
+```javascript
+> const [signer] = await ethers.getSigners()
+> const balance = await ethers.provider.getBalance(signer.address)
+> ethers.formatEther(balance)
+'3.2'
+
+> const Faucet = await ethers.getContractFactory("Faucet")
+> const faucet = Faucet.attach("0x1234...5678")
+> await faucet.withdraw(ethers.parseEther("0.1"))
+```
+
+### Foundry
+
+- **GitHub**: [github.com/foundry-rs/foundry](https://github.com/foundry-rs/foundry)
+- **Documentation**: [book.getfoundry.sh](https://book.getfoundry.sh)
+
+Foundry is a blazing-fast toolkit written in Rust, particularly popular for:
+
+- **Solidity-native testing**: Write tests in Solidity, not JavaScript
+- **Speed**: Extremely fast compilation and test execution
+- **Fuzzing**: Built-in property-based testing
+- **Mainnet forking**: Test against real mainnet state
+- **Gas reporting**: Detailed gas usage analysis
+
+Foundry consists of:
+
+- **Forge**: Testing framework
+- **Cast**: Command-line tool for interacting with contracts
+- **Anvil**: Local testnet node
+- **Chisel**: Solidity REPL
+
+#### Installing Foundry
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+forge --version
+```
+
+#### Creating a Foundry Project
+
+```bash
+forge init Faucet
+cd Faucet
+```
+
+Structure:
+
+```
+Faucet
+├── src/
+│   └── Counter.sol
+├── test/
+│   └── Counter.t.sol
+├── script/
+├── foundry.toml
+└── lib/
+```
+
+#### Configuring for ETC
+
+Edit `foundry.toml`:
+
+```toml
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+evm_version = "shanghai"
+optimizer = true
+optimizer_runs = 200
+
+[rpc_endpoints]
+mordor = "https://rpc.mordor.etccooperative.org"
+etc = "https://etc.rivet.link"
+sepolia = "https://rpc.sepolia.org"
+mainnet = "https://eth.llamarpc.com"
+```
+
+#### Writing Solidity Tests
+
+```solidity
+// test/Faucet.t.sol
+pragma solidity ^0.8.24;
+
+import "forge-std/Test.sol";
+import "../src/Faucet.sol";
+
+contract FaucetTest is Test {
+    Faucet public faucet;
+    address public user;
+
+    function setUp() public {
+        faucet = new Faucet();
+        user = makeAddr("user");
+        vm.deal(address(faucet), 1 ether);
+    }
+
+    function test_Withdraw() public {
+        vm.prank(user);
+        faucet.withdraw(0.1 ether);
+        assertEq(user.balance, 0.1 ether);
+    }
+
+    function testFuzz_Withdraw(uint256 amount) public {
+        amount = bound(amount, 1, 0.1 ether);
+        vm.prank(user);
+        faucet.withdraw(amount);
+        assertEq(user.balance, amount);
+    }
+}
+```
+
+Run tests:
+
+```bash
+forge test
+```
+
+#### Deploying with Foundry
+
+Create `script/Deploy.s.sol`:
+
+```solidity
+pragma solidity ^0.8.24;
+
+import "forge-std/Script.sol";
+import "../src/Faucet.sol";
+
+contract DeployScript is Script {
+    function run() public {
+        vm.startBroadcast();
+        new Faucet();
+        vm.stopBroadcast();
+    }
+}
+```
+
+Deploy:
+
+```bash
+forge script script/Deploy.s.sol --rpc-url mordor --broadcast --private-key $PRIVATE_KEY
+```
+
+### OpenZeppelin Contracts
+
+- **GitHub**: [github.com/OpenZeppelin/openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
+- **Documentation**: [docs.openzeppelin.com/contracts](https://docs.openzeppelin.com/contracts)
+
+The most widely used library of secure, audited smart contracts. Version 5.x supports Solidity ^0.8.20.
+
+**Key contracts:**
+
+- **ERC20, ERC721, ERC1155**: Token standard implementations
+- **AccessControl, Ownable**: Role-based and simple access control
+- **ReentrancyGuard**: Protection against reentrancy attacks
+- **Pausable**: Emergency stop functionality
+- **SafeERC20**: Safe token transfer wrappers
+
+#### Installing
+
+With Hardhat:
+```bash
+npm install @openzeppelin/contracts
+```
+
+With Foundry:
+```bash
+forge install OpenZeppelin/openzeppelin-contracts
+```
+
+Add to `remappings.txt`:
+```
+@openzeppelin/=lib/openzeppelin-contracts/
+```
+
+#### Example: ERC20 Token
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyToken is ERC20, Ownable {
+    constructor() ERC20("MyToken", "MTK") Ownable(msg.sender) {
+        _mint(msg.sender, 1000000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+```
+
+## Libraries
+
+### ethers.js
+
+The most widely used Ethereum library in 2025, known for its clean API and TypeScript support. Default library for Hardhat.
+
+- **GitHub**: [github.com/ethers-io/ethers.js](https://github.com/ethers-io/ethers.js)
+- **Documentation**: [docs.ethers.org](https://docs.ethers.org)
+
+```typescript
+import { ethers } from "ethers";
+
+// Connect to Mordor testnet
+const provider = new ethers.JsonRpcProvider(
+  "https://rpc.mordor.etccooperative.org"
+);
+
+// Get balance
+const balance = await provider.getBalance("0x...");
+console.log(ethers.formatEther(balance), "METC");
+
+// Connect wallet
+const wallet = new ethers.Wallet(privateKey, provider);
+
+// Interact with contract
+const faucet = new ethers.Contract(address, abi, wallet);
+await faucet.withdraw(ethers.parseEther("0.1"));
+```
+
+### viem
+
+A modern TypeScript-first alternative to ethers.js, designed for smaller bundle sizes. Used by wagmi and RainbowKit.
+
+- **GitHub**: [github.com/wevm/viem](https://github.com/wevm/viem)
+- **Documentation**: [viem.sh](https://viem.sh)
+
+```typescript
+import { createPublicClient, http } from "viem";
+
+// Define ETC Mordor chain
+const mordor = {
+  id: 63,
+  name: "Mordor",
+  network: "mordor",
+  nativeCurrency: { name: "Mordor Ether", symbol: "METC", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.mordor.etccooperative.org"] },
+  },
+};
+
+const client = createPublicClient({
+  chain: mordor,
+  transport: http(),
+});
+
+const balance = await client.getBalance({ address: "0x..." });
+```
+
+### Other Libraries
+
+| Library | Language | Documentation |
+|---------|----------|---------------|
+| web3.js | JavaScript | [docs.web3js.org](https://docs.web3js.org) |
+| web3.py | Python | [web3py.readthedocs.io](https://web3py.readthedocs.io) |
+| web3j | Java/Kotlin | [docs.web3j.io](https://docs.web3j.io) |
+| Nethereum | .NET | [docs.nethereum.com](https://docs.nethereum.com) |
+
+## Testing Smart Contracts
+
+### Test Frameworks Summary
+
+| Framework | Test Language | Testing Framework | Local Blockchain |
+|-----------|--------------|-------------------|------------------|
+| Hardhat | TypeScript/JavaScript | Mocha + Chai | Hardhat Network |
+| Foundry | Solidity | forge-std | Anvil |
+
+### Hardhat Testing
+
+```typescript
+import { expect } from "chai";
+import { ethers } from "hardhat";
+
+describe("Faucet", function () {
+  it("Should allow withdrawal", async function () {
+    const Faucet = await ethers.getContractFactory("Faucet");
+    const faucet = await Faucet.deploy();
+
+    const [owner] = await ethers.getSigners();
+    await owner.sendTransaction({
+      to: faucet.target,
+      value: ethers.parseEther("1.0")
+    });
+
+    await expect(
+      faucet.withdraw(ethers.parseEther("0.1"))
+    ).to.changeEtherBalance(owner, ethers.parseEther("0.1"));
+  });
+});
+```
+
+Run: `npx hardhat test`
+
+### Foundry Testing
+
+```solidity
+pragma solidity ^0.8.24;
+
+import "forge-std/Test.sol";
+import "../src/Faucet.sol";
+
+contract FaucetTest is Test {
+    Faucet faucet;
+
+    function setUp() public {
+        faucet = new Faucet();
+        vm.deal(address(faucet), 1 ether);
+    }
+
+    function test_Withdraw() public {
+        address user = makeAddr("user");
+        vm.prank(user);
+        faucet.withdraw(0.1 ether);
+        assertEq(user.balance, 0.1 ether);
+    }
+}
+```
+
+Run: `forge test`
+
+### Local Test Blockchains
+
+**Hardhat Network:**
+```bash
+npx hardhat test      # Auto-starts for tests
+npx hardhat node      # Standalone mode
+```
+
+Features: Solidity stack traces, console.log, mainnet forking, time manipulation.
+
+**Anvil:**
+```bash
+anvil
+anvil --chain-id 63  # Mordor chain ID
+```
+
+Features: Fast execution, mainnet forking, state snapshots, address impersonation.
+
+### When to Use Mordor vs Local
+
+| Scenario | Recommended |
+|----------|-------------|
+| Unit tests | Hardhat Network or Anvil |
+| Integration tests | Local (with forking if needed) |
+| Pre-deployment verification | Mordor testnet |
+| Testing PoW mechanics | Mordor testnet |
+| CI/CD pipelines | Hardhat Network or Anvil |
+
+## Command-Line Utilities
+
+### Cast (Foundry)
+
+```bash
+# Get transaction receipt
+cast receipt <txhash> --rpc-url mordor
+
+# Get contract code
+cast code <address> --rpc-url mordor
+
+# Read storage slot
+cast storage <address> <slot> --rpc-url mordor
+
+# Call a view function
+cast call <address> "getBalance()" --rpc-url mordor
+
+# Send a transaction
+cast send <address> "withdraw(uint256)" 100000000000000000 --rpc-url mordor --private-key $KEY
+```
+
+### helpeth (EthereumJS)
+
+```bash
+helpeth keyGenerate           # Generate new key
+helpeth keyDetails            # Print key details
+helpeth parseTx <tx>          # Parse raw transaction
+helpeth unitConvert 1 ether wei  # Convert units
+```
+
+## Resources
+
+- **Hardhat**: [hardhat.org](https://hardhat.org)
+- **Foundry Book**: [book.getfoundry.sh](https://book.getfoundry.sh)
+- **OpenZeppelin**: [docs.openzeppelin.com](https://docs.openzeppelin.com)
+- **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
+- **viem**: [viem.sh](https://viem.sh)

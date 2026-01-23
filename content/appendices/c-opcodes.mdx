@@ -1,0 +1,192 @@
+---
+title: EVM Opcodes
+description: Complete reference of EVM bytecode instructions
+---
+
+# Appendix C: EVM Opcodes
+
+This appendix provides a reference of all EVM opcodes, their gas costs, and descriptions.
+
+## Opcode Categories
+
+### Stop and Arithmetic (0x00 - 0x0F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| STOP | 0x00 | 0 | 0 → 0 | Halts execution |
+| ADD | 0x01 | 3 | 2 → 1 | Addition |
+| MUL | 0x02 | 5 | 2 → 1 | Multiplication |
+| SUB | 0x03 | 3 | 2 → 1 | Subtraction |
+| DIV | 0x04 | 5 | 2 → 1 | Integer division |
+| SDIV | 0x05 | 5 | 2 → 1 | Signed integer division |
+| MOD | 0x06 | 5 | 2 → 1 | Modulo operation |
+| SMOD | 0x07 | 5 | 2 → 1 | Signed modulo |
+| ADDMOD | 0x08 | 8 | 3 → 1 | Modular addition |
+| MULMOD | 0x09 | 8 | 3 → 1 | Modular multiplication |
+| EXP | 0x0A | 10* | 2 → 1 | Exponentiation |
+| SIGNEXTEND | 0x0B | 5 | 2 → 1 | Sign extend |
+
+*EXP cost: 10 + 50 × (byte size of exponent)
+
+### Comparison & Bitwise (0x10 - 0x1F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| LT | 0x10 | 3 | 2 → 1 | Less than |
+| GT | 0x11 | 3 | 2 → 1 | Greater than |
+| SLT | 0x12 | 3 | 2 → 1 | Signed less than |
+| SGT | 0x13 | 3 | 2 → 1 | Signed greater than |
+| EQ | 0x14 | 3 | 2 → 1 | Equality |
+| ISZERO | 0x15 | 3 | 1 → 1 | Is zero |
+| AND | 0x16 | 3 | 2 → 1 | Bitwise AND |
+| OR | 0x17 | 3 | 2 → 1 | Bitwise OR |
+| XOR | 0x18 | 3 | 2 → 1 | Bitwise XOR |
+| NOT | 0x19 | 3 | 1 → 1 | Bitwise NOT |
+| BYTE | 0x1A | 3 | 2 → 1 | Retrieve single byte |
+| SHL | 0x1B | 3 | 2 → 1 | Shift left |
+| SHR | 0x1C | 3 | 2 → 1 | Shift right |
+| SAR | 0x1D | 3 | 2 → 1 | Arithmetic shift right |
+
+### Keccak (0x20)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| KECCAK256 | 0x20 | 30* | 2 → 1 | Keccak-256 hash |
+
+*Plus 6 gas per word of data
+
+### Environmental (0x30 - 0x3F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| ADDRESS | 0x30 | 2 | 0 → 1 | Current contract address |
+| BALANCE | 0x31 | 100* | 1 → 1 | Balance of address |
+| ORIGIN | 0x32 | 2 | 0 → 1 | Transaction origin |
+| CALLER | 0x33 | 2 | 0 → 1 | Message caller |
+| CALLVALUE | 0x34 | 2 | 0 → 1 | Message value (wei) |
+| CALLDATALOAD | 0x35 | 3 | 1 → 1 | Load calldata word |
+| CALLDATASIZE | 0x36 | 2 | 0 → 1 | Calldata size |
+| CALLDATACOPY | 0x37 | 3* | 3 → 0 | Copy calldata to memory |
+| CODESIZE | 0x38 | 2 | 0 → 1 | Code size |
+| CODECOPY | 0x39 | 3* | 3 → 0 | Copy code to memory |
+| GASPRICE | 0x3A | 2 | 0 → 1 | Transaction gas price |
+| EXTCODESIZE | 0x3B | 100* | 1 → 1 | External code size |
+| EXTCODECOPY | 0x3C | 100* | 4 → 0 | Copy external code |
+| RETURNDATASIZE | 0x3D | 2 | 0 → 1 | Return data size |
+| RETURNDATACOPY | 0x3E | 3* | 3 → 0 | Copy return data |
+| EXTCODEHASH | 0x3F | 100* | 1 → 1 | External code hash |
+
+*Cold/warm access costs apply (EIP-2929)
+
+### Block Information (0x40 - 0x4F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| BLOCKHASH | 0x40 | 20 | 1 → 1 | Hash of recent block |
+| COINBASE | 0x41 | 2 | 0 → 1 | Block producer address |
+| TIMESTAMP | 0x42 | 2 | 0 → 1 | Block timestamp |
+| NUMBER | 0x43 | 2 | 0 → 1 | Block number |
+| PREVRANDAO | 0x44 | 2 | 0 → 1 | PoS random / PoW difficulty |
+| GASLIMIT | 0x45 | 2 | 0 → 1 | Block gas limit |
+| CHAINID | 0x46 | 2 | 0 → 1 | Chain ID |
+| SELFBALANCE | 0x47 | 5 | 0 → 1 | Contract balance |
+| BASEFEE | 0x48 | 2 | 0 → 1 | Block base fee |
+
+### Stack, Memory, Storage (0x50 - 0x5F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| POP | 0x50 | 2 | 1 → 0 | Remove top item |
+| MLOAD | 0x51 | 3* | 1 → 1 | Load from memory |
+| MSTORE | 0x52 | 3* | 2 → 0 | Store to memory |
+| MSTORE8 | 0x53 | 3* | 2 → 0 | Store byte to memory |
+| SLOAD | 0x54 | 100* | 1 → 1 | Load from storage |
+| SSTORE | 0x55 | ** | 2 → 0 | Store to storage |
+| JUMP | 0x56 | 8 | 1 → 0 | Jump to position |
+| JUMPI | 0x57 | 10 | 2 → 0 | Conditional jump |
+| PC | 0x58 | 2 | 0 → 1 | Program counter |
+| MSIZE | 0x59 | 2 | 0 → 1 | Memory size |
+| GAS | 0x5A | 2 | 0 → 1 | Remaining gas |
+| JUMPDEST | 0x5B | 1 | 0 → 0 | Valid jump destination |
+
+*Memory expansion costs apply
+**SSTORE: 20,000 (new) / 5,000 (update) / 100 (warm)
+
+### Push Operations (0x60 - 0x7F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| PUSH1 | 0x60 | 3 | 0 → 1 | Push 1 byte |
+| PUSH2 | 0x61 | 3 | 0 → 1 | Push 2 bytes |
+| ... | ... | ... | ... | ... |
+| PUSH32 | 0x7F | 3 | 0 → 1 | Push 32 bytes |
+
+### Duplication (0x80 - 0x8F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| DUP1 | 0x80 | 3 | 1 → 2 | Duplicate 1st item |
+| DUP2 | 0x81 | 3 | 2 → 3 | Duplicate 2nd item |
+| ... | ... | ... | ... | ... |
+| DUP16 | 0x8F | 3 | 16 → 17 | Duplicate 16th item |
+
+### Exchange (0x90 - 0x9F)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| SWAP1 | 0x90 | 3 | 2 → 2 | Swap 1st and 2nd |
+| SWAP2 | 0x91 | 3 | 3 → 3 | Swap 1st and 3rd |
+| ... | ... | ... | ... | ... |
+| SWAP16 | 0x9F | 3 | 17 → 17 | Swap 1st and 17th |
+
+### Logging (0xA0 - 0xA4)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| LOG0 | 0xA0 | 375* | 2 → 0 | Log with 0 topics |
+| LOG1 | 0xA1 | 750* | 3 → 0 | Log with 1 topic |
+| LOG2 | 0xA2 | 1125* | 4 → 0 | Log with 2 topics |
+| LOG3 | 0xA3 | 1500* | 5 → 0 | Log with 3 topics |
+| LOG4 | 0xA4 | 1875* | 6 → 0 | Log with 4 topics |
+
+*Plus 8 gas per byte of log data
+
+### System Operations (0xF0 - 0xFF)
+
+| Opcode | Hex | Gas | Stack | Description |
+|--------|-----|-----|-------|-------------|
+| CREATE | 0xF0 | 32000* | 3 → 1 | Create contract |
+| CALL | 0xF1 | 100* | 7 → 1 | Call contract |
+| CALLCODE | 0xF2 | 100* | 7 → 1 | Call with own storage |
+| RETURN | 0xF3 | 0 | 2 → 0 | Return from call |
+| DELEGATECALL | 0xF4 | 100* | 6 → 1 | Call keeping context |
+| CREATE2 | 0xF5 | 32000* | 4 → 1 | Create with salt |
+| STATICCALL | 0xFA | 100* | 6 → 1 | Read-only call |
+| REVERT | 0xFD | 0 | 2 → 0 | Revert with data |
+| INVALID | 0xFE | all | 0 → 0 | Invalid instruction |
+| SELFDESTRUCT | 0xFF | 5000* | 1 → 0 | Destroy contract |
+
+## Gas Calculation Examples
+
+```solidity
+// Simple addition: 3 gas
+function add(uint a, uint b) public pure returns (uint) {
+    return a + b;  // ADD: 3 gas
+}
+
+// Storage write: 20,000 gas (new) or 5,000 (update)
+function store(uint x) public {
+    value = x;  // SSTORE: 20,000 or 5,000 gas
+}
+
+// External call: ~2,600 gas minimum
+function callOther(address target) public {
+    target.call("");  // CALL: 100 base + 2,500 cold access
+}
+```
+
+## Resources
+
+- **EVM Codes**: https://www.evm.codes
+- **Ethereum Yellow Paper**: https://ethereum.github.io/yellowpaper
+- **go-ethereum**: https://github.com/ethereum/go-ethereum

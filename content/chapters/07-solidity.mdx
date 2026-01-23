@@ -1,0 +1,449 @@
+---
+title: Smart Contracts and Solidity
+description: Writing smart contracts with the Solidity programming language
+chapter: 7
+---
+
+# Smart Contracts and Solidity
+
+As we discussed earlier, there are two different types of accounts in Ethereum: externally owned accounts (EOAs) and contract accounts. EOAs are controlled by users, often via software such as a wallet application that is external to the Ethereum platform. In contrast, contract accounts are controlled by program code (also commonly referred to as "smart contracts") that is executed by the Ethereum Virtual Machine. In short, EOAs are simple accounts without any associated code or data storage, whereas contract accounts have both associated code and data storage.
+
+In this chapter, we will discuss contract accounts and the program code that controls them using the Solidity programming language.
+
+## What Is a Smart Contract?
+
+The term *smart contract* has been used over the years to describe a wide variety of different things. In the 1990s, cryptographer Nick Szabo coined the term and defined it as "a set of promises, specified in digital form, including protocols within which the parties perform on the other promises." In the context of Ethereum, the term is actually a bit of a misnomer, given that Ethereum smart contracts are neither smart nor legal contracts, but the term has stuck.
+
+In this book, we use the term "smart contracts" to refer to immutable computer programs that run deterministically in the context of an Ethereum Virtual Machine as part of the Ethereum network protocol.
+
+Let's unpack that definition:
+
+**Computer programs** — Smart contracts are simply computer programs. The word "contract" has no legal meaning in this context.
+
+**Immutable** — Once deployed, the code of a smart contract cannot change. Unlike with traditional software, the only way to modify a smart contract is to deploy a new instance.
+
+**Deterministic** — The outcome of the execution of a smart contract is the same for everyone who runs it, given the context of the transaction that initiated its execution and the state of the Ethereum blockchain at the moment of execution.
+
+**EVM context** — Smart contracts operate with a very limited execution context. They can access their own state, the context of the transaction that called them, and some information about the most recent blocks.
+
+**Decentralized world computer** — The EVM runs as a local instance on every Ethereum node, but because all instances of the EVM operate on the same initial state and produce the same final state, the system as a whole operates as a single "world computer."
+
+## Life Cycle of a Smart Contract
+
+Smart contracts are typically written in a high-level language, such as Solidity. But in order to run, they must be compiled to the low-level bytecode that runs in the EVM. Once compiled, they are deployed on the Ethereum platform using a special *contract creation* transaction, which is identified as such by being sent to the special contract creation address, namely `0x0`.
+
+Each contract is identified by an Ethereum address, which is derived from the contract creation transaction as a function of the originating account and nonce. The Ethereum address of a contract can be used in a transaction as the recipient, sending funds to the contract or calling one of the contract's functions.
+
+Importantly, contracts *only run if they are called by a transaction*. All smart contracts in Ethereum are executed, ultimately, because of a transaction initiated from an EOA. A contract can call another contract that can call another contract, and so on, but the first contract in such a chain of execution will always have been called by a transaction from an EOA. Contracts never run "on their own" or "in the background."
+
+Transactions are *atomic*, regardless of how many contracts they call or what those contracts do when called. Transactions execute in their entirety, with any changes in the global state (contracts, accounts, etc.) recorded only if all execution terminates successfully. If execution fails due to an error, all of its effects (changes in state) are "rolled back" as if the transaction never ran.
+
+## Introduction to Ethereum High-Level Languages
+
+The EVM is a virtual machine that runs a special form of code called *EVM bytecode*. While it is possible to program smart contracts directly in bytecode, EVM bytecode is rather unwieldy and very difficult for programmers to read and understand. Instead, most Ethereum developers use a high-level language to write programs, and a compiler to convert them into bytecode.
+
+Currently supported high-level programming languages for smart contracts include:
+
+**LLL** — A functional (declarative) programming language, with Lisp-like syntax. It was the first high-level language for Ethereum smart contracts but is rarely used today.
+
+**Serpent** — A procedural (imperative) programming language with a syntax similar to Python.
+
+**Solidity** — A procedural (imperative) programming language with a syntax similar to JavaScript, C++, or Java. The most popular and frequently used language for Ethereum smart contracts.
+
+**Vyper** — A more recently developed language, similar to Serpent and again with Python-like syntax. Intended to be more secure and auditable than Solidity.
+
+Of all of these, Solidity is by far the most popular, to the point of being the *de facto* high-level language of Ethereum and other EVM-compatible blockchains including Ethereum Classic.
+
+## Building a Smart Contract with Solidity
+
+Solidity was created by Dr. Gavin Wood as a language explicitly for writing smart contracts with features to directly support execution in the decentralized environment of the Ethereum world computer.
+
+The main "product" of the Solidity project is the Solidity compiler, `solc`, which converts programs written in the Solidity language to EVM bytecode. The project also manages the important application binary interface (ABI) standard for Ethereum smart contracts.
+
+### Selecting a Version of Solidity
+
+Solidity follows a versioning model called *semantic versioning*, which specifies version numbers structured as three numbers separated by dots: `MAJOR.MINOR.PATCH`.
+
+As of 2025, Solidity 0.8.x is the current stable series, with important features like:
+
+- Built-in overflow checking (no more SafeMath needed!)
+- Custom errors for gas-efficient reverts
+- User-defined value types
+- Improved ABI encoder (v2 by default)
+
+<Tip>
+Throughout this book, we use Solidity 0.8.x. If you're working with legacy code using 0.7.x or earlier, be aware of significant differences, particularly around arithmetic overflow behavior.
+</Tip>
+
+### Development Environment
+
+To develop in Solidity, you have several options:
+
+**Command-line tools:**
+- `solc` — The standalone Solidity compiler
+- Foundry (`forge`) — A fast, portable, and modular toolkit for Ethereum development
+- Hardhat — A comprehensive development environment for Ethereum
+
+**Web-based IDEs:**
+- Remix IDE (https://remix.ethereum.org) — Full-featured browser-based IDE
+- EthFiddle — Quick code sharing and testing
+
+**Desktop editors with plugins:**
+- VS Code with Solidity extension
+- Sublime Text, Vim, Emacs with syntax highlighting
+
+<Tip>
+For ETC development, we recommend Hardhat or Foundry. Both work seamlessly with ETC networks — just configure your RPC endpoint to point to an ETC node (like `https://etc.rivet.link` for mainnet or `https://rpc.mordor.etccooperative.org` for Mordor testnet).
+</Tip>
+
+### Writing a Simple Solidity Program
+
+Let's revisit and improve the Faucet contract from earlier chapters:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+// Our first contract is a faucet!
+contract Faucet {
+    // Give out ether to anyone who asks
+    function withdraw(uint withdraw_amount) public {
+        // Limit withdrawal amount
+        require(withdraw_amount <= 0.1 ether);
+
+        // Send the amount to the address that requested it
+        payable(msg.sender).transfer(withdraw_amount);
+    }
+
+    // Accept any incoming amount
+    receive() external payable {}
+}
+```
+
+### Compiling with the Solidity Compiler
+
+You can compile using `solc` directly:
+
+```bash
+$ solc --optimize --bin Faucet.sol
+```
+
+Or with Foundry:
+
+```bash
+$ forge build
+```
+
+Or with Hardhat:
+
+```bash
+$ npx hardhat compile
+```
+
+## The Ethereum Contract ABI
+
+An *application binary interface* (ABI) is an interface between two program modules. The ABI defines how data structures and functions are accessed in *machine code*.
+
+In Ethereum, the ABI is used to encode contract calls for the EVM and to read data out of transactions. The purpose of an ABI is to define the functions in the contract that can be invoked and describe how each function will accept arguments and return its result.
+
+A contract's ABI is specified as a JSON array of function descriptions and events:
+
+```bash
+$ solc --abi Faucet.sol
+======= Faucet.sol:Faucet =======
+Contract JSON ABI
+[{"inputs":[{"name":"withdraw_amount","type":"uint256"}],
+"name":"withdraw","outputs":[],"stateMutability":"nonpayable",
+"type":"function"},{"stateMutability":"payable","type":"receive"}]
+```
+
+All that is needed for an application to interact with a contract is an ABI and the address where the contract has been deployed.
+
+## Programming with Solidity
+
+### Data Types
+
+Let's look at some of the basic data types offered in Solidity:
+
+**Boolean (`bool`)** — Boolean value, `true` or `false`, with logical operators `!` (not), `&&` (and), `||` (or), `==` (equal), and `!=` (not equal).
+
+**Integer (`int`, `uint`)** — Signed (`int`) and unsigned (`uint`) integers, declared in increments of 8 bits from `int8` to `uint256`. Without a size suffix, 256-bit quantities are used, to match the word size of the EVM.
+
+**Address** — A 20-byte Ethereum address. The `address` object has member functions like `balance` (returns the account balance) and `transfer` (transfers ether to the account).
+
+**Byte array (fixed)** — Fixed-size arrays of bytes, declared with `bytes1` up to `bytes32`.
+
+**Byte array (dynamic)** — Variable-sized arrays of bytes, declared with `bytes` or `string`.
+
+**Enum** — User-defined type for enumerating discrete values: `enum NAME {LABEL1, LABEL2, ...}`.
+
+**Arrays** — An array of any type, either fixed or dynamic: `uint32[][5]` is a fixed-size array of five dynamic arrays of unsigned integers.
+
+**Struct** — User-defined data containers for grouping variables.
+
+**Mapping** — Hash lookup tables for `key => value` pairs: `mapping(address => uint256) balances`.
+
+Solidity also offers unit literals:
+
+**Time units:** `seconds`, `minutes`, `hours`, `days`, `weeks`
+**Ether units:** `wei`, `gwei`, `ether`
+
+Example using unit multipliers:
+
+```solidity
+// Instead of:
+require(withdraw_amount <= 100000000000000000);
+
+// Write:
+require(withdraw_amount <= 0.1 ether);
+```
+
+### Predefined Global Variables and Functions
+
+When a contract is executed in the EVM, it has access to global objects:
+
+**Transaction/message context (`msg`):**
+- `msg.sender` — Address that called this contract
+- `msg.value` — Value of ether sent with this call (in wei)
+- `msg.data` — The data payload of this call
+- `msg.sig` — The first four bytes of the data payload (function selector)
+
+**Transaction context (`tx`):**
+- `tx.gasprice` — The gas price in the calling transaction
+- `tx.origin` — The address of the originating EOA for this transaction (WARNING: unsafe for authorization!)
+
+**Block context (`block`):**
+- `block.coinbase` — The address of the block producer
+- `block.difficulty` / `block.prevrandao` — Difficulty (PoW) or randomness (PoS)
+- `block.gaslimit` — The maximum gas for the current block
+- `block.number` — The current block number
+- `block.timestamp` — The timestamp of the current block
+
+<Note>
+On **Ethereum Classic (PoW)**, `block.difficulty` returns the actual mining difficulty. On **Ethereum (PoS)**, this was renamed to `block.prevrandao` and returns a random value from the beacon chain. Smart contracts that rely on difficulty for randomness should be aware of this difference.
+</Note>
+
+### Functions
+
+The syntax for declaring a function in Solidity:
+
+```solidity
+function FunctionName([parameters]) {public|private|internal|external}
+[pure|view|payable] [modifiers] [returns (return types)]
+```
+
+**Visibility:**
+- `public` — Can be called by other contracts, EOA transactions, or from within the contract
+- `external` — Like public, but cannot be called from within the contract (without `this`)
+- `internal` — Only accessible from within the contract or derived contracts
+- `private` — Only accessible from within the contract (not derived contracts)
+
+**Function behavior:**
+- `view` — Promises not to modify any state
+- `pure` — Neither reads nor writes any variables in storage
+- `payable` — Can accept incoming payments
+
+### Contract Constructor and selfdestruct
+
+When a contract is created, it runs the *constructor function* if one exists:
+
+```solidity
+contract Faucet {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+}
+```
+
+Contracts can be destroyed using `selfdestruct`:
+
+```solidity
+function destroy() public {
+    require(msg.sender == owner);
+    selfdestruct(payable(owner));
+}
+```
+
+<Warning>
+The `SELFDESTRUCT` opcode is being deprecated in Ethereum. EIP-6780 (part of the Dencun upgrade) significantly changed its behavior — it now only sends funds and does not delete contract code except when called in the same transaction as contract creation. Plan accordingly for long-term code.
+</Warning>
+
+### Function Modifiers
+
+Function modifiers create reusable conditions:
+
+```solidity
+modifier onlyOwner {
+    require(msg.sender == owner, "Only owner can call this");
+    _;
+}
+
+function destroy() public onlyOwner {
+    selfdestruct(payable(owner));
+}
+```
+
+The underscore `_` is replaced by the code of the modified function.
+
+### Contract Inheritance
+
+Solidity's `contract` object supports inheritance:
+
+```solidity
+contract Owned {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+}
+
+contract Mortal is Owned {
+    function destroy() public onlyOwner {
+        selfdestruct(payable(owner));
+    }
+}
+
+contract Faucet is Mortal {
+    function withdraw(uint amount) public {
+        require(amount <= 0.1 ether);
+        payable(msg.sender).transfer(amount);
+    }
+
+    receive() external payable {}
+}
+```
+
+### Error Handling
+
+Solidity provides several error handling functions:
+
+**`require(condition, "message")`** — Test preconditions, revert with message if false
+**`assert(condition)`** — Test internal conditions (should never fail in correct code)
+**`revert("message")`** — Explicitly revert execution
+
+Custom errors (Solidity 0.8.4+) are more gas-efficient:
+
+```solidity
+error InsufficientBalance(uint256 available, uint256 required);
+
+function withdraw(uint amount) public {
+    if (address(this).balance < amount) {
+        revert InsufficientBalance(address(this).balance, amount);
+    }
+    payable(msg.sender).transfer(amount);
+}
+```
+
+### Events
+
+Events are used to log information for off-chain consumption:
+
+```solidity
+contract Faucet {
+    event Withdrawal(address indexed to, uint amount);
+    event Deposit(address indexed from, uint amount);
+
+    function withdraw(uint amount) public {
+        require(amount <= 0.1 ether);
+        payable(msg.sender).transfer(amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    receive() external payable {
+        emit Deposit(msg.sender, msg.value);
+    }
+}
+```
+
+Events are especially useful for:
+- Light clients and DApp services that "watch" for specific events
+- Debugging during development
+- Creating audit trails
+
+### Calling Other Contracts
+
+You can call other contracts in several ways:
+
+**Creating a new instance:**
+```solidity
+import "./Faucet.sol";
+
+contract Token {
+    Faucet _faucet;
+
+    constructor() {
+        _faucet = new Faucet();
+    }
+}
+```
+
+**Addressing an existing instance:**
+```solidity
+constructor(address _f) {
+    _faucet = Faucet(_f);
+}
+```
+
+**Low-level calls:**
+```solidity
+(bool success, ) = _faucet.call(abi.encodeWithSignature("withdraw(uint256)", amount));
+require(success, "Call failed");
+```
+
+<Warning>
+Low-level calls like `call` and `delegatecall` can expose your contract to reentrancy attacks. Always follow the checks-effects-interactions pattern and consider using ReentrancyGuard.
+</Warning>
+
+## Gas Considerations
+
+Gas is a resource constraining the maximum amount of computation that Ethereum will allow a transaction to consume. If the gas limit is exceeded:
+
+- An "out of gas" exception is thrown
+- The state of the contract is reverted
+- All ether used to pay for the gas is taken as a transaction fee (not refunded)
+
+### Gas Optimization Tips
+
+**Avoid dynamically sized arrays in loops** — Any loop through a dynamically sized array risks running out of gas.
+
+**Minimize storage operations** — Storage (`SSTORE`) is the most expensive operation. Use memory variables when possible.
+
+**Use appropriate data types** — Smaller types like `uint8` don't save gas in storage (slots are 256-bit), but they can save gas in memory and calldata.
+
+**Use custom errors** — Custom errors are more gas-efficient than string error messages.
+
+### Estimating Gas Cost
+
+```javascript
+// Hardhat console
+const gasEstimate = await faucet.withdraw.estimateGas(ethers.parseEther("0.1"));
+const feeData = await ethers.provider.getFeeData();
+const gasCost = gasEstimate * feeData.gasPrice;
+console.log("Gas cost:", ethers.formatEther(gasCost), "ether");
+```
+
+<Tip>
+Gas prices vary significantly between chains. Ethereum Classic typically has much lower gas prices than Ethereum mainnet. Mordor testnet has negligible gas costs for testing.
+</Tip>
+
+## Conclusions
+
+In this chapter, we explored the Solidity programming language for writing smart contracts. We covered:
+
+- Smart contract definition and life cycle
+- Solidity syntax: data types, functions, modifiers
+- Contract inheritance and code reuse
+- Error handling patterns
+- Events for logging
+- Calling other contracts safely
+- Gas considerations and optimization
+
+In the next chapter, we will explore Vyper, another smart contract language with a focus on security and simplicity.

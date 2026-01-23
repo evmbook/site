@@ -1,0 +1,322 @@
+---
+title: Glossary
+description: Key terms and definitions for EVM development
+---
+
+# Appendix E: Glossary
+
+This glossary contains terms used throughout this book and in the broader EVM ecosystem.
+
+## A
+
+**Account**
+An object containing an address, balance, nonce, and optional storage and code. An account can be a contract account or an externally owned account (EOA).
+
+**Address**
+A 20-byte (160-bit) identifier for an account. Derived from the rightmost 160 bits of the Keccak-256 hash of an ECDSA public key.
+
+**Assert**
+In Solidity, `assert(false)` compiles to `0xfe`, an invalid opcode that consumes all remaining gas. Use `assert()` for conditions that should never occur—indicates a bug if triggered.
+
+## B
+
+**Big-endian**
+A byte ordering where the most significant byte is stored first. The EVM uses big-endian for most operations.
+
+**Block**
+A collection of transactions, a block header, and references to ommer blocks. Blocks are added by miners (PoW) or validators (PoS).
+
+**Blockchain**
+A sequence of blocks, each cryptographically linked to its predecessor, forming an immutable ledger.
+
+**Bytecode**
+Low-level instructions executed by the EVM. Compiled from high-level languages like Solidity or Vyper.
+
+## C
+
+**Consensus**
+Agreement among nodes on the current state of the blockchain.
+
+**Consensus Client**
+In post-Merge Ethereum (PoS), the client responsible for the Proof of Stake consensus mechanism. Works alongside an execution client. Examples: Lighthouse, Prysm, Teku. Not required on PoW chains like Ethereum Classic.
+
+**Consensus Rules**
+The validation rules that full nodes follow to stay in consensus with other nodes.
+
+**Contract Account**
+An account containing code that executes when it receives transactions. Has no private key—controlled only by its code.
+
+**Core Geth**
+The primary execution client for Ethereum Classic, maintained as a fork of go-ethereum (Geth). Supports ETC mainnet (chainId 61) and Mordor testnet (chainId 63).
+
+## D
+
+**DAO**
+Decentralized Autonomous Organization. Also refers to "The DAO" contract hacked in June 2016, which led to the ETH/ETC split.
+
+**DApp**
+Decentralized Application. A web application built on decentralized infrastructure, typically combining smart contracts with a frontend.
+
+**Difficulty**
+In Proof of Work, a network-wide setting controlling how much computation is required to mine a block.
+
+**Digital Signature**
+Cryptographic proof that a message was created by the holder of a specific private key.
+
+## E
+
+**ECDSA**
+Elliptic Curve Digital Signature Algorithm. The cryptographic algorithm used to sign transactions and prove ownership of accounts.
+
+**EIP**
+Ethereum Improvement Proposal. A design document proposing new features or changes. See [eips.ethereum.org](https://eips.ethereum.org).
+
+**ENS**
+Ethereum Name Service. Maps human-readable names (like `vitalik.eth`) to addresses.
+
+**EOA**
+Externally Owned Account. An account controlled by a private key, used by humans to interact with the blockchain.
+
+**ERC**
+Ethereum Request for Comments. A category of EIPs defining application-level standards (e.g., ERC-20 for tokens).
+
+**Ethash**
+The original Proof of Work algorithm used by Ethereum before The Merge and still used (as ETCHash) by Ethereum Classic.
+
+**ETCHash**
+The PoW mining algorithm used by Ethereum Classic since the Thanos upgrade (November 2020). A modification of Ethash that supports 4GB GPUs.
+
+**Ether**
+The native cryptocurrency of Ethereum and Ethereum Classic networks. Symbol: ETH (Ethereum) or ETC (Ethereum Classic).
+
+**Ethereum Classic (ETC)**
+The original Ethereum blockchain that continued without the DAO hard fork. Maintains Proof of Work consensus. ChainId 61 (mainnet), 63 (Mordor testnet).
+
+**EVM**
+Ethereum Virtual Machine. The stack-based virtual machine that executes bytecode. Shared by Ethereum, Ethereum Classic, and other EVM-compatible chains.
+
+**Execution Client**
+Client software responsible for executing transactions and managing state (the EVM). On PoW chains like ETC, only an execution client is needed. Examples: Geth, Core Geth, Besu, Erigon.
+
+## F
+
+**Fallback Function**
+A contract function called when no other function matches the call data, or when the contract receives plain ether.
+
+**Faucet**
+A service that dispenses free test ether for use on testnets.
+
+**Finney**
+A denomination of ether. 1 finney = 10^15 wei = 0.001 ether.
+
+**Fork**
+A change in protocol rules, or a divergence creating two competing chains. Can be "soft" (backward compatible) or "hard" (not backward compatible).
+
+**Foundry**
+A Rust-based Ethereum development toolkit. Includes Forge (testing), Cast (CLI), Anvil (local testnet), and Chisel (REPL).
+
+## G
+
+**Gas**
+A unit measuring computational effort in the EVM. Each operation costs a specific amount of gas.
+
+**Gas Limit**
+The maximum gas a transaction can consume (set by sender) or a block can contain (set by network).
+
+**Gas Price**
+The amount of ether (in wei) the sender pays per unit of gas.
+
+**Genesis Block**
+The first block (block 0) of a blockchain.
+
+**Geth**
+Go Ethereum. The most widely used Ethereum client, written in Go.
+
+## H
+
+**Hardhat**
+A popular Ethereum development framework for JavaScript/TypeScript, featuring Hardhat Network for local testing.
+
+**Hard Fork**
+A protocol change that is not backward compatible. Nodes must upgrade or they will follow a different chain.
+
+**Hash**
+A fixed-size output produced by a cryptographic hash function from variable-size input. Used extensively for data integrity and identification.
+
+**HD Wallet**
+Hierarchical Deterministic wallet. Uses a seed phrase to derive unlimited keys following BIP-32/39/44 standards.
+
+## I
+
+**ICAP**
+Inter-exchange Client Address Protocol. An address encoding compatible with IBAN, using the XE prefix.
+
+**Immutability**
+The principle that deployed smart contract code cannot be changed. A core property of blockchain systems.
+
+**Internal Transaction**
+A message sent from one contract to another during execution. Not recorded as a separate transaction on-chain.
+
+**IPFS**
+InterPlanetary File System. A decentralized storage protocol often used with DApps for storing content.
+
+## K
+
+**Keccak-256**
+The cryptographic hash function used by Ethereum. Related to but not identical to SHA-3.
+
+**Keystore File**
+A JSON file containing an encrypted private key, protected by a password.
+
+## L
+
+**Library**
+A contract deployed once and called by other contracts using DELEGATECALL. Cannot hold state or receive ether.
+
+**Light Client**
+A client that doesn't store the full blockchain, instead requesting data from full nodes as needed.
+
+## M
+
+**Mainnet**
+The primary, production blockchain network. Ethereum mainnet (chainId 1) and ETC mainnet (chainId 61).
+
+**Merkle Patricia Tree**
+The data structure used by Ethereum to store state, transactions, and receipts efficiently.
+
+**Message**
+An internal transaction between contracts, never serialized to the blockchain.
+
+**Miner**
+A node that finds valid Proof of Work solutions for new blocks. Used on PoW chains like Ethereum Classic.
+
+**Mordor**
+The primary testnet for Ethereum Classic. Uses PoW consensus (ETCHash) and chainId 63.
+
+## N
+
+**NFT**
+Non-Fungible Token. A unique token following the ERC-721 or ERC-1155 standard.
+
+**Node**
+A software client that participates in the blockchain network.
+
+**Nonce**
+A counter used to prevent replay attacks. Account nonce: counts transactions sent. Block nonce (PoW): the value miners vary to find valid hashes.
+
+## O
+
+**Ommer**
+A valid block that wasn't included in the main chain. Previously called "uncle." Ommer miners receive partial rewards.
+
+**Opcode**
+A single instruction in EVM bytecode. See Appendix C for the complete reference.
+
+## P
+
+**Private Key**
+A 256-bit secret number that controls an account. Must be kept secure—anyone with the key controls the account.
+
+**Proof of Stake (PoS)**
+A consensus mechanism where validators stake cryptocurrency to participate in block production. Used by Ethereum since The Merge (September 2022).
+
+**Proof of Work (PoW)**
+A consensus mechanism requiring computational work to produce blocks. Used by Ethereum Classic and Bitcoin.
+
+**Public Key**
+A point on the secp256k1 elliptic curve derived from a private key. Used to verify signatures and derive addresses.
+
+## R
+
+**Receipt**
+Data returned after transaction execution, including status, gas used, and logs.
+
+**Reentrancy**
+A vulnerability where a contract can be called back before its first execution completes, potentially draining funds.
+
+**Revert**
+An operation that undoes all state changes in the current call and returns remaining gas.
+
+**RLP**
+Recursive Length Prefix. Ethereum's serialization format for encoding arbitrary data structures.
+
+## S
+
+**Selfdestruct**
+An opcode that destroys a contract and sends its balance to a specified address. Deprecated in future upgrades.
+
+**Sepolia**
+The primary testnet for Ethereum development. Uses PoS consensus and chainId 11155111.
+
+**Smart Contract**
+A program stored on the blockchain that executes automatically when triggered by transactions.
+
+**Solidity**
+The most popular language for writing smart contracts. Syntax similar to JavaScript/C++.
+
+**SSTORE**
+The opcode for writing to contract storage. One of the most expensive operations (20,000 gas for new values).
+
+**Szabo**
+A denomination of ether. 1 szabo = 10^12 wei = 0.000001 ether.
+
+## T
+
+**Testnet**
+A blockchain network for testing, using valueless test ether. Active testnets: Sepolia (ETH), Mordor (ETC).
+
+**The Merge**
+The September 2022 upgrade that transitioned Ethereum from PoW to PoS. Ethereum Classic did not participate.
+
+**Transaction**
+A signed message sent from an EOA, targeting an address with optional value and data.
+
+**Turing Complete**
+A system capable of computing anything computable given enough resources. The EVM is Turing complete (bounded by gas).
+
+## V
+
+**Validator**
+In PoS networks, a participant who stakes cryptocurrency to propose and attest to blocks. Ethereum validators stake 32 ETH.
+
+**Vyper**
+A Python-like smart contract language designed for security and simplicity.
+
+## W
+
+**Wallet**
+Software managing private keys and providing an interface to interact with the blockchain.
+
+**Web3**
+The vision of a decentralized web built on blockchain technology.
+
+**Wei**
+The smallest denomination of ether. 1 ether = 10^18 wei.
+
+## Z
+
+**Zero Address**
+The address `0x0000000000000000000000000000000000000000`. Used as the destination for contract creation transactions.
+
+---
+
+## Denomination Reference
+
+| Unit | Wei Value | Ether Value |
+|------|-----------|-------------|
+| Wei | 1 | 10^-18 |
+| Kwei (babbage) | 10^3 | 10^-15 |
+| Mwei (lovelace) | 10^6 | 10^-12 |
+| Gwei (shannon) | 10^9 | 10^-9 |
+| Szabo | 10^12 | 10^-6 |
+| Finney | 10^15 | 10^-3 |
+| Ether | 10^18 | 1 |
+
+## Chain IDs
+
+| Network | Chain ID |
+|---------|----------|
+| Ethereum Mainnet | 1 |
+| Ethereum Classic | 61 |
+| Sepolia (ETH testnet) | 11155111 |
+| Mordor (ETC testnet) | 63 |

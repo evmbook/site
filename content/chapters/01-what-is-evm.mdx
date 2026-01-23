@@ -1,0 +1,215 @@
+---
+title: What Is the EVM?
+description: Understanding the Ethereum Virtual Machine and its role as the world computer
+chapter: 1
+---
+
+# What Is the EVM?
+
+The Ethereum Virtual Machine is often described as "the world computer." But what does that mean? Let's start with a computer science–focused description, and then try to decipher that with a more practical analysis of the EVM's capabilities and characteristics, while comparing it to Bitcoin and other decentralized information exchange platforms (or "blockchains" for short).
+
+From a computer science perspective, the EVM is a deterministic but practically unbounded state machine, consisting of a globally accessible singleton state and a virtual machine that applies changes to that state.
+
+From a more practical perspective, an EVM-based blockchain is an open source, globally decentralized computing infrastructure that executes programs called *smart contracts*. It uses a blockchain to synchronize and store the system's state changes, along with a cryptocurrency (like *ether* on Ethereum or *ETC* on Ethereum Classic) to meter and constrain execution resource costs.
+
+The EVM platform enables developers to build powerful decentralized applications with built-in economic functions. While providing high availability, auditability, transparency, and neutrality, it also reduces or eliminates censorship and reduces certain counterparty risks.
+
+## Compared to Bitcoin
+
+Many people will come to the EVM with some prior experience of cryptocurrencies, specifically Bitcoin. EVM-based blockchains share many common elements with other open blockchains: a peer-to-peer network connecting participants, a Byzantine fault–tolerant consensus algorithm for synchronization of state updates, the use of cryptographic primitives such as digital signatures and hashes, and a digital currency.
+
+Yet in many ways, both the purpose and construction of EVM chains are strikingly different from those of the open blockchains that preceded them, including Bitcoin.
+
+The EVM's purpose is not primarily to be a digital currency payment network. While the native cryptocurrency is both integral to and necessary for the operation of the network, it is intended as a *utility currency* to pay for use of the platform as the world computer.
+
+Unlike Bitcoin, which has a very limited scripting language, EVM-based chains are designed to be general-purpose programmable blockchains that run a *virtual machine* capable of executing code of arbitrary and unbounded complexity. Where Bitcoin's Script language is, intentionally, constrained to simple true/false evaluation of spending conditions, the EVM's language is *Turing complete*, meaning that it can straightforwardly function as a general-purpose computer.
+
+## Components of a Blockchain
+
+The components of an open, public blockchain are (usually):
+
+- A peer-to-peer (P2P) network connecting participants and propagating transactions and blocks of verified transactions, based on a standardized "gossip" protocol
+- Messages, in the form of transactions, representing state transitions
+- A set of consensus rules, governing what constitutes a transaction and what makes for a valid state transition
+- A state machine that processes transactions according to the consensus rules
+- A chain of cryptographically secured blocks that acts as a journal of all the verified and accepted state transitions
+- A consensus algorithm that decentralizes control over the blockchain, by forcing participants to cooperate in the enforcement of the consensus rules
+- A game-theoretically sound incentivization scheme (e.g., proof-of-work costs plus block rewards) to economically secure the state machine in an open environment
+- One or more open source software implementations of the above ("clients")
+
+All or most of these components are usually combined in a single software client. For example, in Bitcoin, the reference implementation is developed by the *Bitcoin Core* open source project and implemented as the *bitcoind* client. In Ethereum, rather than a reference implementation there is a *reference specification*, a mathematical description of the system in the Yellow Paper. There are a number of clients, which are built according to the reference specification.
+
+In the past, we used the term "blockchain" to represent all of the components just listed, as a shorthand reference to the combination of technologies that encompass all of the characteristics described. Today, however, there are a huge variety of blockchains with different properties. We need qualifiers to help us understand the characteristics of the blockchain in question, such as *open, public, global, decentralized, neutral*, and *censorship-resistant*, to identify the important emergent characteristics of a "blockchain" system that these components allow.
+
+Not all blockchains are created equal. When someone tells you that something is a blockchain, you have not received an answer; rather, you need to start asking a lot of questions to clarify what they mean when they use the word "blockchain." Start by asking for a description of the components in the preceding list, then ask whether this "blockchain" exhibits the characteristics of being *open, public*, etc.
+
+## The Birth of Ethereum
+
+All great innovations solve real problems, and Ethereum is no exception. Ethereum was conceived at a time when people recognized the power of the Bitcoin model, and were trying to move beyond cryptocurrency applications. But developers faced a conundrum: they either needed to build on top of Bitcoin or start a new blockchain. Building upon Bitcoin meant living within the intentional constraints of the network and trying to find workarounds. The limited set of transaction types, data types, and sizes of data storage seemed to limit the sorts of applications that could run directly on Bitcoin; anything else needed additional off-chain layers, and that immediately negated many of the advantages of using a public blockchain. For projects that needed more freedom and flexibility while staying on-chain, a new blockchain was the only option. But that meant a lot of work: bootstrapping all the infrastructure elements, exhaustive testing, etc.
+
+Toward the end of 2013, Vitalik Buterin, a young programmer and Bitcoin enthusiast, started thinking about further extending the capabilities of Bitcoin and Mastercoin (an overlay protocol that extended Bitcoin to offer rudimentary smart contracts). In October of that year, Vitalik proposed a more generalized approach to the Mastercoin team, one that allowed flexible and scriptable (but not Turing-complete) contracts to replace the specialized contract language of Mastercoin. While the Mastercoin team were impressed, this proposal was too radical a change to fit into their development roadmap.
+
+In December 2013, Vitalik started sharing a whitepaper that outlined the idea behind Ethereum: a Turing-complete, general-purpose blockchain. A few dozen people saw this early draft and offered feedback, helping Vitalik evolve the proposal.
+
+Both of the authors of the original *Mastering Ethereum* book received an early draft of the whitepaper and commented on it. Andreas M. Antonopoulos was intrigued by the idea and asked Vitalik many questions about the use of a separate blockchain to enforce consensus rules on smart contract execution and the implications of a Turing-complete language. Dr. Gavin Wood was one of the first people to reach out to Vitalik and offer to help with his C++ programming skills. Gavin became Ethereum's cofounder, codesigner, and CTO.
+
+As Vitalik recounts in his "Ethereum Prehistory" post:
+
+> This was the time when the Ethereum protocol was entirely my own creation. From here on, however, new participants started to join the fold. By far the most prominent on the protocol side was Gavin Wood...
+>
+> Gavin can also be largely credited for the subtle change in vision from viewing Ethereum as a platform for building programmable money, with blockchain-based contracts that can hold digital assets and transfer them according to pre-set rules, to a general-purpose computing platform. This started with subtle changes in emphasis and terminology, and later this influence became stronger with the increasing emphasis on the "Web 3" ensemble, which saw Ethereum as being one piece of a suite of decentralized technologies, the other two being Whisper and Swarm.
+
+Starting in December 2013, Vitalik and Gavin refined and evolved the idea, together building the protocol layer that became Ethereum.
+
+Ethereum's founders were thinking about a blockchain without a specific purpose, that could support a broad variety of applications by being *programmed*. The idea was that by using a general-purpose blockchain like Ethereum, a developer could program their particular application without having to implement the underlying mechanisms of peer-to-peer networks, blockchains, consensus algorithms, etc. The Ethereum platform was designed to abstract these details and provide a deterministic and secure programming environment for decentralized blockchain applications.
+
+Much like Satoshi, Vitalik and Gavin didn't just invent a new technology; they combined new inventions with existing technologies in a novel way and delivered the prototype code to prove their ideas to the world.
+
+The founders worked for years, building and refining the vision. And on July 30, 2015, the first Ethereum block was mined. The world's computer started serving the world.
+
+<Callout type="note">
+Vitalik Buterin's article "A Prehistory of Ethereum" was published in September 2017 and provides a fascinating first-person view of Ethereum's earliest moments. You can read it at [vitalik.ca](https://vitalik.ca/general/2017/09/14/prehistory.html).
+</Callout>
+
+## The EVM Fork: Ethereum and Ethereum Classic
+
+<Callout type="note" title="ETC vs ETH">
+This book covers both major EVM implementations: **Ethereum (ETH)** running proof-of-stake, and **Ethereum Classic (ETC)** running proof-of-work. This section explains how they diverged.
+</Callout>
+
+In June 2016, a vulnerability in "The DAO" smart contract was exploited, draining approximately 3.6 million ETH. The community faced a difficult choice: accept the loss or implement an "irregular state change" to return the funds.
+
+On July 20, 2016, at block 1,920,000, Ethereum implemented a hard fork that reversed the DAO exploit. Not everyone agreed with this decision. Those who believed "code is law" and that the blockchain should never be altered to reverse transactions continued running the original chain—this became **Ethereum Classic (ETC)**.
+
+Today, both chains share the same EVM architecture and are largely compatible at the smart contract level. The key differences are:
+
+| Aspect | Ethereum (ETH) | Ethereum Classic (ETC) |
+|--------|---------------|----------------------|
+| **Consensus** | Proof-of-Stake (since The Merge, 2022) | Proof-of-Work |
+| **Chain ID** | 1 | 61 |
+| **Philosophy** | Pragmatic evolution | Immutability, code-is-law |
+| **Primary Testnet** | Sepolia | Mordor |
+
+For developers, the practical implications are minimal—the same Solidity code compiles to the same EVM bytecode and runs on both chains. The differences lie in network configuration, gas economics, and community values.
+
+## Ethereum's Development Stages
+
+Ethereum's development was planned over four distinct stages, with major changes occurring at each stage. A stage may include subreleases, known as "hard forks," that change functionality in a way that is not backward compatible.
+
+The four main development stages are codenamed *Frontier*, *Homestead*, *Metropolis*, and *Serenity*. Key milestones include:
+
+- **Block #0 (Frontier)** — The initial stage of Ethereum, lasting from July 30, 2015, to March 2016.
+- **Block #1,150,000 (Homestead)** — The second stage of Ethereum, launched in March 2016.
+- **Block #1,920,000 (DAO Fork)** — The hard fork that caused Ethereum and Ethereum Classic to split.
+- **Block #4,370,000 (Byzantium)** — Part of the Metropolis stage, launched October 2017.
+- **Block #7,280,000 (Constantinople)** — Further Metropolis upgrades.
+- **Block #15,537,394 (The Merge)** — Ethereum's transition from PoW to PoS in September 2022.
+
+Ethereum Classic has followed its own upgrade path, maintaining proof-of-work consensus while implementing compatible EVM upgrades through ECIPs (Ethereum Classic Improvement Proposals).
+
+## A General-Purpose Blockchain
+
+The original blockchain, namely Bitcoin's blockchain, tracks the state of units of bitcoin and their ownership. You can think of Bitcoin as a distributed consensus *state machine*, where transactions cause a global *state transition*, altering the ownership of coins. The state transitions are constrained by the rules of consensus, allowing all participants to (eventually) converge on a common (consensus) state of the system, after several blocks are mined.
+
+The EVM is also a distributed state machine. But instead of tracking only the state of currency ownership, it tracks the state transitions of a general-purpose data store, i.e., a store that can hold any data expressible as a *key–value tuple*. A key–value data store holds arbitrary values, each referenced by some key; for example, the value "Mastering EVM" referenced by the key "Book Title". In some ways, this serves the same purpose as the data storage model of *Random Access Memory* (RAM) used by most general-purpose computers. The EVM has memory that stores both code and data, and it uses the blockchain to track how this memory changes over time. Like a general-purpose stored-program computer, the EVM can load code into its state machine and *run* that code, storing the resulting state changes in its blockchain. Two of the critical differences from most general-purpose computers are that EVM state changes are governed by the rules of consensus and the state is distributed globally. The EVM answers the question: "What if we could track any arbitrary state and program the state machine to create a world-wide computer operating under consensus?"
+
+## EVM Components
+
+In an EVM-based blockchain, the components of a blockchain system are, more specifically:
+
+- **P2P network** — The network runs on TCP port 30303 and uses the ÐΞVp2p protocol.
+- **Consensus rules** — Defined in the reference specification (the Yellow Paper for Ethereum).
+- **Transactions** — Network messages that include a sender, recipient, value, and data payload.
+- **State machine** — The Ethereum Virtual Machine (EVM), a stack-based virtual machine that executes *bytecode* (machine-language instructions). EVM programs, called "smart contracts," are written in high-level languages (e.g., Solidity) and compiled to bytecode for execution on the EVM.
+- **Data structures** — State is stored locally on each node as a database (usually LevelDB), which contains the transactions and system state in a serialized hashed data structure called a *Merkle Patricia Tree*.
+- **Consensus algorithm** — Ethereum uses proof-of-stake (PoS) via the Beacon Chain. Ethereum Classic uses proof-of-work (PoW) with the Etchash algorithm.
+- **Clients** — There are several interoperable implementations. For Ethereum: Geth, Nethermind, Besu. For Ethereum Classic: Core Geth, Hyperledger Besu, and Erigon.
+
+### Further Reading
+
+- [The Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
+- [The Beige Paper](https://github.com/chronaeon/beigepaper) (Yellow Paper in less formal language)
+- [ÐΞVp2p network protocol](https://github.com/ethereum/devp2p)
+- [EVM resources](https://ethereum.org/en/developers/docs/evm/)
+- [LevelDB database](https://github.com/google/leveldb)
+- [Merkle Patricia trees](https://ethereum.org/en/developers/docs/data-structures-and-encoding/patricia-merkle-trie/)
+
+## Turing Completeness
+
+As soon as you start reading about the EVM, you will immediately encounter the term "Turing complete." The EVM, they say, unlike Bitcoin, is Turing complete. What exactly does that mean?
+
+The term refers to English mathematician Alan Turing, who is considered the father of computer science. In 1936 he created a mathematical model of a computer consisting of a state machine that manipulates symbols by reading and writing them on sequential memory (resembling an infinite-length paper tape). With this construct, Turing went on to provide a mathematical foundation to answer (in the negative) questions about *universal computability*, meaning whether all problems are solvable. He proved that there are classes of problems that are uncomputable. Specifically, he proved that the *halting problem* (whether it is possible, given an arbitrary program and its input, to determine whether the program will eventually stop running) is not solvable.
+
+Alan Turing further defined a system to be *Turing complete* if it can be used to simulate any Turing machine. Such a system is called a *Universal Turing machine* (UTM).
+
+The EVM's ability to execute a stored program, while reading and writing data to memory, makes it a Turing-complete system and therefore a UTM. The EVM can compute any algorithm that can be computed by any Turing machine, given the limitations of finite memory.
+
+The groundbreaking innovation is combining the general-purpose computing architecture of a stored-program computer with a decentralized blockchain, thereby creating a distributed single-state (singleton) world computer. EVM programs run "everywhere," yet produce a common state that is secured by the rules of consensus.
+
+### Turing Completeness as a "Feature"
+
+Hearing that the EVM is Turing complete, you might arrive at the conclusion that this is a *feature* that is somehow lacking in a system that is Turing incomplete. Rather, it is the opposite. Turing completeness is very easy to achieve; in fact, the simplest Turing-complete state machine known has 4 states and uses 6 symbols, with a state definition that is only 22 instructions long. Indeed, sometimes systems are found to be "accidentally Turing complete."
+
+However, Turing completeness is very dangerous, particularly in open access systems like public blockchains, because of the halting problem. For example, modern printers are Turing complete and can be given files to print that send them into a frozen state. The fact that the EVM is Turing complete means that any program of any complexity can be computed. But that flexibility brings some thorny security and resource management problems. An unresponsive printer can be turned off and turned back on again. That is not possible with a public blockchain.
+
+### Implications of Turing Completeness
+
+Turing proved that you cannot predict whether a program will terminate by simulating it on a computer. In simple terms, we cannot predict the path of a program without running it. Turing-complete systems can run in "infinite loops," a term used (in oversimplification) to describe a program that does not terminate. It is trivial to create a program that runs a loop that never ends. But unintended never-ending loops can arise without warning, due to complex interactions between the starting conditions and the code.
+
+In the EVM, this poses a challenge: every participating node (client) must validate every transaction, running any smart contracts it calls. But we can't predict if a smart contract will terminate, or how long it will run, without actually running it (possibly running forever). Whether by accident or on purpose, a smart contract can be created such that it runs forever when a node attempts to validate it. This is effectively a DoS attack.
+
+To answer this challenge, the EVM introduces a metering mechanism called *gas*. As the EVM executes a smart contract, it carefully accounts for every instruction (computation, data access, etc.). Each instruction has a predetermined cost in units of gas. When a transaction triggers the execution of a smart contract, it must include an amount of gas that sets the upper limit of what can be consumed running the smart contract. The EVM will terminate execution if the amount of gas consumed by computation exceeds the gas available in the transaction. Gas is the mechanism the EVM uses to allow Turing-complete computation while limiting the resources that any program can consume.
+
+The next question is, "how does one get gas to pay for computation on the world computer?" You won't find gas on any exchanges. It can only be purchased as part of a transaction, and can only be bought with the native cryptocurrency (ether on Ethereum, ETC on Ethereum Classic). The cryptocurrency needs to be sent along with a transaction and it needs to be explicitly earmarked for the purchase of gas, along with an acceptable gas price. Just like at the pump, the price of gas is not fixed. Gas is purchased for the transaction, the computation is executed, and any unused gas is refunded back to the sender of the transaction.
+
+## Decentralized Applications (DApps)
+
+The EVM started as a way to make a general-purpose blockchain that could be programmed for a variety of uses. But very quickly, the vision expanded to become a platform for programming DApps. DApps represent a broader perspective than smart contracts. A DApp is, at the very least, a smart contract and a web user interface. More broadly, a DApp is a web application that is built on top of open, decentralized, peer-to-peer infrastructure services.
+
+A DApp is composed of at least:
+
+- Smart contracts on a blockchain
+- A web frontend user interface
+
+In addition, many DApps include other decentralized components, such as:
+
+- A decentralized (P2P) storage protocol and platform
+- A decentralized (P2P) messaging protocol and platform
+
+<Callout type="info">
+You may see DApps spelled as *ÐApps*. The Ð character is the Latin character called "ETH," alluding to Ethereum. To display this character, use the Unicode codepoint `0xD0`, or if necessary the HTML character entity `&eth;`.
+</Callout>
+
+## The Third Age of the Internet
+
+In 2004 the term "Web 2.0" came to prominence, describing an evolution of the web toward user-generated content, responsive interfaces, and interactivity. Web 2.0 is not a technical specification, but rather a term describing the new focus of web applications.
+
+The concept of DApps is meant to take the World Wide Web to its next natural evolutionary stage, introducing decentralization with peer-to-peer protocols into every aspect of a web application. The term used to describe this evolution is *web3*, meaning the third "version" of the web. First proposed by Dr. Gavin Wood, web3 represents a new vision and focus for web applications: from centrally owned and managed applications, to applications built on decentralized protocols.
+
+In later chapters we'll explore JavaScript libraries like ethers.js and viem that bridge JavaScript applications running in your browser with the blockchain. With these tools included in a JavaScript library running in your web browser, developers have a full application development suite that allows them to build web3 DApps.
+
+## Development Culture
+
+So far we've talked about how the EVM's goals and technology differ from those of other blockchains that preceded it, like Bitcoin. EVM ecosystems also have different development cultures.
+
+In Bitcoin, development is guided by conservative principles: all changes are carefully studied to ensure that none of the existing systems are disrupted. For the most part, changes are only implemented if they are backward compatible.
+
+In Ethereum (ETH), by comparison, the community's development culture is focused on the future rather than the past. The (not entirely serious) mantra is "move fast and break things." If a change is needed, it is implemented, even if that means invalidating prior assumptions, breaking compatibility, or forcing clients to update.
+
+Ethereum Classic (ETC) takes a middle path: it values immutability and stability ("code is law") while still implementing necessary upgrades. Changes are carefully considered through the ECIP process, with a focus on maintaining backward compatibility when possible.
+
+What this means to you as a developer is that you must remain flexible and be prepared to rebuild your infrastructure as some of the underlying assumptions change. One of the big challenges facing developers is the inherent contradiction between deploying code to an immutable system and a development platform that is still evolving. You can't simply "upgrade" your smart contracts. You must be prepared to deploy new ones, migrate users, apps, and funds, and start over.
+
+## Why Learn the EVM?
+
+Blockchains have a very steep learning curve, as they combine multiple disciplines into one domain: programming, information security, cryptography, economics, distributed systems, peer-to-peer networks, etc. The EVM makes this learning curve a lot less steep, so you can get started quickly. But just below the surface of a deceptively simple environment lies a lot more. As you learn and start looking deeper, there's always another layer of complexity and wonder.
+
+The EVM ecosystem is a great platform for learning about blockchains and it's building a massive community of developers. More than any other, this is a *developer's blockchain*, built by developers for developers. A developer familiar with JavaScript applications can drop into EVM development and start producing working code very quickly.
+
+## What This Book Will Teach You
+
+This book dives into the EVM and examines every component. You will start with a simple transaction, dissect how it works, build a simple contract, make it better, and follow its journey through the system.
+
+You will learn not only how to use the EVM—how it works—but also why it is designed the way it is. You will be able to understand how each of the pieces works, and how they fit together and why.
+
+Throughout, we'll highlight differences between Ethereum (ETH) and Ethereum Classic (ETC) where relevant, ensuring you understand both major implementations of this powerful technology.
