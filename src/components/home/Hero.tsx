@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 
 export function Hero() {
   return (

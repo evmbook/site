@@ -82,10 +82,10 @@
   --color-section-default: var(--section-default);
   --color-section-alt: var(--section-alt);
 
-  /* Typography */
-  --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Typography - using CSS variables from next/font */
+  --font-sans: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   /* Border Radius */
   --radius-sm: 4px;

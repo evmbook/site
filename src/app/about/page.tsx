@@ -25,12 +25,12 @@ export default function AboutPage() {
             <p>
               The blockchain space moves at lightning speed. The original <em>Mastering Ethereum</em> was
               written with content reflecting February 2017—a lifetime ago in this industry. Since then,
-              we've seen The Merge, Layer 2 scaling solutions, the DeFi explosion, and countless protocol
+              we&apos;ve seen The Merge, Layer 2 scaling solutions, the DeFi explosion, and countless protocol
               upgrades.
             </p>
             <p>
               <strong>Mastering EVM</strong> is designed as a living document that evolves with the ecosystem.
-              We continuously update content to reflect the current state of EVM development, ensuring you're
+              We continuously update content to reflect the current state of EVM development, ensuring you&apos;re
               learning modern practices, not historical artifacts.
             </p>
 
@@ -41,7 +41,7 @@ export default function AboutPage() {
               book we wished existed when we started our blockchain journey.
             </p>
             <p>
-              This isn't just another "intro to Ethereum" guide. We go deep. You'll understand
+              This isn&apos;t just another &quot;intro to Ethereum&quot; guide. We go deep. You&apos;ll understand
               not just <em>how</em> to write smart contracts, but <em>why</em> they work the
               way they do.
             </p>

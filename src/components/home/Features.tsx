@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem, cardHover } from '@/lib/animations'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 
 const features = [
   {
