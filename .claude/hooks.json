@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "preToolExecution": [
+      {
+        "tools": ["Write", "Edit"],
+        "command": "bash -c 'case \"$CLAUDE_FILE_PATH\" in *.env|*.env.*|*/.env|*/.env.*|*/secrets/*|*/secrets.*|*secret*|CNAME) echo \"BLOCKED: Protected file - $CLAUDE_FILE_PATH\"; exit 1;; esac'",
+        "description": "Block edits to .env files, secrets, and CNAME"
+      }
+    ]
+  }
+}
