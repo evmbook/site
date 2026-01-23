@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import '@/styles/globals.css'
+import { BackgroundSystem } from '@/components/BackgroundSystem'
 
 export const metadata: Metadata = {
   title: {
@@ -8,8 +9,8 @@ export const metadata: Metadata = {
   },
   description: 'A comprehensive guide to the Ethereum Virtual Machine ecosystem, covering Ethereum and Ethereum Classic.',
   keywords: ['EVM', 'Ethereum', 'Ethereum Classic', 'Solidity', 'Smart Contracts', 'Blockchain', 'DeFi'],
-  authors: [{ name: 'Nakamoto Wei' }],
-  creator: 'Nakamoto Wei',
+  authors: [{ name: 'Cipher Null' }],
+  creator: 'Cipher Null',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -36,8 +37,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
-        {children}
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-void-black text-text-primary antialiased">
+        <BackgroundSystem />
+        <div className="relative z-10">
+          {children}
+        </div>
       </body>
     </html>
   )

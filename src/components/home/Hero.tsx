@@ -1,39 +1,56 @@
+'use client'
+
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { fadeInUp, staggerContainer, staggerItem } from '@/lib/animations'
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
-      {/* Background decoration */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-brand-500/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-        <div className="text-center">
+    <section className="relative overflow-hidden py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          className="text-center"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Badge */}
-          <div className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 mb-8">
-            Free &amp; Open Source
-          </div>
+          <motion.div variants={staggerItem}>
+            <span className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium bg-dark-purple border border-neon-purple/30 text-neon-cyan mb-8">
+              Free &amp; Open Source
+            </span>
+          </motion.div>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Mastering the
-            <span className="block text-brand-600 dark:text-brand-400">
+          <motion.h1
+            variants={staggerItem}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight"
+          >
+            <span className="text-text-primary">Mastering the</span>
+            <span className="block mt-2 text-gradient-neon">
               Ethereum Virtual Machine
             </span>
-          </h1>
+          </motion.h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+          <motion.p
+            variants={staggerItem}
+            className="mt-6 text-lg sm:text-xl text-text-secondary max-w-3xl mx-auto"
+          >
             A comprehensive guide to EVM development. Learn Solidity, smart contract security,
-            DeFi protocols, and more. Covering both Ethereum and Ethereum Classic.
-          </p>
+            DeFi protocols, and more. Covering both{' '}
+            <span className="text-neon-pink">Ethereum</span> and{' '}
+            <span className="text-neon-green">Ethereum Classic</span>.
+          </motion.p>
 
           {/* CTA Buttons */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <motion.div
+            variants={staggerItem}
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
             <Link
               href="/read"
-              className="inline-flex items-center justify-center rounded-md bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-neon-pink to-neon-purple px-6 py-3 text-base font-semibold text-white shadow-lg shadow-neon-pink/25 hover:shadow-xl hover:shadow-neon-pink/40 transition-all duration-200"
             >
               Read Online
               <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -42,35 +59,54 @@ export function Hero() {
             </Link>
             <Link
               href="/download"
-              className="inline-flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 px-6 py-3 text-base font-semibold text-slate-900 dark:text-white shadow-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-transparent border border-neon-cyan px-6 py-3 text-base font-semibold text-neon-cyan shadow-md shadow-neon-cyan/10 hover:bg-neon-cyan/10 hover:shadow-lg hover:shadow-neon-cyan/25 transition-all duration-200"
             >
               Download PDF
               <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Stats */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-2xl mx-auto">
-            <div>
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">17</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">Chapters</div>
+          <motion.div
+            variants={staggerItem}
+            className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-2xl mx-auto"
+          >
+            <div className="text-center">
+              <div className="text-3xl font-bold text-neon-cyan">17</div>
+              <div className="text-sm text-text-muted">Chapters</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">5</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">Appendices</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-neon-pink">5</div>
+              <div className="text-sm text-text-muted">Appendices</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">100+</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">Code Examples</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-neon-green">100+</div>
+              <div className="text-sm text-text-muted">Code Examples</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">Free</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">Forever</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-neon-purple">Free</div>
+              <div className="text-sm text-text-muted">Forever</div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+
+          {/* Dual chain indicator */}
+          <motion.div
+            variants={staggerItem}
+            className="mt-12 flex items-center justify-center gap-8"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-neon-green shadow-lg shadow-neon-green/50" />
+              <span className="text-sm text-text-muted">ETC (PoW)</span>
+            </div>
+            <div className="w-px h-4 bg-text-muted/30" />
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-neon-pink shadow-lg shadow-neon-pink/50" />
+              <span className="text-sm text-text-muted">ETH (PoS)</span>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   )
