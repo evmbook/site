@@ -26,7 +26,7 @@ export default function ColophonPage() {
         <p>
           <strong>Mastering EVM</strong> is a comprehensive guide to the Ethereum Virtual Machine
           ecosystem, covering both Ethereum (ETH) and Ethereum Classic (ETC). This work is a
-          derivative of <em>Mastering Ethereum</em> by Andreas M. Antonopoulos and Gavin Wood,
+          derivative of <em>Mastering Ethereum (Open Edition)</em> by Andreas M. Antonopoulos and Gavin Wood,
           substantially rewritten, reorganized, and updated for 2026.
         </p>
 

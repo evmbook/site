@@ -28,7 +28,7 @@ export default function AboutPage() {
 
             <h2>A Living Book</h2>
             <p>
-              The blockchain space moves at lightning speed. The original <em>Mastering Ethereum</em> was
+              The blockchain space moves at lightning speed. The original <em>Mastering Ethereum (Open Edition)</em> was
               written with content reflecting February 2017—a lifetime ago in this industry. Since then,
               we&apos;ve seen The Merge, Layer 2 scaling solutions, the DeFi explosion, and countless protocol
               upgrades.
@@ -66,7 +66,7 @@ export default function AboutPage() {
 
             <h2>Attribution</h2>
             <p>
-              This work is a derivative of <em>Mastering Ethereum</em> by Andreas M. Antonopoulos
+              This work is a derivative of <em>Mastering Ethereum (Open Edition)</em> by Andreas M. Antonopoulos
               and Gavin Wood, available under the Creative Commons Attribution-ShareAlike 4.0
               International License (CC BY-SA 4.0).
             </p>
