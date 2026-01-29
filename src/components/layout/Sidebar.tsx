@@ -138,10 +138,10 @@ export function Sidebar() {
         <ul className="space-y-1">
           <li>
             <Link
-              href="/code"
+              href="/read/code"
               className={clsx(
                 'block px-3 py-2 text-sm transition-all duration-150',
-                pathname === '/code'
+                pathname === '/read/code'
                   ? 'bg-[var(--accent-secondary)] text-white font-bold'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
               )}
@@ -152,10 +152,10 @@ export function Sidebar() {
           </li>
           <li>
             <Link
-              href="/diagrams"
+              href="/read/diagrams"
               className={clsx(
                 'block px-3 py-2 text-sm transition-all duration-150',
-                pathname === '/diagrams'
+                pathname === '/read/diagrams'
                   ? 'bg-[var(--accent-secondary)] text-white font-bold'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
               )}

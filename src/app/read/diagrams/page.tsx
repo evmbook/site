@@ -1,8 +1,6 @@
 import { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: 'Diagrams — Mastering EVM',
@@ -141,60 +139,50 @@ const diagrams = [
 
 export default function DiagramsPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-1 bg-[var(--surface-base)]">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
-          <div className="mb-12">
-            <h1 className="text-4xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Diagrams
-            </h1>
-            <p className="mt-4 text-lg text-[var(--text-secondary)]">
-              Technical diagrams from Mastering EVM (2025 Edition). All diagrams are SVG format
-              for crisp rendering at any size.
-            </p>
-          </div>
+    <article className="prose prose-invert max-w-none">
+      <h1>Diagrams</h1>
+      <p className="lead">
+        Technical diagrams from Mastering EVM (2025 Edition). All diagrams are SVG format
+        for crisp rendering at any size.
+      </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {diagrams.map((diagram) => (
-              <div
-                key={diagram.file}
-                className="border-4 border-[var(--accent-primary)]/30 bg-[var(--surface-elevated)] overflow-hidden hover:border-[var(--accent-primary)] transition-colors duration-150"
-              >
-                <div className="aspect-[4/3] bg-white p-4 flex items-center justify-center">
-                  <Image
-                    src={`/images/diagrams/${diagram.file}`}
-                    alt={diagram.title}
-                    width={600}
-                    height={450}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-                <div className="p-4 border-t-2 border-[var(--accent-primary)]/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold text-[var(--accent-primary)]">
-                      Chapter {diagram.chapter}
-                    </span>
-                    <Link
-                      href={`/read/${diagram.slug}`}
-                      className="text-xs text-[var(--link-color)] hover:text-[var(--link-hover)]"
-                    >
-                      Read chapter →
-                    </Link>
-                  </div>
-                  <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                    {diagram.title}
-                  </h2>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                    {diagram.description}
-                  </p>
-                </div>
+      <div className="not-prose grid grid-cols-1 gap-8 mt-8">
+        {diagrams.map((diagram) => (
+          <div
+            key={diagram.file}
+            className="border-4 border-[var(--accent-primary)]/30 bg-[var(--surface-elevated)] overflow-hidden hover:border-[var(--accent-primary)] transition-colors duration-150"
+          >
+            <div className="bg-white p-4 flex items-center justify-center">
+              <Image
+                src={`/images/diagrams/${diagram.file}`}
+                alt={diagram.title}
+                width={800}
+                height={500}
+                className="max-w-full h-auto object-contain"
+              />
+            </div>
+            <div className="p-4 border-t-2 border-[var(--accent-primary)]/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-[var(--accent-primary)]">
+                  Chapter {diagram.chapter}
+                </span>
+                <Link
+                  href={`/read/${diagram.slug}`}
+                  className="text-xs text-[var(--link-color)] hover:text-[var(--link-hover)]"
+                >
+                  Read chapter &rarr;
+                </Link>
               </div>
-            ))}
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">
+                {diagram.title}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                {diagram.description}
+              </p>
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+        ))}
+      </div>
+    </article>
   )
 }
