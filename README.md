@@ -11,7 +11,7 @@ The website syncs the following from the book repo:
 - `content/appendices/` — 8 appendices (MDX)
 - `content/chapters/_index.json` — Canonical TOC
 - `content/code/` — Code examples (Solidity, TypeScript)
-- `public/diagrams/` — Technical diagrams (SVG)
+- `public/images/diagrams/` — Technical diagrams (SVG)
 
 ## Content Sync
 
@@ -23,7 +23,7 @@ cp -r ../evmbook-v2025/content/chapters/*.mdx content/chapters/
 cp ../evmbook-v2025/content/chapters/_index.json content/chapters/
 cp -r ../evmbook-v2025/content/appendices/*.mdx content/appendices/
 cp -r ../evmbook-v2025/code/* content/code/
-cp ../evmbook-v2025/images/diagrams/*.svg public/diagrams/
+cp ../evmbook-v2025/images/diagrams/*.svg public/images/diagrams/
 ```
 
 **After syncing, update:**
@@ -62,9 +62,11 @@ npm run format
 src/
 ├── app/
 │   ├── page.tsx         # Landing page
-│   ├── read/            # Book reader (chapters, appendices)
-│   ├── code/            # Code library
-│   ├── diagrams/        # Diagram gallery
+│   ├── read/            # Book reader
+│   │   ├── [slug]/      # Chapter pages
+│   │   ├── appendix/    # Appendix pages
+│   │   ├── code/        # Code library (/read/code)
+│   │   └── diagrams/    # Diagram gallery (/read/diagrams)
 │   ├── download/        # Download options
 │   └── about/           # About page
 ├── components/
@@ -81,7 +83,7 @@ content/                 # Book content (synced from evmbook-v2025)
 └── meta/                # Colophon, about
 
 public/
-├── diagrams/            # 18 SVG technical diagrams
+├── images/diagrams/     # 18 SVG technical diagrams
 └── ...                  # Favicons, OG images
 ```
 
@@ -102,8 +104,8 @@ Before deploying, verify:
 ### Routes
 - [ ] **Build succeeds**: `npm run build` completes without errors
 - [ ] **No 404s**: All sidebar links resolve to actual pages
-- [ ] **Code library works**: `/code` page renders
-- [ ] **Diagrams render**: `/diagrams` page shows all 18 diagrams
+- [ ] **Code library works**: `/read/code` page renders
+- [ ] **Diagrams render**: `/read/diagrams` page shows all 18 diagrams
 
 ### Content Accuracy
 - [ ] **Author bio matches back cover**: About page uses exact back cover copy
