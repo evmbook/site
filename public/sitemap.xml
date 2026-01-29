@@ -20,6 +20,7 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <!-- Chapters -->
   <url>
     <loc>https://masteringevm.com/read/00-preface</loc>
     <changefreq>monthly</changefreq>
@@ -31,12 +32,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/02-ethereum-basics</loc>
+    <loc>https://masteringevm.com/read/02-getting-started</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/03-ethereum-clients</loc>
+    <loc>https://masteringevm.com/read/03-clients</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -56,7 +57,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/07-smart-contracts</loc>
+    <loc>https://masteringevm.com/read/07-solidity</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -66,47 +67,47 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/09-testing-debugging</loc>
+    <loc>https://masteringevm.com/read/09-security</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/10-security</loc>
+    <loc>https://masteringevm.com/read/10-tokens</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/11-tokens</loc>
+    <loc>https://masteringevm.com/read/11-oracles</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/12-oracles</loc>
+    <loc>https://masteringevm.com/read/12-dapps</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/13-dapps</loc>
+    <loc>https://masteringevm.com/read/13-evm-deep-dive</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/14-evm-deep-dive</loc>
+    <loc>https://masteringevm.com/read/14-consensus</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/15-consensus</loc>
+    <loc>https://masteringevm.com/read/15-defi</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/16-defi</loc>
+    <loc>https://masteringevm.com/read/16-scaling</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/17-layer2</loc>
+    <loc>https://masteringevm.com/read/17-zero-knowledge</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -114,5 +115,31 @@
     <loc>https://masteringevm.com/read/18-agentic-development</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <!-- Appendices -->
+  <url>
+    <loc>https://masteringevm.com/read/appendix/a-fork-history</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/b-eip-standards</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/c-opcodes</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/d-dev-tools</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/e-glossary</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>

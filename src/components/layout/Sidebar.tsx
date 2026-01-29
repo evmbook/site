@@ -6,47 +6,38 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 
-// Canonical chapter list from evmbook-v2025 content/chapters/_index.json
+// Chapter list matching actual content files in content/chapters/
+// NOTE: Book (evmbook-v2025) has 28 chapters; website content is being expanded
+// Keep this in sync with content/chapters/_index.json
 const chapters = [
   { slug: '00-preface', title: 'Preface', chapter: 0 },
-  { slug: '01-evm-today', title: 'The EVM Today', chapter: 1 },
-  { slug: '02-how-we-got-here', title: 'How We Got Here', chapter: 2 },
-  { slug: '03-environment-setup', title: 'Setting Up Your Environment', chapter: 3 },
-  { slug: '04-cryptography', title: 'Cryptography Essentials', chapter: 4 },
-  { slug: '05-accounts-wallets', title: 'Accounts, Keys & Wallets', chapter: 5 },
-  { slug: '06-transactions-gas', title: 'Transactions & Gas', chapter: 6 },
-  { slug: '07-consensus-finality', title: 'Consensus & Finality', chapter: 7 },
-  { slug: '08-solidity-fundamentals', title: 'Solidity Fundamentals', chapter: 8 },
-  { slug: '09-advanced-solidity', title: 'Advanced Solidity Patterns', chapter: 9 },
-  { slug: '10-security', title: 'Smart Contract Security', chapter: 10 },
-  { slug: '11-testing-verification', title: 'Testing & Verification', chapter: 11 },
-  { slug: '12-deployment-upgrades', title: 'Deployment & Upgrades', chapter: 12 },
-  { slug: '13-evm-internals', title: 'EVM Internals', chapter: 13 },
-  { slug: '14-gas-optimization', title: 'Gas Optimization', chapter: 14 },
-  { slug: '15-token-standards', title: 'Token Standards & Evolution', chapter: 15 },
-  { slug: '16-amm-evolution', title: 'AMM Evolution', chapter: 16 },
-  { slug: '17-lending-evolution', title: 'Lending & Stablecoin Evolution', chapter: 17 },
-  { slug: '18-governance-daos', title: 'Governance & DAOs', chapter: 18 },
-  { slug: '19-nft-marketplaces', title: 'NFT Marketplace Evolution', chapter: 19 },
-  { slug: '20-launchpads-distribution', title: 'Launchpads & Token Distribution', chapter: 20 },
-  { slug: '21-prediction-markets', title: 'Prediction Markets', chapter: 21 },
-  { slug: '22-oracles', title: 'Oracles & Data Feeds', chapter: 22 },
-  { slug: '23-layer2-solutions', title: 'Layer 2 Solutions', chapter: 23 },
-  { slug: '24-zero-knowledge', title: 'Zero-Knowledge Applications', chapter: 24 },
-  { slug: '25-regulatory-landscape', title: 'Regulatory Landscape', chapter: 25 },
-  { slug: '26-bootstrapping-ecosystem', title: 'Bootstrapping an EVM Ecosystem', chapter: 26 },
-  { slug: '27-agentic-development', title: 'Agentic Development', chapter: 27 },
+  { slug: '01-what-is-evm', title: 'What is the EVM?', chapter: 1 },
+  { slug: '02-getting-started', title: 'Getting Started', chapter: 2 },
+  { slug: '03-clients', title: 'EVM Clients', chapter: 3 },
+  { slug: '04-cryptography', title: 'Cryptography', chapter: 4 },
+  { slug: '05-wallets', title: 'Wallets', chapter: 5 },
+  { slug: '06-transactions', title: 'Transactions', chapter: 6 },
+  { slug: '07-solidity', title: 'Smart Contracts with Solidity', chapter: 7 },
+  { slug: '08-vyper', title: 'Smart Contracts with Vyper', chapter: 8 },
+  { slug: '09-security', title: 'Smart Contract Security', chapter: 9 },
+  { slug: '10-tokens', title: 'Tokens', chapter: 10 },
+  { slug: '11-oracles', title: 'Oracles', chapter: 11 },
+  { slug: '12-dapps', title: 'Decentralized Applications', chapter: 12 },
+  { slug: '13-evm-deep-dive', title: 'The EVM in Depth', chapter: 13 },
+  { slug: '14-consensus', title: 'Consensus Mechanisms', chapter: 14 },
+  { slug: '15-defi', title: 'DeFi Protocols', chapter: 15 },
+  { slug: '16-scaling', title: 'Scaling Solutions', chapter: 16 },
+  { slug: '17-zero-knowledge', title: 'Zero-Knowledge Proofs', chapter: 17 },
+  { slug: '18-agentic-development', title: 'Agentic Development', chapter: 18 },
 ]
 
+// Appendices matching actual content files in content/appendices/
 const appendices = [
   { slug: 'a-fork-history', title: 'Fork History' },
   { slug: 'b-eip-standards', title: 'EIP Standards Reference' },
   { slug: 'c-opcodes', title: 'EVM Opcodes' },
   { slug: 'd-dev-tools', title: 'Development Tools' },
   { slug: 'e-glossary', title: 'Glossary' },
-  { slug: 'f-regulatory-timeline', title: 'Regulatory Timeline' },
-  { slug: 'g-key-figures', title: 'Key Figures in Blockchain History' },
-  { slug: 'h-essential-reading', title: 'Essential Reading List' },
 ]
 
 export function Sidebar() {

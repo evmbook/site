@@ -116,7 +116,7 @@ export function Footer() {
               Current through January 2026
             </p>
             <p className="text-xs text-[var(--text-muted)]/60">
-              28 Chapters | 8 Appendices | Ethereum &amp; Ethereum Classic
+              19 Chapters | 5 Appendices | Ethereum &amp; Ethereum Classic
             </p>
           </div>
         </div>
