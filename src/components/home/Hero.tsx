@@ -26,7 +26,7 @@ export function Hero({ stats }: HeroProps) {
             {/* Badge - Neo-Brutalist with glass effect */}
             <motion.div variants={staggerItem}>
               <span className="inline-flex items-center px-4 py-2 text-sm font-bold uppercase tracking-wider bg-[var(--glass-bg)] backdrop-blur-sm border-4 border-[var(--accent-primary)] text-[var(--accent-primary)] shadow-[var(--shadow-brutal-sm)] mb-8">
-                Free &amp; Open Source
+                2025 Edition — Free to Read
               </span>
             </motion.div>
 

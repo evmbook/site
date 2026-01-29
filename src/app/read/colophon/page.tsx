@@ -83,22 +83,22 @@ export default function ColophonPage() {
         <p>
           This work is licensed under the{' '}
           <a
-            href="https://creativecommons.org/licenses/by-sa/4.0/"
+            href="https://creativecommons.org/licenses/by-nc/4.0/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)
+            Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)
           </a>.
         </p>
         <p>You are free to:</p>
         <ul>
           <li><strong>Share</strong> — copy and redistribute the material in any medium or format</li>
-          <li><strong>Adapt</strong> — remix, transform, and build upon the material for any purpose, even commercially</li>
+          <li><strong>Adapt</strong> — remix, transform, and build upon the material</li>
         </ul>
         <p>Under the following terms:</p>
         <ul>
           <li><strong>Attribution</strong> — Give appropriate credit, provide a link to the license, and indicate if changes were made</li>
-          <li><strong>ShareAlike</strong> — Distribute contributions under the same license</li>
+          <li><strong>NonCommercial</strong> — You may not use the material for commercial purposes</li>
         </ul>
 
         <h2>Source Code</h2>

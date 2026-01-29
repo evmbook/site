@@ -106,7 +106,7 @@ const jsonLd = {
   },
   bookFormat: 'EBook',
   isAccessibleForFree: true,
-  license: 'https://creativecommons.org/licenses/by-sa/4.0/',
+  license: 'https://creativecommons.org/licenses/by-nc/4.0/',
   publisher: 'Mastering EVM',
   inLanguage: 'en',
   about: {

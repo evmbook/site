@@ -70,7 +70,7 @@ export function DownloadCTA() {
           </div>
 
           <p className="mt-8 text-sm text-[var(--text-muted)] uppercase tracking-wider">
-            Licensed under CC BY-SA 4.0 — Free for personal and commercial use
+            Licensed under CC BY-NC 4.0 — Free for non-commercial use
           </p>
         </motion.div>
       </div>

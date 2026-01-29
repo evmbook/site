@@ -91,15 +91,15 @@ export default function DownloadPage() {
             <p className="text-[var(--text-secondary)]">
               Mastering EVM is licensed under{' '}
               <a
-                href="https://creativecommons.org/licenses/by-sa/4.0/"
+                href="https://creativecommons.org/licenses/by-nc/4.0/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--link-color)] hover:text-[var(--link-hover)] transition-colors duration-150"
               >
-                CC BY-SA 4.0
+                CC BY-NC 4.0
               </a>
-              . You are free to share and adapt this work for any purpose, even commercially,
-              as long as you give appropriate credit and distribute your contributions under the same license.
+              . You are free to share and adapt this work for non-commercial purposes,
+              as long as you give appropriate credit.
             </p>
           </div>
 
