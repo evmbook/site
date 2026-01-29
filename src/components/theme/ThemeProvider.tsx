@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 const STORAGE_KEY = 'evmbook-theme'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const [theme, setThemeState] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -26,9 +26,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(saved)
       document.documentElement.classList.toggle('light', saved === 'light')
     } else {
-      // Default to dark mode (no system preference check needed)
-      setThemeState('dark')
-      document.documentElement.classList.remove('light')
+      // Default to light mode
+      setThemeState('light')
+      document.documentElement.classList.add('light')
     }
   }, [])
 
