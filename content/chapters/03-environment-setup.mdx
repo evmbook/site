@@ -1,0 +1,988 @@
+---
+title: Setting Up Your Environment
+description: Modern tooling for EVM development in 2026
+chapter: 3
+---
+
+# Setting Up Your Environment
+
+The EVM development ecosystem has matured significantly. Where early developers cobbled together tools, today we have polished, integrated toolchains. This chapter covers the modern stack: Foundry for smart contract development, TypeScript as the default language for scripts and frontends, and the evolution of client libraries from web3.js to viem.
+
+## The Modern Stack (2026)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND                                  │
+│  React/Next.js + wagmi + viem                               │
+├─────────────────────────────────────────────────────────────┤
+│                    SCRIPTS & TESTING                         │
+│  TypeScript + viem (or ethers.js v6)                        │
+├─────────────────────────────────────────────────────────────┤
+│                    SMART CONTRACTS                           │
+│  Foundry (Forge, Cast, Anvil) + Solidity                    │
+├─────────────────────────────────────────────────────────────┤
+│                    LOCAL DEVELOPMENT                         │
+│  Anvil (local node) or Hardhat Network                      │
+├─────────────────────────────────────────────────────────────┤
+│                    NETWORKS                                  │
+│  Ethereum / ETC Mainnets | Testnets (Sepolia/Mordor) | L2s  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Installing Foundry
+
+Foundry is a widely-adopted toolchain for Solidity development. It's fast, written in Rust, and lets you write tests in Solidity.
+
+### Installation
+
+```bash
+# Install Foundryup (the Foundry installer)
+curl -L https://foundry.paradigm.xyz | bash
+
+# Restart your terminal, then install Foundry
+foundryup
+
+# Verify installation
+forge --version
+cast --version
+anvil --version
+```
+
+### Foundry Components
+
+| Tool | Purpose |
+|------|---------|
+| `forge` | Build, test, and deploy contracts |
+| `cast` | Interact with contracts and perform conversions |
+| `anvil` | Local EVM node for development |
+| `chisel` | Interactive Solidity REPL |
+
+### Creating a Project
+
+```bash
+# Create new project
+forge init my-project
+cd my-project
+
+# Project structure
+├── foundry.toml     # Configuration
+├── src/             # Source contracts
+│   └── Counter.sol
+├── test/            # Test files
+│   └── Counter.t.sol
+├── script/          # Deployment scripts
+│   └── Counter.s.sol
+└── lib/             # Dependencies
+```
+
+### Configuration
+
+```toml
+# foundry.toml
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+evm_version = "cancun"
+
+# Solidity version
+solc_version = "0.8.24"
+
+# Testing
+fuzz = { runs = 1000 }
+invariant = { runs = 256, depth = 500 }
+
+[rpc_endpoints]
+mainnet = "${ETH_RPC_URL}"
+sepolia = "${SEPOLIA_RPC_URL}"
+etc = "https://etc.rivet.link"
+mordor = "https://rpc.mordor.etccooperative.org"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_API_KEY}" }
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+etc = { key = "${BLOCKSCOUT_API_KEY}", url = "https://etc.blockscout.com/api" }
+```
+
+### Essential Commands
+
+```bash
+# Build contracts
+forge build
+
+# Run tests
+forge test
+
+# Run tests with verbosity
+forge test -vvvv
+
+# Run specific test
+forge test --match-test testDeposit
+
+# Gas report
+forge test --gas-report
+
+# Deploy
+forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast
+
+# Verify contract
+forge verify-contract <address> src/Contract.sol:Contract --chain-id 1
+```
+
+## Local Development with Anvil
+
+Anvil provides a fast local EVM node:
+
+```bash
+# Start local node
+anvil
+
+# Output:
+Available Accounts
+==================
+(0) 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000 ETH)
+(1) 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000 ETH)
+...
+
+Private Keys
+==================
+(0) 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+...
+
+Listening on 127.0.0.1:8545
+```
+
+### Anvil Options
+
+```bash
+# Fork Ethereum mainnet at specific block
+anvil --fork-url $ETH_RPC_URL --fork-block-number 18000000
+
+# Fork ETC
+anvil --fork-url https://etc.rivet.link
+
+# Custom chain ID (for testing)
+anvil --chain-id 31337
+
+# Increase block gas limit
+anvil --gas-limit 30000000
+
+# Auto-mine every 5 seconds (simulates real network)
+anvil --block-time 5
+```
+
+### Interacting with Cast
+
+```bash
+# Get balance
+cast balance 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --rpc-url http://localhost:8545
+
+# Send transaction
+cast send $CONTRACT_ADDRESS "deposit()" --value 1ether --private-key $PRIVATE_KEY
+
+# Call view function
+cast call $CONTRACT_ADDRESS "balanceOf(address)" $USER_ADDRESS
+
+# Decode calldata
+cast calldata-decode "transfer(address,uint256)" 0xa9059cbb000000000000...
+
+# Convert units
+cast to-wei 1.5 ether  # 1500000000000000000
+cast from-wei 1500000000000000000  # 1.5
+
+# Get storage slot
+cast storage $CONTRACT_ADDRESS 0
+```
+
+## TypeScript is Default
+
+Modern EVM development uses TypeScript for scripts, tests (when not using Foundry), and frontends. The type safety catches errors early and improves developer experience.
+
+```typescript
+// tsconfig.json for EVM projects
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+```
+
+## SDK Evolution: web3.js → ethers → viem
+
+### The Timeline
+
+| Era | Library | Characteristics |
+|-----|---------|-----------------|
+| 2015-2019 | web3.js | Callback-heavy, mutable, Ethereum Foundation maintained |
+| 2019-2022 | ethers.js v5 | Promise-based, cleaner API, provider/signer separation |
+| 2022-2023 | ethers.js v6 | Better TypeScript, ESM, breaking changes from v5 |
+| 2023-2026 | viem | Type-safe, tree-shakeable, modern TypeScript patterns |
+
+### viem (Recommended for New Projects)
+
+viem offers strong type safety, tree-shaking, and modern TypeScript patterns:
+
+```bash
+npm install viem
+```
+
+```typescript
+import { createPublicClient, createWalletClient, http, parseEther } from 'viem'
+import { mainnet, classic } from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
+
+// Read-only client
+const publicClient = createPublicClient({
+  chain: mainnet,
+  transport: http('https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'),
+})
+
+// Get balance
+const balance = await publicClient.getBalance({
+  address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+})
+console.log(`Balance: ${balance} wei`)
+
+// Read contract
+const totalSupply = await publicClient.readContract({
+  address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+  abi: [{
+    name: 'totalSupply',
+    type: 'function',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  }],
+  functionName: 'totalSupply',
+})
+
+// Wallet client for transactions
+const account = privateKeyToAccount('0x...')
+const walletClient = createWalletClient({
+  account,
+  chain: mainnet,
+  transport: http('https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'),
+})
+
+// Send transaction
+const hash = await walletClient.sendTransaction({
+  to: '0x...',
+  value: parseEther('0.1'),
+})
+
+// Write to contract
+const hash = await walletClient.writeContract({
+  address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  abi: erc20Abi,
+  functionName: 'transfer',
+  args: ['0x...', 1000000n], // BigInt for uint256
+})
+```
+
+### viem with ETC
+
+```typescript
+import { createPublicClient, http, defineChain } from 'viem'
+
+// ETC is included in viem
+import { classic, mordor } from 'viem/chains'
+
+const etcClient = createPublicClient({
+  chain: classic,
+  transport: http('https://etc.rivet.link'),
+})
+
+const mordorClient = createPublicClient({
+  chain: mordor,
+  transport: http('https://rpc.mordor.etccooperative.org'),
+})
+```
+
+### ethers.js v6 (Still Widely Used)
+
+```bash
+npm install ethers
+```
+
+```typescript
+import { ethers, parseEther, formatEther } from 'ethers'
+
+// Provider (read-only)
+const provider = new ethers.JsonRpcProvider(
+  'https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'
+)
+
+// Get balance
+const balance = await provider.getBalance('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
+console.log(`Balance: ${formatEther(balance)} ETH`)
+
+// Contract interaction
+const usdc = new ethers.Contract(
+  '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  ['function totalSupply() view returns (uint256)'],
+  provider
+)
+const supply = await usdc.totalSupply()
+
+// Wallet for transactions
+const wallet = new ethers.Wallet('0x...', provider)
+
+// Send transaction
+const tx = await wallet.sendTransaction({
+  to: '0x...',
+  value: parseEther('0.1'),
+})
+await tx.wait()
+```
+
+### Key Differences: viem vs ethers
+
+| Aspect | viem | ethers v6 |
+|--------|------|-----------|
+| TypeScript | First-class, strict | Good, some `any` types |
+| Bundle size | Tree-shakeable, smaller | Larger, less modular |
+| BigInt | Native BigInt | BigInt with utilities |
+| Errors | Typed error objects | String-based mostly |
+| API style | Explicit actions | Object methods |
+| Learning curve | Steeper | Gentler |
+
+**Recommendation**: Use viem for new projects. Use ethers if your team knows it well or you're maintaining existing code.
+
+## Frontend Development with wagmi
+
+wagmi provides React hooks for Ethereum:
+
+```bash
+npm install wagmi viem @tanstack/react-query
+```
+
+```typescript
+// config.ts
+import { createConfig, http } from 'wagmi'
+import { mainnet, sepolia } from 'wagmi/chains'
+import { injected, walletConnect } from 'wagmi/connectors'
+
+export const config = createConfig({
+  chains: [mainnet, sepolia],
+  connectors: [
+    injected(),
+    walletConnect({ projectId: 'YOUR_PROJECT_ID' }),
+  ],
+  transports: {
+    [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY'),
+    [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY'),
+  },
+})
+```
+
+```tsx
+// App.tsx
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { config } from './config'
+
+const queryClient = new QueryClient()
+
+function App() {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <YourApp />
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+```tsx
+// Component using hooks
+import { useAccount, useBalance, useConnect, useDisconnect } from 'wagmi'
+
+function Wallet() {
+  const { address, isConnected } = useAccount()
+  const { data: balance } = useBalance({ address })
+  const { connect, connectors } = useConnect()
+  const { disconnect } = useDisconnect()
+
+  if (!isConnected) {
+    return (
+      <div>
+        {connectors.map((connector) => (
+          <button key={connector.id} onClick={() => connect({ connector })}>
+            Connect {connector.name}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p>Connected: {address}</p>
+      <p>Balance: {balance?.formatted} {balance?.symbol}</p>
+      <button onClick={() => disconnect()}>Disconnect</button>
+    </div>
+  )
+}
+```
+
+### Contract Reads with wagmi
+
+```tsx
+import { useReadContract } from 'wagmi'
+
+function TokenBalance({ address }: { address: `0x${string}` }) {
+  const { data: balance, isLoading } = useReadContract({
+    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [address],
+  })
+
+  if (isLoading) return <span>Loading...</span>
+
+  return <span>{balance?.toString()} USDC</span>
+}
+```
+
+### Contract Writes with wagmi
+
+```tsx
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { parseUnits } from 'viem'
+
+function TransferButton() {
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+
+  const handleTransfer = () => {
+    writeContract({
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: ['0x...', parseUnits('100', 6)], // 100 USDC
+    })
+  }
+
+  return (
+    <div>
+      <button onClick={handleTransfer} disabled={isPending}>
+        {isPending ? 'Confirming...' : 'Transfer'}
+      </button>
+      {isConfirming && <p>Waiting for confirmation...</p>}
+      {isSuccess && <p>Transfer successful!</p>}
+    </div>
+  )
+}
+```
+
+## Testnets
+
+### Ethereum Testnets
+
+| Network | Chain ID | Purpose | Faucets |
+|---------|----------|---------|---------|
+| Sepolia | 11155111 | Primary testnet | sepoliafaucet.com, Alchemy faucet |
+| Holesky | 17000 | Validator testing | holeskyfaucet.io |
+
+```bash
+# Add Sepolia to Foundry
+[rpc_endpoints]
+sepolia = "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}"
+```
+
+### Ethereum Classic Testnets
+
+| Network | Chain ID | Purpose | Faucets |
+|---------|----------|---------|---------|
+| Mordor | 63 | Primary ETC testnet | mordor.canhaz.net |
+
+```bash
+# ETC Mordor configuration
+[rpc_endpoints]
+mordor = "https://rpc.mordor.etccooperative.org"
+
+# Or use public endpoints
+# https://etc-mordor.blockscout.com
+```
+
+### L2 Testnets
+
+| Network | Chain ID | Mainnet Equivalent |
+|---------|----------|--------------------|
+| Arbitrum Sepolia | 421614 | Arbitrum One |
+| Optimism Sepolia | 11155420 | OP Mainnet |
+| Base Sepolia | 84532 | Base |
+
+## RPC Providers
+
+### Hosted Providers
+
+| Provider | Free Tier | Strengths |
+|----------|-----------|-----------|
+| Alchemy | 300M compute units/month | Reliability, debugging tools |
+| Infura | 100K requests/day | Simple, wide chain support |
+| QuickNode | Limited free | Low latency, global endpoints |
+| Ankr | 100K requests/month | Wide chain coverage |
+
+### ETC RPC Endpoints
+
+```bash
+# Public endpoints
+https://etc.rivet.link          # Rivet (reliable)
+https://etc.etcdesktop.com      # ETC Desktop
+https://etc-mordor.blockscout.com  # Mordor testnet
+```
+
+### Running Your Own Node
+
+For production, consider running your own node:
+
+```bash
+# Core-Geth for ETC
+docker run -d \
+  -v /data/etc:/root/.ethereum \
+  -p 8545:8545 \
+  -p 30303:30303 \
+  etclabscore/core-geth \
+  --classic \
+  --http \
+  --http.addr 0.0.0.0 \
+  --http.vhosts "*"
+```
+
+### Load Balancing with Dshackle
+
+For resilient RPC access, Dshackle load-balances across multiple upstreams:
+
+```yaml
+# dshackle.yaml
+cluster:
+  upstreams:
+    - id: alchemy
+      chain: ethereum
+      connection:
+        ethereum:
+          rpc:
+            url: "https://eth-mainnet.g.alchemy.com/v2/KEY"
+    - id: infura
+      chain: ethereum
+      connection:
+        ethereum:
+          rpc:
+            url: "https://mainnet.infura.io/v3/KEY"
+```
+
+## Node Types and Data Access
+
+Understanding the different types of blockchain nodes is essential for building robust applications.
+
+### Full Nodes vs Archival Nodes
+
+| Node Type | Storage | Historical Access | Use Case |
+|-----------|---------|------------------|----------|
+| **Light client** | ~400 MB | None | Mobile wallets, resource-constrained |
+| **Full node** | ~1 TB (ETH), ~100 GB (ETC) | Recent state only | Normal operations, transaction submission |
+| **Archival node** | ~14 TB (ETH), ~1 TB (ETC) | All historical state | Historical queries, analytics, indexing |
+
+**Full nodes** store current state and can validate the entire chain, but they prune old state. If you need to query historical balances or call contracts at old blocks, you need an archival node.
+
+```bash
+# Full node: returns current state
+cast call $TOKEN "balanceOf(address)" $USER
+
+# Archival node: can query historical state
+cast call $TOKEN "balanceOf(address)" $USER --block 15000000
+```
+
+<Callout type="warning">
+**Most free RPC providers don't offer archival access.** Historical queries will fail with "missing trie node" errors. Check your provider's documentation for archival support.
+</Callout>
+
+### When You Need Archival Access
+
+- Querying historical token balances
+- Analyzing past transactions and state
+- Building analytics dashboards
+- Running indexers that need full history
+- Debugging historical transactions
+
+## Indexers and Data Infrastructure
+
+Raw RPC calls are inefficient for complex queries. You can't easily ask an RPC endpoint "show me all transfers to this address" without scanning every block. Indexers solve this.
+
+### The Indexing Landscape
+
+| Indexer | Model | Best For |
+|---------|-------|----------|
+| **The Graph** | Decentralized, GraphQL | Production dApps needing censorship resistance |
+| **SubQuery** | Multi-chain, GraphQL | Cross-chain applications |
+| **Envio** | HyperSync, fast indexing | High-performance analytics |
+| **Helius** | Solana-focused | (Cross-reference for Solana devs) |
+| **Ponder** | TypeScript-first | Developer-friendly, local-first |
+| **Dune Analytics** | SQL queries | Analytics dashboards, research |
+
+### The Graph: Decentralized Indexing
+
+The Graph provides decentralized indexing for production dApps:
+
+```graphql
+# Query a subgraph (Uniswap V3 example)
+{
+  swaps(
+    first: 10
+    orderBy: timestamp
+    orderDirection: desc
+    where: { pool: "0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8" }
+  ) {
+    id
+    timestamp
+    amount0
+    amount1
+    amountUSD
+  }
+}
+```
+
+```typescript
+// Query from your dApp
+import { request, gql } from 'graphql-request'
+
+const query = gql`
+  query GetRecentSwaps($pool: String!) {
+    swaps(first: 10, where: { pool: $pool }) {
+      id
+      amount0
+      amount1
+    }
+  }
+`
+
+const data = await request(
+  'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
+  query,
+  { pool: '0x...' }
+)
+```
+
+### Building Your Own Subgraph
+
+```yaml
+# subgraph.yaml
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: MyToken
+    network: mainnet
+    source:
+      address: "0x..."
+      abi: MyToken
+      startBlock: 15000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: MyToken
+          file: ./abis/MyToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
+```
+
+### Ponder: Local-First Indexing
+
+Ponder offers a TypeScript-first developer experience:
+
+```typescript
+// ponder.config.ts
+import { createConfig } from "@ponder/core"
+
+export default createConfig({
+  networks: {
+    mainnet: {
+      chainId: 1,
+      transport: http(process.env.ETH_RPC_URL),
+    },
+  },
+  contracts: {
+    MyToken: {
+      network: "mainnet",
+      abi: "./abis/MyToken.json",
+      address: "0x...",
+      startBlock: 15000000,
+    },
+  },
+})
+
+// src/index.ts
+import { ponder } from "@/generated"
+
+ponder.on("MyToken:Transfer", async ({ event, context }) => {
+  const { from, to, value } = event.args
+
+  await context.db.Transfer.create({
+    id: event.log.id,
+    from,
+    to,
+    value,
+    timestamp: event.block.timestamp,
+  })
+})
+```
+
+## Block Explorers
+
+Block explorers provide human-readable views of blockchain data.
+
+### Major Explorers
+
+| Chain | Explorer | Features |
+|-------|----------|----------|
+| Ethereum | Etherscan | Contract verification, token tracking, labels |
+| Ethereum | Blockscout | Open source, self-hostable |
+| ETC | BlockScout ETC | etc.blockscout.com |
+| Arbitrum | Arbiscan | Etherscan-style for Arbitrum |
+| Optimism | Optimistic Etherscan | Etherscan-style for OP |
+| Base | BaseScan | Etherscan-style for Base |
+
+### Contract Verification
+
+Verify your contracts so users can read the source code:
+
+```bash
+# Foundry verification
+forge verify-contract $CONTRACT_ADDRESS src/MyContract.sol:MyContract \
+  --chain mainnet \
+  --etherscan-api-key $ETHERSCAN_KEY
+
+# With constructor arguments
+forge verify-contract $CONTRACT_ADDRESS src/MyContract.sol:MyContract \
+  --chain mainnet \
+  --constructor-args $(cast abi-encode "constructor(address,uint256)" $ARG1 $ARG2)
+```
+
+### Blockscout for ETC
+
+```bash
+# ETC mainnet verification
+forge verify-contract $CONTRACT_ADDRESS src/MyContract.sol:MyContract \
+  --chain etc \
+  --verifier blockscout \
+  --verifier-url https://etc.blockscout.com/api
+```
+
+## Monitoring and Alerts
+
+Production dApps need monitoring for:
+- Contract events (deposits, withdrawals, emergencies)
+- Unusual activity (large transfers, failed transactions)
+- Protocol health (TVL changes, liquidations)
+
+### Monitoring Services
+
+| Service | Focus |
+|---------|-------|
+| **Tenderly** | Transaction simulation, alerts, debugging |
+| **OpenZeppelin Defender** | Admin operations, monitoring, relaying |
+| **Forta** | Security monitoring, threat detection |
+| **Dune Analytics** | Dashboards, public analytics |
+
+### Tenderly Alerts
+
+```javascript
+// Example: Alert on large transfers
+{
+  "alert_type": "event",
+  "network": "mainnet",
+  "addresses": ["0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"], // USDC
+  "event_name": "Transfer",
+  "parameters": {
+    "value": { "gt": "1000000000000" } // > $1M USDC
+  }
+}
+```
+
+### Self-Hosted Monitoring
+
+For privacy or cost reasons, you might self-host monitoring:
+
+```typescript
+// Simple event monitor with viem
+import { createPublicClient, http, parseAbiItem } from 'viem'
+import { mainnet } from 'viem/chains'
+
+const client = createPublicClient({
+  chain: mainnet,
+  transport: http(process.env.ETH_RPC_URL),
+})
+
+// Watch for Transfer events
+const unwatch = client.watchContractEvent({
+  address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  abi: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)'),
+  onLogs: (logs) => {
+    for (const log of logs) {
+      if (log.args.value > 1_000_000_000_000n) {
+        // Alert: Large USDC transfer
+        console.log(`Large transfer: ${log.args.value} from ${log.args.from}`)
+        // Send to Slack, PagerDuty, etc.
+      }
+    }
+  },
+})
+```
+
+## Data Stack Summary
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    YOUR APPLICATION                          │
+├─────────────────────────────────────────────────────────────┤
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │
+│   │  Frontend   │   │   Backend   │   │  Analytics  │       │
+│   │  (wagmi)    │   │  (scripts)  │   │  (dashboards)│      │
+│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘       │
+│          │                 │                 │               │
+├──────────┼─────────────────┼─────────────────┼───────────────┤
+│   ┌──────▼──────┐   ┌──────▼──────┐   ┌──────▼──────┐       │
+│   │ RPC Access  │   │  Indexers   │   │   Block     │       │
+│   │ (Alchemy,   │   │ (The Graph, │   │  Explorers  │       │
+│   │  Infura)    │   │  Ponder)    │   │ (Etherscan) │       │
+│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘       │
+│          │                 │                 │               │
+├──────────┴─────────────────┴─────────────────┴───────────────┤
+│                    BLOCKCHAIN NODES                          │
+│   Full Nodes (current state) | Archival Nodes (all history) │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Choose your data infrastructure based on your needs:
+- **Simple dApp**: Hosted RPC (Alchemy) + public subgraphs
+- **Production dApp**: Redundant RPC + custom subgraph + monitoring
+- **Analytics**: Archival access + Dune or custom indexer
+- **High security**: Own nodes + own indexer + Forta alerts
+
+## Development Workflow
+
+### Recommended Setup
+
+1. **Initialize project**
+   ```bash
+   forge init my-protocol
+   cd my-protocol
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # OpenZeppelin contracts
+   forge install OpenZeppelin/openzeppelin-contracts
+
+   # Update remappings
+   echo '@openzeppelin/=lib/openzeppelin-contracts/' >> remappings.txt
+   ```
+
+3. **Environment variables**
+   ```bash
+   # .env (add to .gitignore!)
+   PRIVATE_KEY=0x...
+   ETH_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/...
+   ETHERSCAN_API_KEY=...
+   ```
+
+4. **Development cycle**
+   ```bash
+   # Terminal 1: Local node
+   anvil
+
+   # Terminal 2: Test-driven development
+   forge test --watch
+
+   # Deploy to local
+   forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
+   ```
+
+5. **Deploy to testnet**
+   ```bash
+   # Load environment
+   source .env
+
+   # Deploy and verify
+   forge script script/Deploy.s.sol \
+     --rpc-url $SEPOLIA_RPC_URL \
+     --broadcast \
+     --verify
+   ```
+
+## IDE Setup
+
+### VS Code
+
+Install these extensions:
+- **Solidity** (Juan Blanco) - Syntax highlighting, compilation
+- **Solidity Visual Developer** - Security insights
+- **Even Better TOML** - For foundry.toml
+
+```json
+// .vscode/settings.json
+{
+  "solidity.packageDefaultDependenciesContractsDirectory": "src",
+  "solidity.packageDefaultDependenciesDirectory": "lib",
+  "editor.formatOnSave": true,
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  }
+}
+```
+
+### AI-Assisted Development
+
+AI coding assistants can help with Solidity development:
+- Generating boilerplate
+- Explaining complex patterns
+- Reviewing security issues
+- Writing tests
+
+Always review AI-generated code carefully, especially for security-sensitive smart contracts.
+
+## Summary
+
+The 2026 EVM development stack:
+
+| Layer | Primary Tool | Alternative |
+|-------|-------------|-------------|
+| Smart Contracts | Foundry (Forge) | Hardhat |
+| Local Node | Anvil | Hardhat Network |
+| Testing | Forge (Solidity tests) | Hardhat (TypeScript tests) |
+| Client Library | viem | ethers.js v6 |
+| Frontend | wagmi + React | ethers.js + custom hooks |
+| TypeScript | Yes (default) | JavaScript (legacy) |
+
+Key points:
+- **Foundry** is widely adopted for smart contract development
+- **TypeScript** is the default for scripts and frontends
+- **viem** provides type-safe client interactions
+- **wagmi** provides React hooks for wallet integration
+- **Anvil** enables fast local development with mainnet forking
+
+The next chapter covers cryptography essentials—the mathematical foundations that make all of this trustless interaction possible.

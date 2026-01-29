@@ -1,0 +1,847 @@
+---
+title: "AMM Evolution: From Order Books to Liquidity Pools"
+description: How decentralized exchanges evolved from on-chain order books to concentrated liquidity and ve(3,3) tokenomics
+chapter: 16
+---
+
+# AMM Evolution: From Order Books to Liquidity Pools
+
+Decentralized exchange is the foundation of DeFi. Without the ability to swap tokens trustlessly, lending protocols can't liquidate positions, stablecoins can't maintain pegs, and governance tokens have no price discovery. This chapter traces the evolution of on-chain trading from its primitive beginnings to the sophisticated AMM designs of 2026.
+
+Understanding this evolution isn't just historical curiosity—it's essential for building. Each innovation solved specific problems while creating new tradeoffs. Knowing *why* Uniswap V3 introduced concentrated liquidity helps you decide whether to use it or stick with V2's simplicity.
+
+## The Problem: Why Decentralized Exchange?
+
+Centralized exchanges (CEXs) work. Binance, Coinbase, and others process billions in daily volume with sub-second execution and tight spreads. Why build something worse?
+
+**Custody risk**: CEXs hold your assets. FTX proved this isn't theoretical—$8 billion in customer funds vanished. Mt. Gox, QuadrigaCX, and dozens of smaller exchanges demonstrated the pattern before.
+
+**Censorship**: Centralized exchanges can freeze accounts, delist tokens, and block users from specific jurisdictions. Your access depends on their compliance decisions.
+
+**Permissioned listing**: Getting a token listed on a CEX requires relationships, fees, and approval. Permissionless innovation requires permissionless markets.
+
+**Composability**: Smart contracts can't call Binance's API mid-transaction. On-chain liquidity enables atomic arbitrage, flash loans, and complex DeFi strategies.
+
+The goal was clear: trustless token exchange where users maintain custody and anyone can provide liquidity or list tokens. The path to get there was not.
+
+## Academic Foundations
+
+### Market Microstructure (1970s-1980s)
+
+The economics of market making were formalized decades before DeFi existed.
+
+**Garman (1976)** — "Market Microstructure" introduced inventory models for market makers, analyzing how dealers manage risk while providing liquidity. The paper established that market makers face inventory risk and must be compensated through spreads.
+
+**Amihud & Mendelson (1980)** — "Dealership Market" formalized bid-ask spread theory and the economics of inventory-based market making.
+
+**Relevance**: These papers established the economic foundations for automated liquidity provision. AMMs automate the market maker function with algorithmic pricing—the spread (swap fee) compensates LPs for inventory risk (impermanent loss).
+
+### Prediction Market AMMs (2003)
+
+**Robin Hanson's LMSR (2003)** — "Combinatorial Information Market Design" introduced the Logarithmic Market Scoring Rule, an automated market maker for prediction markets:
+
+```
+Cost function: C(q) = b * ln(Σ exp(q_i/b))
+```
+
+**Key insight**: A mathematical function can replace human market makers, providing continuous liquidity for any trade size. LMSR was implemented in prediction markets (Gnosis, Augur) before DeFi.
+
+### The Intellectual Lineage to x*y=k
+
+The constant product formula emerged from multiple contributors:
+
+| Date | Contributor | Contribution |
+|------|-------------|--------------|
+| Sep 2, 2015 | Martin Köppelmann | Proposed integrating market maker into orderbook (Gnosis) |
+| Sep 26, 2016 | Nick Johnson | Introduced "Euler" concept—single token paired against all |
+| **Oct 3, 2016** | **Vitalik Buterin** | **Reddit post connecting prediction markets to DEX AMMs** |
+| Mar 6, 2017 | Alan Lu (Gnosis) | Explored various invariant designs |
+| Jun 2017 | Bancor | Launched bonding curves for continuous liquidity |
+| Mar 2, 2018 | Vitalik Buterin | Revisited earlier post; discussed x*y=k formula |
+| **Nov 2, 2018** | **Hayden Adams** | **Uniswap V1 launched** |
+
+Hayden Adams has credited Vitalik's October 2016 Reddit post as direct inspiration. The post suggested running DEXs "the way we run prediction markets."
+
+<Callout type="info" title="Common Misattribution">
+**"Uniswap invented AMMs"** — AMMs existed in prediction markets (LMSR, 2003) and on-chain (Bancor, 2017) before Uniswap. Uniswap's contribution was radical simplification, not invention. The constant product formula is simple enough to be independently discovered by many; the innovation was implementation and UX.
+</Callout>
+
+## Era 0: On-Chain Order Books (2016-2017)
+
+### EtherDelta: The Pioneer
+
+EtherDelta launched in 2016 as the first significant decentralized exchange on Ethereum. It implemented a traditional order book model—makers post limit orders, takers fill them—entirely on-chain.
+
+```solidity
+// Simplified EtherDelta order structure
+struct Order {
+    address tokenGet;      // Token maker wants
+    uint256 amountGet;     // Amount maker wants
+    address tokenGive;     // Token maker offers
+    uint256 amountGive;    // Amount maker offers
+    uint256 expires;       // Block number expiration
+    uint256 nonce;         // Unique identifier
+    address user;          // Maker address
+}
+
+// Trade execution required matching orders
+function trade(
+    address tokenGet,
+    uint256 amountGet,
+    address tokenGive,
+    uint256 amountGive,
+    uint256 expires,
+    uint256 nonce,
+    address user,
+    uint8 v,
+    bytes32 r,
+    bytes32 s,
+    uint256 amount
+) public {
+    // Verify signature, check balances, execute swap
+    // Each trade = one on-chain transaction
+}
+```
+
+**The Problems:**
+
+1. **Gas costs**: Every order placement, cancellation, and trade required an on-chain transaction. At $0.10/tx this was manageable; at $50/tx during 2021 congestion, it was unusable.
+
+2. **Front-running**: Miners could see pending trades and insert their own transactions first. The mempool was a dark forest.
+
+3. **Liquidity fragmentation**: Orders scattered across price levels meant thin liquidity at any given price. Large trades moved the market significantly.
+
+4. **Poor UX**: Users needed to understand limit orders, manage open orders, and wait for counterparties.
+
+EtherDelta proved decentralized exchange was possible. It also proved that replicating CEX architecture on-chain doesn't work.
+
+<Callout type="note" title="EtherDelta's Legacy">
+Despite its limitations, EtherDelta processed significant volume during the 2017 ICO boom. It was later acquired, hacked, and eventually faded—but it demonstrated market demand for trustless trading.
+</Callout>
+
+## Era 1: Bonding Curves and Continuous Liquidity (2017)
+
+### Bancor: The First AMM
+
+Bancor introduced a radical idea: instead of matching buyers and sellers, use a mathematical formula to determine prices. Liquidity providers deposit tokens into a pool, and the protocol algorithmically quotes prices based on pool reserves.
+
+```solidity
+// Bancor's bonding curve formula
+// Price increases as supply increases
+function calculatePurchaseReturn(
+    uint256 supply,         // Current token supply
+    uint256 reserveBalance, // Connector token balance
+    uint32 reserveRatio,    // Connector weight (CW)
+    uint256 depositAmount   // Amount being deposited
+) public pure returns (uint256) {
+    // Return = Supply * ((1 + DepositAmount / ReserveBalance) ^ CW - 1)
+    // Continuous pricing without order books
+}
+```
+
+**Key Innovations:**
+
+- **Continuous liquidity**: Always a price available, no waiting for counterparties
+- **Algorithmic pricing**: Formula determines price, removing human market makers
+- **Single-sided liquidity**: Could deposit just one token (with limitations)
+
+**The Limitations:**
+
+- Complex reserve ratio mechanics confused users
+- Required BNT token as intermediary in many pools
+- Impermanent loss wasn't well understood or communicated
+- Smart contract complexity introduced attack surface
+
+Bancor proved the AMM concept but didn't achieve mass adoption. That would require simplification.
+
+## Era 2: Constant Product AMM (2018-2020)
+
+### Uniswap V1 & V2: Elegant Simplicity
+
+Hayden Adams launched Uniswap V1 in November 2018 with a single, elegant formula:
+
+```
+x * y = k
+```
+
+Where `x` is the reserve of token A, `y` is the reserve of token B, and `k` is a constant. When you buy token A, you add token B to the pool, and the formula determines how much A you receive.
+
+```solidity
+// Uniswap V2 core swap logic (simplified)
+function swap(
+    uint256 amount0Out,
+    uint256 amount1Out,
+    address to,
+    bytes calldata data
+) external {
+    require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT");
+
+    (uint112 reserve0, uint112 reserve1,) = getReserves();
+    require(amount0Out < reserve0 && amount1Out < reserve1, "INSUFFICIENT_LIQUIDITY");
+
+    // Transfer tokens out
+    if (amount0Out > 0) _safeTransfer(token0, to, amount0Out);
+    if (amount1Out > 0) _safeTransfer(token1, to, amount1Out);
+
+    // Flash swap callback
+    if (data.length > 0) {
+        IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+    }
+
+    // Get new balances
+    uint256 balance0 = IERC20(token0).balanceOf(address(this));
+    uint256 balance1 = IERC20(token1).balanceOf(address(this));
+
+    // Verify constant product (with 0.3% fee)
+    uint256 balance0Adjusted = balance0 * 1000 - amount0In * 3;
+    uint256 balance1Adjusted = balance1 * 1000 - amount1In * 3;
+    require(
+        balance0Adjusted * balance1Adjusted >= uint256(reserve0) * reserve1 * 1000**2,
+        "K"
+    );
+}
+```
+
+**Why It Worked:**
+
+1. **Radical simplicity**: One formula, ~300 lines of core code, easy to understand and audit
+2. **Permissionless**: Anyone can create a pool by depositing equal values of two tokens
+3. **Passive liquidity**: LPs earn fees proportional to their share without active management
+4. **Flash swaps**: Borrow any amount, use it within the transaction, return it plus fee
+
+**V2 Additions (May 2020):**
+
+- **ERC-20/ERC-20 pairs**: V1 required ETH as one side; V2 allowed any pair
+- **Price oracles**: Time-weighted average prices (TWAP) for manipulation resistance
+- **Flash swaps**: Formalized the pattern for atomic borrowing
+
+```solidity
+// Uniswap V2 TWAP oracle
+// Accumulates price * time, allowing calculation of time-weighted averages
+function _update(
+    uint256 balance0,
+    uint256 balance1,
+    uint112 reserve0,
+    uint112 reserve1
+) private {
+    uint32 timeElapsed = uint32(block.timestamp) - blockTimestampLast;
+    if (timeElapsed > 0 && reserve0 != 0 && reserve1 != 0) {
+        // Accumulate price
+        price0CumulativeLast += uint256(UQ112x112.encode(reserve1).uqdiv(reserve0)) * timeElapsed;
+        price1CumulativeLast += uint256(UQ112x112.encode(reserve0).uqdiv(reserve1)) * timeElapsed;
+    }
+}
+```
+
+### The Constant Product Tradeoff
+
+The `x * y = k` formula has an elegant property: it always provides liquidity at *some* price. But this comes at a cost—**capital inefficiency**.
+
+```
+Price impact example:
+- Pool: 100 ETH + 200,000 USDC (k = 20,000,000)
+- Buy 10 ETH:
+  - New ETH reserve: 90
+  - New USDC reserve: 20,000,000 / 90 = 222,222
+  - Cost: 22,222 USDC for 10 ETH = $2,222/ETH
+  - Market price was $2,000/ETH
+  - Slippage: 11%
+```
+
+Most of the liquidity in a V2 pool sits at prices far from the current market, earning nothing. This inefficiency would drive the next evolution.
+
+## Era 3: Specialized Curves (2020)
+
+### Curve Finance: StableSwap
+
+Curve launched with a key insight: assets that should trade at similar prices (stablecoins, wrapped assets) don't need the full price range of `x * y = k`. A flatter curve around the peg dramatically improves capital efficiency.
+
+```solidity
+// Curve StableSwap invariant (simplified)
+// Combines constant sum (x + y = k) and constant product (x * y = k)
+// Parameter A controls the "flatness" around the peg
+
+function get_D(uint256[] memory xp, uint256 A) internal pure returns (uint256) {
+    // D is the invariant - total value in the pool
+    // Higher A = flatter curve = less slippage near peg
+    // A = 0 is constant product, A = infinity is constant sum
+
+    uint256 S = 0;
+    for (uint256 i = 0; i < xp.length; i++) {
+        S += xp[i];
+    }
+    if (S == 0) return 0;
+
+    uint256 D = S;
+    uint256 Ann = A * xp.length;
+
+    // Newton's method to find D
+    for (uint256 i = 0; i < 255; i++) {
+        uint256 D_P = D;
+        for (uint256 j = 0; j < xp.length; j++) {
+            D_P = D_P * D / (xp[j] * xp.length);
+        }
+        uint256 Dprev = D;
+        D = (Ann * S + D_P * xp.length) * D / ((Ann - 1) * D + (xp.length + 1) * D_P);
+        if (D > Dprev) {
+            if (D - Dprev <= 1) break;
+        } else {
+            if (Dprev - D <= 1) break;
+        }
+    }
+    return D;
+}
+```
+
+**Results:**
+
+- Swapping $10M USDC to USDT on Curve: ~0.01% slippage
+- Same swap on Uniswap V2: ~0.5% slippage
+
+Curve became the backbone of stablecoin liquidity, processing billions in volume with minimal slippage. Its 3pool (USDC/USDT/DAI) became critical DeFi infrastructure.
+
+<Callout type="warning" title="The Curve Exploit (July 2023)">
+A Vyper compiler bug led to reentrancy vulnerabilities in several Curve pools, resulting in ~$70M in losses. The incident highlighted risks in language-level security and concentrated liquidity in single protocols.
+</Callout>
+
+## Era 4: Concentrated Liquidity (2021)
+
+### Uniswap V3: Capital Efficiency Revolution
+
+Uniswap V3 (May 2021) introduced **concentrated liquidity**: LPs choose a price range for their liquidity instead of providing across the entire curve.
+
+```solidity
+// V3 position structure
+struct Position {
+    uint128 liquidity;    // Liquidity amount
+    int24 tickLower;      // Lower price bound (as tick)
+    int24 tickUpper;      // Upper price bound (as tick)
+    // Fees earned tracked separately per position
+}
+
+// Mint liquidity in a specific range
+function mint(
+    address recipient,
+    int24 tickLower,
+    int24 tickUpper,
+    uint128 amount,
+    bytes calldata data
+) external returns (uint256 amount0, uint256 amount1) {
+    // Liquidity only active when price is within [tickLower, tickUpper]
+    // Concentrated positions = higher capital efficiency
+    // But require active management as price moves
+}
+```
+
+**The Tradeoffs:**
+
+| Aspect | V2 | V3 |
+|--------|----|----|
+| Capital efficiency | ~0.5% of liquidity active | Up to 4000x improvement |
+| Management | Passive, set-and-forget | Active, must rebalance |
+| Impermanent loss | Distributed across range | Concentrated in your range |
+| Fungibility | LP tokens are fungible ERC-20 | Positions are NFTs |
+| Gas costs | Lower | Higher (tick math) |
+| Composability | Easy (just hold LP token) | Harder (manage NFT positions) |
+
+**For Developers:**
+
+V3's complexity spawned an ecosystem of position managers (Arrakis, Gamma), limit order protocols, and yield optimizers. If you're building on V3, you're likely integrating with these rather than managing positions directly.
+
+```solidity
+// Reading V3 pool state
+IUniswapV3Pool pool = IUniswapV3Pool(poolAddress);
+(uint160 sqrtPriceX96, int24 tick, , , , , ) = pool.slot0();
+
+// Convert sqrtPriceX96 to human-readable price
+// price = (sqrtPriceX96 / 2^96)^2
+uint256 price = uint256(sqrtPriceX96) * uint256(sqrtPriceX96) * 1e18 >> 192;
+```
+
+## Era 5: Incentive-Aligned Liquidity (2022-Present)
+
+### The Liquidity Mining Problem
+
+DeFi Summer 2020 introduced liquidity mining: protocols pay token rewards to attract LPs. The problem? Mercenary capital. LPs farm rewards and leave when incentives dry up.
+
+```
+Week 1: Launch with 1M tokens/week rewards
+         → TVL: $100M, APY: 500%
+Week 12: Rewards reduced to 100K tokens/week
+         → TVL: $10M (90% leaves)
+         → Protocol has distributed tokens to farmers who dumped
+```
+
+### Curve Wars and ve(3,3)
+
+Curve introduced vote-escrowed CRV (veCRV): lock CRV tokens to receive voting power over emission allocation. This sparked the "Curve Wars" as protocols competed for veCRV to direct rewards to their pools.
+
+Andre Cronje and the Solidly team generalized this into **ve(3,3)**: combining Curve's vote-escrow model with Olympus DAO's (3,3) game theory.
+
+### Velodrome/Aerodrome: Modern ve(3,3)
+
+Velodrome (Optimism) and Aerodrome (Base) implement the most successful ve(3,3) designs:
+
+```solidity
+// Simplified ve(3,3) mechanics
+
+// 1. Lock tokens for voting power
+function createLock(uint256 amount, uint256 duration) external {
+    // Longer lock = more voting power
+    // Max lock: 4 years = 1:1 voting power
+    // 1 year lock = 0.25 voting power
+    uint256 votingPower = amount * duration / MAX_LOCK_DURATION;
+    // Voting power decays linearly to incentivize relocking
+}
+
+// 2. Vote on pool emissions
+function vote(uint256 tokenId, address[] calldata pools, uint256[] calldata weights) external {
+    // veToken holders direct emissions to pools
+    // Protocols bribe voters to direct emissions to their pools
+}
+
+// 3. Claim bribes and fees
+function claimBribes(address[] calldata bribes, address[][] calldata tokens) external {
+    // Voters receive bribes from protocols wanting emissions
+    // Plus trading fees from pools they voted for
+}
+
+// 4. Emissions to LPs
+function claimRewards(address pool) external {
+    // LPs in voted pools receive emissions
+    // Weekly epoch-based distribution
+}
+```
+
+**Why It Works:**
+
+1. **Aligned incentives**: Token holders must lock (reducing sell pressure) to earn yield
+2. **Sustainable emissions**: Bribes create external demand for directing emissions
+3. **Fee sharing**: Voters get real yield (trading fees) not just token inflation
+4. **Protocol-owned liquidity**: Projects can bribe for liquidity cheaper than renting it
+
+**Aerodrome on Base** became the dominant DEX by TVL within months of Base's launch, demonstrating ve(3,3)'s effectiveness at bootstrapping liquidity.
+
+![AMM Evolution Timeline](/images/diagrams/ch16-amm-evolution.svg)
+
+## The Dependency Tree
+
+AMMs sit at the center of DeFi's dependency graph:
+
+```
+                    ┌─────────────────────────────────────┐
+                    │       APPLICATIONS LAYER            │
+                    │  Aggregators, Wallets, Interfaces   │
+                    └─────────────────┬───────────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │                             │                             │
+        ▼                             ▼                             ▼
+┌───────────────┐           ┌─────────────────┐           ┌─────────────────┐
+│  LAUNCHPADS   │           │    LENDING      │           │   GOVERNANCE    │
+│ Need initial  │           │ Need price      │           │  Need token     │
+│ liquidity     │           │ discovery &     │           │  price for      │
+│ discovery     │           │ liquidations    │           │  incentives     │
+└───────┬───────┘           └────────┬────────┘           └────────┬────────┘
+        │                            │                             │
+        └────────────────────────────┼─────────────────────────────┘
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │              AMMs                   │
+                    │    The liquidity foundation        │
+                    │  Price discovery, swaps, routing   │
+                    └─────────────────┬──────────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+             ┌───────────┐     ┌───────────┐     ┌───────────┐
+             │  TOKENS   │     │  ORACLES  │     │ STABLES   │
+             │  ERC-20   │     │  Prices   │     │  DAI/USDC │
+             └───────────┘     └───────────┘     └───────────┘
+```
+
+**What AMMs Enable:**
+
+- **Lending protocols**: Liquidation markets, collateral price discovery
+- **Stablecoins**: Peg maintenance through arbitrage
+- **Derivatives**: Underlying price feeds
+- **Aggregators**: Route optimization across multiple venues
+- **Launchpads**: Initial price discovery for new tokens
+
+**What AMMs Depend On:**
+
+- **Token standards**: ERC-20 compatibility
+- **Oracles**: External price validation (for some designs)
+- **Stablecoins**: Quote currency for most pairs
+
+## Building Your Own DEX
+
+### When to Fork
+
+Forking Uniswap V2 makes sense when:
+- Deploying to a new chain that lacks DEX infrastructure
+- Need simple, audited code with predictable behavior
+- Want full control over fee structure
+- Building a specialized application (launchpad, NFT AMM)
+
+```bash
+# V2 is MIT licensed and well-documented
+git clone https://github.com/Uniswap/v2-core
+git clone https://github.com/Uniswap/v2-periphery
+```
+
+### When to Build Custom
+
+Consider custom implementation when:
+- Need specialized curves (concentrated liquidity for specific use case)
+- Building protocol-specific mechanics (ve(3,3), bonding curves)
+- Optimizing for specific asset types
+
+### Integration Patterns
+
+Most projects should integrate existing DEXs rather than build their own:
+
+```solidity
+// Integrate with Uniswap V2 Router
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+
+function swapExactTokensForTokens(
+    uint256 amountIn,
+    uint256 amountOutMin,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+) external {
+    IERC20(path[0]).approve(address(router), amountIn);
+    router.swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
+}
+
+// For production: use aggregators for best execution
+// 1inch, Paraswap, or 0x API handle routing across multiple DEXs
+```
+
+## Uniswap V4: The Hooks Era (2024-2025)
+
+Uniswap V4 represents a paradigm shift from "one AMM fits all" to "build your own AMM logic on a shared infrastructure."
+
+### The V4 Architecture
+
+V4 introduces three key innovations:
+
+1. **Singleton Contract**: All pools in a single contract (massive gas savings)
+2. **Hooks**: Custom logic at every pool lifecycle point
+3. **Flash Accounting**: Defer balance checks to transaction end
+
+```
+V2/V3: Each pool is a separate contract
+┌──────┐  ┌──────┐  ┌──────┐
+│Pool 1│  │Pool 2│  │Pool 3│  (separate deployments)
+└──────┘  └──────┘  └──────┘
+
+V4: All pools in one singleton
+┌────────────────────────────────┐
+│        Pool Manager            │
+│  ┌─────┐  ┌─────┐  ┌─────┐    │
+│  │ P1  │  │ P2  │  │ P3  │    │  (internal accounting)
+│  └─────┘  └─────┘  └─────┘    │
+└────────────────────────────────┘
+```
+
+### Hooks: Custom Pool Logic
+
+Hooks are external contracts that execute at specific points in a pool's lifecycle:
+
+```solidity
+interface IHooks {
+    // Pool creation
+    function beforeInitialize(...) external returns (bytes4);
+    function afterInitialize(...) external returns (bytes4);
+
+    // Adding liquidity
+    function beforeAddLiquidity(...) external returns (bytes4);
+    function afterAddLiquidity(...) external returns (bytes4);
+
+    // Removing liquidity
+    function beforeRemoveLiquidity(...) external returns (bytes4);
+    function afterRemoveLiquidity(...) external returns (bytes4);
+
+    // Swapping
+    function beforeSwap(...) external returns (bytes4, BeforeSwapDelta, uint24);
+    function afterSwap(...) external returns (bytes4, int128);
+
+    // Donations
+    function beforeDonate(...) external returns (bytes4);
+    function afterDonate(...) external returns (bytes4);
+}
+```
+
+### Hook Use Cases
+
+| Hook Type | Use Case | Example |
+|-----------|----------|---------|
+| **Dynamic Fees** | Adjust fees based on volatility | Higher fees during high volatility |
+| **TWAMM** | Time-weighted average market maker | Large orders executed over time |
+| **Limit Orders** | On-chain limit orders | Execute at target price |
+| **Oracle Integration** | Custom price feeds | Chainlink-powered pools |
+| **KYC/Allowlists** | Permissioned pools | Compliance for RWAs |
+| **MEV Mitigation** | Batch auctions | Reduce sandwich attacks |
+
+### Example: Dynamic Fee Hook
+
+```solidity
+// Hook that adjusts fees based on recent volatility
+contract VolatilityFeeHook is BaseHook {
+    function beforeSwap(
+        address,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata,
+        bytes calldata
+    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+        // Calculate recent volatility
+        uint256 volatility = calculateVolatility(key);
+
+        // Dynamic fee: 0.05% base + up to 0.5% based on volatility
+        uint24 fee = 500 + uint24((volatility * 5000) / MAX_VOLATILITY);
+
+        return (
+            BaseHook.beforeSwap.selector,
+            BeforeSwapDeltaLibrary.ZERO_DELTA,
+            fee | LPFeeLibrary.OVERRIDE_FEE_FLAG
+        );
+    }
+}
+```
+
+### Flash Accounting
+
+V4 allows "going negative" during a transaction, settling at the end:
+
+```solidity
+// Old way: Each swap settles immediately
+swap(pool1, tokenA, tokenB);  // Transfer A in, B out
+swap(pool2, tokenB, tokenC);  // Transfer B in, C out
+// 4 transfers total
+
+// V4 Flash Accounting: Settle once at the end
+poolManager.unlock(...);
+// Inside callback:
+swap(pool1, tokenA, tokenB);  // Just update internal accounting
+swap(pool2, tokenB, tokenC);  // Just update internal accounting
+// At end: Transfer A in, C out (2 transfers)
+```
+
+This dramatically reduces gas for multi-hop swaps and arbitrage.
+
+### Developer Implications
+
+**Building on V4:**
+- Fork existing hooks as starting points
+- Test hooks extensively (they affect all pool operations)
+- Consider composability with other hooks
+- Gas optimization matters even more in singleton
+
+**Migrating from V3:**
+- V3 positions remain valid (V3 isn't deprecated)
+- New pools should consider V4 if hooks add value
+- Liquidity will migrate as V4 ecosystem matures
+
+## Intent-Based Trading: CoW Protocol
+
+While V4 improves on-chain execution, intent-based systems take a different approach: users express *what* they want, and solvers compete to provide the best execution.
+
+### How CoW Protocol Works
+
+```
+Traditional DEX:
+User → submits exact swap → executes at current price
+
+CoW Protocol:
+User → signs intent ("swap 100 USDC for max ETH")
+       ↓
+Solvers → compete to fulfill intent
+       ↓
+Batch Auction → best solver wins, user gets optimal execution
+```
+
+Benefits:
+- MEV protection (no public mempool)
+- Price improvement (solvers compete)
+- Coincidence of Wants (direct peer matching)
+
+<Callout type="info">
+**The AMM Landscape (2025)**:
+- V2 forks: Still dominant on new L2s/chains (simple, proven)
+- V3: Capital-efficient trading on established markets
+- V4: Custom logic pools, advanced use cases
+- Curve: Stablecoin dominance
+- ve(3,3): Bootstrapping new ecosystems
+- Intents: Optimal execution for sophisticated users
+</Callout>
+
+## What We Learned
+
+**1. Simplicity wins adoption.** Uniswap V2's elegance enabled an ecosystem. V3's complexity, while more efficient, reduced composability.
+
+**2. Incentive alignment matters more than efficiency.** Curve's ve-tokenomics and ve(3,3) models demonstrate that sustainable liquidity requires aligned stakeholders, not just high APYs.
+
+**3. Gas costs drive design.** EtherDelta's order books died because of gas. L2s enable more complex DEX designs that wouldn't work on L1.
+
+**4. Specialization beats generalization.** Curve dominates stablecoins. V3 dominates volatile pairs. V4 enables infinite specialization through hooks.
+
+**5. Composability is a feature.** Flash swaps, atomic arbitrage, and MEV extraction are features, not bugs. They improve price efficiency.
+
+**6. The pendulum swings.** V2 was simple. V3 added complexity for efficiency. V4 adds complexity for customization. Intent systems add complexity for MEV protection. Each generation solves the previous generation's problems.
+
+The foundation—trustless, permissionless token exchange—remains constant.
+
+Understanding this evolution helps you choose the right tool: V2 for simplicity, V3 for capital efficiency, Curve for stables, ve(3,3) for bootstrapping. Each solved real problems. Each created new ones. That's how DeFi evolves.
+
+## Impermanent Loss: The LP Tax
+
+Every LP must understand impermanent loss (IL)—the cost of providing liquidity versus simply holding.
+
+### How IL Works
+
+When prices diverge from your entry point, you experience IL:
+
+```
+Initial: 1 ETH ($2000) + 2000 USDC = $4000 total
+Price doubles to $4000/ETH:
+├── If held: 1 ETH ($4000) + 2000 USDC = $6000
+├── If LP'd: 0.707 ETH ($2828) + 2828 USDC = $5656
+└── IL: $344 (5.7%)
+```
+
+**The math**: Constant product maintains x*y=k. As ETH price rises, arbitrageurs buy cheap ETH from your pool, leaving you with less ETH and more USDC.
+
+### IL by Price Change
+
+| Price Change | Impermanent Loss |
+|--------------|------------------|
+| 1.25x (25% up) | 0.6% |
+| 1.5x (50% up) | 2.0% |
+| 2x (100% up) | 5.7% |
+| 3x (200% up) | 13.4% |
+| 4x (300% up) | 20.0% |
+| 5x (400% up) | 25.5% |
+
+IL is symmetric—same loss whether price goes up or down by the same factor.
+
+### When LP'ing Makes Sense
+
+```
+LP Profit = Fees Earned - Impermanent Loss
+
+Profitable when:
+├── Fees > IL (high volume, low volatility)
+├── Token rewards compensate for IL
+├── Range-bound pairs (stablecoins)
+└── Mean-reverting pairs (price returns to entry)
+```
+
+<Warning>
+Most retail LPs lose money on volatile pairs. Academic research (Adams et al., "An analysis of Uniswap markets") shows that LPs systematically underperform holding for pairs with significant price movement.
+</Warning>
+
+## MEV and AMMs
+
+AMMs are the primary target for MEV extraction.
+
+### Sandwich Attacks
+
+The most common AMM-related MEV:
+
+```
+1. Victim submits: Swap 100 USDC → ETH (slippage 0.5%)
+2. Attacker front-runs: Buy ETH (price rises)
+3. Victim's trade executes (at worse price)
+4. Attacker back-runs: Sell ETH (profit from price difference)
+
+Victim pays: Higher price + full slippage
+Attacker profits: Price impact minus gas
+```
+
+**Protection strategies**:
+- Private mempools (Flashbots Protect)
+- Intent-based trading (CoW Protocol)
+- Low slippage tolerance
+- Smaller trade sizes
+
+### Just-In-Time (JIT) Liquidity
+
+Sophisticated LPs provide liquidity only for the moment of large trades:
+
+```
+1. Large swap detected in mempool
+2. JIT provider adds concentrated liquidity at trade price
+3. Trade executes (JIT LP earns fees)
+4. JIT provider removes liquidity immediately
+5. Profit: Fees minus gas, no IL exposure
+```
+
+JIT liquidity is MEV extraction that *helps* traders (better execution) while outcompeting passive LPs.
+
+## Key Figures in AMM Development
+
+### Hayden Adams (Uniswap)
+
+**Background**: B.S. Engineering, Stony Brook University (2016). Worked as mechanical engineer at Siemens on computational fluid dynamics before being laid off.
+
+**Path to Uniswap**: College roommate Karl Floersch (later Optimism CTO) introduced him to Ethereum and suggested building an AMM based on Vitalik's posts. Received $65,000 Ethereum Foundation grant.
+
+**Contribution**: Launched Uniswap V1 (November 2018), implementing constant product in an elegant, gas-efficient contract. V2 (2020) added flash swaps and TWAP. V3 (2021) introduced concentrated liquidity. V4 (2024) enables custom pool logic via hooks.
+
+### Michael Egorov (Curve)
+
+**Background**: PhD Physics, Swinburne University of Technology. Bronze medalist, 2003 International Physics Olympiad. Postdoc at Monash University building Bose-Einstein Condensate machines.
+
+**Prior work**: Founded NuCypher (2015-2020), a Y Combinator-backed proxy re-encryption company.
+
+**Contribution**: Founded Curve Finance (June 2020). Developed the StableSwap invariant optimized for like-kind assets. Curve's TVL reached $20B+ at peak. Created ve-tokenomics model that influenced governance design across DeFi.
+
+### Andre Cronje (Solidly/Velodrome)
+
+**Background**: Self-taught developer from South Africa. Former fintech attorney.
+
+**Contribution**: Created Yearn Finance (2020), pioneering yield aggregation. Launched Solidly (February 2022) introducing ve(3,3) tokenomics combining Curve's vote-escrow with Olympus DAO's (3,3) game theory. Though Solidly itself struggled, the model was perfected by Velodrome (Optimism) and Aerodrome (Base), becoming the dominant DEX design for new ecosystems.
+
+## AMM Evolution: What's Next
+
+### Beyond V4
+
+The trajectory suggests increasing customization and specialization:
+
+**App-specific AMMs**: Custom curves for specific use cases (NFT pricing, RWA trading, yield curve arbitrage).
+
+**Intent + AMM hybrids**: Users express desired outcomes; solvers route through AMMs optimally.
+
+**Cross-chain AMMs**: Atomic swaps across L2s via shared sequencing or ZK proofs.
+
+**Privacy-preserving AMMs**: ZK-based AMMs that hide trade details while maintaining price discovery.
+
+### The Constant: Permissionless Exchange
+
+What remains unchanged since EtherDelta:
+- Anyone can provide liquidity
+- Anyone can swap tokens
+- No counterparty custody risk
+- Composable with other protocols
+
+The primitives evolve. The principle endures.
+
+## Research Citations
+
+This chapter draws on foundational research:
+
+- Garman, M. (1976). "Market Microstructure" [@article_garman_market_1976]
+- Amihud & Mendelson (1980). "Dealership Market" [@article_amihud_dealership_1980]
+- Hanson, R. (2003). "Combinatorial Information Market Design" (LMSR) [@article_hanson_lmsr_2003]
+- Bancor Whitepaper (2017) [@whitepaper_bancor_2017]
+- Adams, H. (2018). Uniswap V1 [@blog_adams_uniswap_2018]
+- Uniswap V2 Whitepaper (2020) [@whitepaper_uniswap_v2_2020]
+- Egorov, M. (2020). Curve StableSwap [@whitepaper_curve_stableswap_2020]
+- Uniswap V3 Whitepaper (2021) [@whitepaper_uniswap_v3_2021]
+
+For the intellectual lineage of AMMs within the Ethereum community, see the Adjacent Research documentation [@misc_adjacent_amm_history].

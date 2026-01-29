@@ -33,16 +33,22 @@ export function Header() {
               Read Online
             </Link>
             <Link
+              href="/code"
+              className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
+            >
+              Code
+            </Link>
+            <Link
+              href="/diagrams"
+              className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
+            >
+              Diagrams
+            </Link>
+            <Link
               href="/download"
               className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
             >
               Download
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
-            >
-              About
             </Link>
             <a
               href="https://github.com/evmbook"
@@ -125,18 +131,25 @@ export function Header() {
                 Read Online
               </Link>
               <Link
+                href="/code"
+                className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Code Library
+              </Link>
+              <Link
+                href="/diagrams"
+                className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Diagrams
+              </Link>
+              <Link
                 href="/download"
                 className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Download
-              </Link>
-              <Link
-                href="/about"
-                className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
               </Link>
               <a
                 href="https://github.com/evmbook"

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 650" width="850" height="650">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FAFBFC"/>
+      <stop offset="100%" style="stop-color:#F0F4F8"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="evmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a3a"/>
+      <stop offset="100%" style="stop-color:#0f0f2f"/>
+    </linearGradient>
+    <linearGradient id="tokenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="100%" style="stop-color:#4B6DD0"/>
+    </linearGradient>
+    <linearGradient id="dexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF007A"/>
+      <stop offset="100%" style="stop-color:#D6006A"/>
+    </linearGradient>
+    <linearGradient id="stableGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3AB83A"/>
+      <stop offset="100%" style="stop-color:#2D8F2D"/>
+    </linearGradient>
+    <linearGradient id="oracleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#D97706"/>
+    </linearGradient>
+    <linearGradient id="lendingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="govGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4"/>
+      <stop offset="100%" style="stop-color:#0891B2"/>
+    </linearGradient>
+    <linearGradient id="advancedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899"/>
+      <stop offset="100%" style="stop-color:#DB2777"/>
+    </linearGradient>
+    <linearGradient id="offchainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6B7280"/>
+      <stop offset="100%" style="stop-color:#4B5563"/>
+    </linearGradient>
+    <marker id="depArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#627EEA"/>
+    </marker>
+    <marker id="optArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9CA3AF"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E7EB" stroke-width="0.5"/>
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>
+
+  <!-- Title -->
+  <text x="350" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1a3a">Sovereign On-Chain Dependency Tree</text>
+  <text x="350" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6B7280">Bootstrap order for a self-sovereign EVM ecosystem</text>
+
+  <!-- On-chain section label -->
+  <rect x="60" y="70" width="580" height="530" rx="12" fill="none" stroke="#3AB83A" stroke-width="2" stroke-dasharray="8,4"/>
+  <rect x="80" y="60" width="140" height="20" fill="#FAFBFC"/>
+  <text x="150" y="75" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#3AB83A">ON-CHAIN (Sovereign)</text>
+
+  <!-- Layer labels (left side) -->
+  <g transform="translate(35, 560)">
+    <rect x="-25" y="-12" width="50" height="24" rx="4" fill="#E5E7EB"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">L0</text>
+  </g>
+  <g transform="translate(35, 480)">
+    <rect x="-25" y="-12" width="50" height="24" rx="4" fill="#E5E7EB"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">L1</text>
+  </g>
+  <g transform="translate(35, 385)">
+    <rect x="-25" y="-12" width="50" height="24" rx="4" fill="#E5E7EB"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">L2</text>
+  </g>
+  <g transform="translate(35, 280)">
+    <rect x="-25" y="-12" width="50" height="24" rx="4" fill="#E5E7EB"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">L3</text>
+  </g>
+  <g transform="translate(35, 165)">
+    <rect x="-25" y="-12" width="50" height="24" rx="4" fill="#E5E7EB"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">L4</text>
+  </g>
+
+  <!-- Layer 0: EVM Chain -->
+  <g transform="translate(350, 560)" filter="url(#dropShadow)">
+    <rect x="-140" y="-28" width="280" height="56" rx="10" fill="url(#evmGradient)"/>
+    <text y="-5" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FFF">EVM Chain</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9CA3AF">Execution • Consensus • State Machine</text>
+  </g>
+
+  <!-- Arrow L0 → L1 -->
+  <line x1="350" y1="532" x2="350" y2="510" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+
+  <!-- Layer 1: Token Standards -->
+  <g transform="translate(350, 480)" filter="url(#dropShadow)">
+    <rect x="-130" y="-23" width="260" height="46" rx="8" fill="url(#tokenGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Token Standards</text>
+    <text y="14" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C7D2FE">ERC-20 • WETH • ERC-721/1155 • needs: EVM only</text>
+  </g>
+
+  <!-- Arrows L1 → L2 -->
+  <line x1="280" y1="457" x2="180" y2="415" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="350" y1="457" x2="350" y2="415" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="420" y1="457" x2="520" y2="415" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+
+  <!-- Layer 2: DEX V2 + Governance + Seed Stable -->
+  <g transform="translate(160, 385)" filter="url(#dropShadow)">
+    <rect x="-70" y="-23" width="140" height="46" rx="8" fill="url(#dexGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">DEX V2 (x·y=k)</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#FFE0EB">needs: tokens only</text>
+  </g>
+  <g transform="translate(350, 385)" filter="url(#dropShadow)">
+    <rect x="-70" y="-23" width="140" height="46" rx="8" fill="url(#govGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">Governance</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#CFFAFE">needs: tokens only</text>
+  </g>
+  <g transform="translate(540, 385)" filter="url(#dropShadow)">
+    <rect x="-75" y="-23" width="150" height="46" rx="8" fill="url(#stableGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFF">Seed Stable*</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#D1FAE5">bootstrap USD pricing</text>
+  </g>
+
+  <!-- Bootstrap note -->
+  <text x="540" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#6B7280">*1 bridged OR native unit</text>
+
+  <!-- Arrows L2 → L3 -->
+  <line x1="160" y1="362" x2="160" y2="310" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="200" y1="362" x2="350" y2="310" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="540" y1="362" x2="540" y2="310" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="540" y1="362" x2="350" y2="310" stroke="#627EEA" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#depArrow)"/>
+
+  <!-- Layer 3: TWAP Oracles + CDP Stables + Lending -->
+  <g transform="translate(160, 280)" filter="url(#dropShadow)">
+    <rect x="-70" y="-23" width="140" height="46" rx="8" fill="url(#oracleGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">TWAP Oracles</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#FEF3C7">needs: DEX + stable pair</text>
+  </g>
+  <g transform="translate(350, 280)" filter="url(#dropShadow)">
+    <rect x="-75" y="-23" width="150" height="46" rx="8" fill="url(#stableGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">CDP Stablecoins</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#D1FAE5">needs: TWAP + DEX (liq)</text>
+  </g>
+  <g transform="translate(540, 280)" filter="url(#dropShadow)">
+    <rect x="-70" y="-23" width="140" height="46" rx="8" fill="url(#lendingGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">Lending</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#EDE9FE">needs: TWAP + DEX (liq)</text>
+  </g>
+
+  <!-- Mutual dependency indicators -->
+  <path d="M 230 280 Q 290 265 335 280" stroke="#9CA3AF" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+  <path d="M 425 280 Q 480 265 470 280" stroke="#9CA3AF" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+
+  <!-- Arrows L3 → L4 -->
+  <line x1="160" y1="257" x2="180" y2="195" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="350" y1="257" x2="350" y2="195" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+  <line x1="540" y1="257" x2="520" y2="195" stroke="#627EEA" stroke-width="2" marker-end="url(#depArrow)"/>
+
+  <!-- Layer 4: Advanced Applications -->
+  <g transform="translate(180, 165)" filter="url(#dropShadow)">
+    <rect x="-70" y="-23" width="140" height="46" rx="8" fill="url(#advancedGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFF">Derivatives</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FECDD3">TWAP + stables + DEX</text>
+  </g>
+  <g transform="translate(350, 165)" filter="url(#dropShadow)">
+    <rect x="-75" y="-23" width="150" height="46" rx="8" fill="url(#advancedGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFF">Prediction Markets</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FECDD3">on-chain resolution</text>
+  </g>
+  <g transform="translate(520, 165)" filter="url(#dropShadow)">
+    <rect x="-65" y="-23" width="130" height="46" rx="8" fill="url(#advancedGradient)"/>
+    <text y="-3" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFF">Launchpads</text>
+    <text y="13" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FECDD3">DEX + tokens</text>
+  </g>
+
+  <!-- Off-chain section -->
+  <rect x="660" y="200" width="175" height="260" rx="10" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="6,3"/>
+  <rect x="680" y="190" width="135" height="20" fill="#FAFBFC"/>
+  <text x="747" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#6B7280">OFF-CHAIN (Optional)</text>
+
+  <g transform="translate(747, 250)" filter="url(#dropShadow)">
+    <rect x="-65" y="-20" width="130" height="40" rx="6" fill="url(#offchainGradient)"/>
+    <text y="-2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">Chainlink</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#D1D5DB">external oracles</text>
+  </g>
+
+  <g transform="translate(747, 315)" filter="url(#dropShadow)">
+    <rect x="-65" y="-20" width="130" height="40" rx="6" fill="url(#offchainGradient)"/>
+    <text y="-2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">Bridged USDC</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#D1D5DB">Circle + bridge trust</text>
+  </g>
+
+  <g transform="translate(747, 380)" filter="url(#dropShadow)">
+    <rect x="-65" y="-20" width="130" height="40" rx="6" fill="url(#offchainGradient)"/>
+    <text y="-2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">External RPCs</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#D1D5DB">Infura, Alchemy</text>
+  </g>
+
+  <!-- Optional arrow from off-chain to on-chain -->
+  <line x1="682" y1="315" x2="615" y2="315" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#optArrow)"/>
+  <text x="650" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#9CA3AF">optional</text>
+
+  <!-- Build Order Legend -->
+  <g transform="translate(785, 510)" filter="url(#dropShadow)">
+    <rect x="-55" y="-15" width="115" height="130" rx="8" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="2" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">Build Order</text>
+    <g transform="translate(0, 20)">
+      <circle cx="-35" cy="0" r="8" fill="#1a1a3a"/>
+      <text x="-35" y="4" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FFF">1</text>
+      <text x="5" y="4" font-family="Arial, sans-serif" font-size="8" fill="#4B5563">EVM + Tokens</text>
+    </g>
+    <g transform="translate(0, 40)">
+      <circle cx="-35" cy="0" r="8" fill="#FF007A"/>
+      <text x="-35" y="4" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FFF">2</text>
+      <text x="5" y="4" font-family="Arial, sans-serif" font-size="8" fill="#4B5563">DEX V2 + Gov</text>
+    </g>
+    <g transform="translate(0, 60)">
+      <circle cx="-35" cy="0" r="8" fill="#F59E0B"/>
+      <text x="-35" y="4" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FFF">3</text>
+      <text x="5" y="4" font-family="Arial, sans-serif" font-size="8" fill="#4B5563">TWAP + CDP</text>
+    </g>
+    <g transform="translate(0, 80)">
+      <circle cx="-35" cy="0" r="8" fill="#EC4899"/>
+      <text x="-35" y="4" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FFF">4</text>
+      <text x="5" y="4" font-family="Arial, sans-serif" font-size="8" fill="#4B5563">Advanced</text>
+    </g>
+  </g>
+
+  <!-- Key insight -->
+  <g transform="translate(350, 105)">
+    <rect x="-280" y="-25" width="560" height="50" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+    <text y="-8" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400E">Sovereign Bootstrap</text>
+    <text y="8" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#B45309">DEX V2 only needs tokens. TWAP oracles need a DEX + stable pair.</text>
+    <text y="21" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#B45309">Seed with 1 bridged stable OR use native token as unit of account.</text>
+  </g>
+</svg>

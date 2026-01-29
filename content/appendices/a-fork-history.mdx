@@ -32,6 +32,7 @@ This split created two separate chains sharing a common history up to block 1,92
 | Magneto | 13,189,133 | Jul 2021 | Berlin equivalence |
 | Mystique | 14,525,000 | Feb 2022 | London equivalence (no EIP-1559) |
 | Spiral | 19,250,000 | Feb 2024 | Shanghai equivalence (partial) |
+| **Olympia** | TBD | 2025 | EIP-1559 with treasury, ECIP-1121 opcodes |
 
 ## Ethereum Forks
 
@@ -53,6 +54,7 @@ This split created two separate chains sharing a common history up to block 1,92
 | **The Merge** | 15,537,394 | Sep 2022 | **Transition to PoS** |
 | Shanghai | 17,034,870 | Apr 2023 | Validator withdrawals |
 | Dencun | 19,426,587 | Mar 2024 | EIP-4844 blobs |
+| **Pectra** | TBD | Late 2024 | EIP-7702 (native AA), EIP-7251, EIP-7002 |
 
 ## Key Differences After The Merge
 
@@ -78,9 +80,10 @@ ETC maintains EVM compatibility with ETH through coordinated upgrades:
 | Berlin | Magneto | Full compatibility |
 | London | Mystique | No EIP-1559 (fee burn) |
 | Shanghai | Spiral | No withdrawals (not PoS) |
+| — | Olympia | EIP-1559 with treasury (not burn), opcode alignment |
 
 <Note>
-ETC generally implements EVM-related EIPs while skipping consensus-related changes that assume Proof of Stake.
+ETC generally implements EVM-related EIPs while skipping consensus-related changes that assume Proof of Stake. The Olympia upgrade is notable for implementing EIP-1559 semantics but with a different economic model: base fees go to a treasury for protocol development rather than being burned.
 </Note>
 
 ## Resources

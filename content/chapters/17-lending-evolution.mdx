@@ -1,0 +1,913 @@
+---
+title: "Lending & Stablecoin Evolution"
+description: From ETHLend to Aave V3, MakerDAO to Sky Protocol, and the stablecoin landscape of 2026
+chapter: 17
+---
+
+# Lending & Stablecoin Evolution
+
+Lending and stablecoins are intertwined. You can't have capital-efficient lending without stable units of account, and you can't have decentralized stablecoins without overcollateralized lending. This chapter traces both evolutions together, showing how each innovation enabled the next.
+
+By 2026, on-chain lending protocols manage tens of billions in assets. Stablecoins—both centralized and decentralized—underpin nearly every DeFi transaction. Understanding how we got here helps you build on (or compete with) the established infrastructure.
+
+## Why On-Chain Lending?
+
+Traditional lending requires:
+- **Credit assessment**: Banks evaluate borrowers' ability to repay
+- **Legal enforcement**: Courts enforce loan agreements
+- **Intermediaries**: Banks match lenders with borrowers, taking spread
+
+Blockchain lending inverts this model:
+- **Overcollateralization**: Borrowers post more collateral than they borrow, eliminating credit risk
+- **Algorithmic enforcement**: Smart contracts automatically liquidate undercollateralized positions
+- **Peer-to-pool**: Lenders deposit to pools; borrowers draw from them
+
+The tradeoff? Capital inefficiency. Overcollateralized loans require $150 of collateral for $100 of borrowing. But they work without identity, credit scores, or legal systems.
+
+## Historical Precursors: Pre-DeFi Stablecoins
+
+Before Ethereum, several projects attempted crypto-backed stablecoins. Understanding their failures illuminates why the MakerDAO/Compound model succeeded.
+
+### BitUSD (July 2014): First Crypto-Collateralized Stablecoin
+
+**BitShares** introduced BitUSD—the first crypto-collateralized stablecoin—created by Charles Hoskinson and Dan Larimer (later of Cardano and EOS).
+
+- **Mechanism**: 200% collateralization in BTS tokens required
+- **Shorting model**: Users shorted USD/BTS by posting collateral
+- **Design flaw**: Protected against BTS price falls but not against BitUSD depegging below $1
+
+**Failure Timeline**:
+- April 2015: Market cap peaked >$1M
+- November 2015: Fell below $200k
+- November 25, 2018: "Global settlement" triggered—system too undercollateralized
+- Current status: Trades ~$0.80, effectively abandoned
+
+**Lesson**: Over-collateralization works only if liquidation mechanisms function reliably.
+
+### NuBits (September 2014): First Algorithmic Stablecoin
+
+**Nu** introduced the first seigniorage-based stablecoin:
+- Dual-token system: NuBits (USNBT) + NuShares (NSR)
+- Uncollateralized, algorithmically backed
+- "Parking" rates to incentivize holding during contraction
+
+**2016 Crash** (May-June):
+- Bitcoin price spiked → holders mass-sold NuBits for BTC
+- Peg broke; stayed broken 3 months before recovering
+
+**2018 Final Collapse** (December 2017 - early 2018):
+- Bitcoin's "Christmas crash" drove users INTO NuBits as safe haven
+- Market cap grew 1,500% ($950k → $14M)
+- Price peaked ~$1.50 (Dec 20-28, 2017)
+- Then catastrophic collapse when sentiment reversed
+- Never recovered; currently trades ~$0.03-0.30
+
+**Design Flaw**: Fractional reserve couldn't handle demand fluctuations. No diversified collateral to absorb sell pressure.
+
+**Significance**: Both NuBits crashes presaged the UST collapse by demonstrating that seigniorage models fail under bank-run dynamics without adequate reserves.
+
+<Callout type="note" title="The Pattern">
+Every failed algorithmic stablecoin—NuBits (2016/2018), Iron Finance (2021), UST (2022)—exhibited the same death spiral dynamic. The mechanism designed to restore the peg instead accelerates collapse when confidence breaks.
+</Callout>
+
+## Era 0: Peer-to-Peer Lending (2017)
+
+### ETHLend: The Napster of DeFi Lending
+
+ETHLend (later rebranded to Aave) launched with peer-to-peer lending: individual lenders matched with individual borrowers.
+
+```solidity
+// Simplified ETHLend loan structure
+struct LoanRequest {
+    address borrower;
+    address lender;
+    address collateralToken;
+    uint256 collateralAmount;
+    address loanToken;
+    uint256 loanAmount;
+    uint256 interestRate;
+    uint256 duration;
+    LoanState state;
+}
+
+// Borrower creates request, lender funds it
+function createLoanRequest(
+    address collateralToken,
+    uint256 collateralAmount,
+    address loanToken,
+    uint256 loanAmount,
+    uint256 interestRate,
+    uint256 duration
+) external {
+    // Borrower specifies exact terms
+    // Must wait for lender to accept
+}
+```
+
+**The Problem**: Like EtherDelta for trading, peer-to-peer lending required matching. Borrowers waited for lenders with compatible terms. Liquidity was fragmented.
+
+## Era 1: Pool-Based Lending (2018-2020)
+
+### Compound: The Innovation
+
+Compound (launched 2018, V2 in 2019) introduced pool-based lending: lenders deposit to a pool, borrowers draw from it, and interest rates adjust algorithmically based on utilization.
+
+```solidity
+// Compound's interest rate model (simplified)
+function getBorrowRate(
+    uint256 cash,        // Uninvested funds in pool
+    uint256 borrows,     // Total borrowed
+    uint256 reserves     // Protocol reserves
+) public view returns (uint256) {
+    uint256 utilization = borrows * 1e18 / (cash + borrows - reserves);
+
+    // Linear model: rate increases with utilization
+    // base + slope * utilization
+    if (utilization <= kink) {
+        return baseRate + utilization * multiplier / 1e18;
+    } else {
+        // Jump rate above kink to prevent full utilization
+        uint256 normalRate = baseRate + kink * multiplier / 1e18;
+        uint256 excessUtil = utilization - kink;
+        return normalRate + excessUtil * jumpMultiplier / 1e18;
+    }
+}
+```
+
+**The Kink**: Compound introduced a "kink" in the utilization curve. Below ~80% utilization, rates increase gradually. Above 80%, rates jump sharply to incentivize repayment and deposits.
+
+```
+Interest Rate
+     │
+ 30% │                            ╱
+     │                          ╱
+ 20% │                        ╱
+     │                      ╱
+ 10% │              ╱------╱
+     │          ╱
+  5% │      ╱
+     │  ╱
+  0% └──────────────────────────────
+     0%        80%      100%
+              Utilization (kink at 80%)
+```
+
+### cTokens: Yield-Bearing Receipts
+
+Compound introduced cTokens—ERC-20 tokens representing deposits that automatically accrue interest:
+
+```solidity
+// Depositing to Compound
+function mint(uint256 mintAmount) external returns (uint256) {
+    // Transfer underlying to protocol
+    underlying.transferFrom(msg.sender, address(this), mintAmount);
+
+    // Mint cTokens based on exchange rate
+    // Exchange rate increases over time as interest accrues
+    uint256 cTokens = mintAmount * 1e18 / exchangeRate();
+    _mint(msg.sender, cTokens);
+    return cTokens;
+}
+
+// Withdrawing: cToken balance stays same, but exchangeRate increases
+function redeem(uint256 redeemTokens) external returns (uint256) {
+    uint256 redeemAmount = redeemTokens * exchangeRate() / 1e18;
+    _burn(msg.sender, redeemTokens);
+    underlying.transfer(msg.sender, redeemAmount);
+    return redeemAmount;
+}
+```
+
+**Why This Mattered**: cTokens were composable. You could use cUSDC as collateral in other protocols, deposit it in yield aggregators, or trade it—all while earning Compound interest.
+
+### Aave: Building on the Model
+
+Aave (rebranded from ETHLend) launched Aave V1 in 2020, adding:
+
+- **Flash loans**: Borrow any amount with no collateral, as long as you repay within the same transaction
+- **Rate switching**: Borrowers could switch between stable and variable rates
+- **aTokens**: Similar to cTokens but with rebasing (balance increases) rather than exchange rate appreciation
+
+```solidity
+// Aave flash loan usage
+function executeOperation(
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata premiums,
+    address initiator,
+    bytes calldata params
+) external returns (bool) {
+    // You have the borrowed funds here
+    // Do arbitrage, liquidation, collateral swap, etc.
+
+    // Must repay amount + premium (0.09% fee)
+    for (uint i = 0; i < assets.length; i++) {
+        uint256 amountOwed = amounts[i] + premiums[i];
+        IERC20(assets[i]).approve(address(POOL), amountOwed);
+    }
+    return true;
+}
+```
+
+Flash loans became critical infrastructure for:
+- **Liquidations**: Liquidators don't need capital; they borrow, liquidate, repay
+- **Arbitrage**: Capture price differences across venues atomically
+- **Collateral swaps**: Change collateral type without closing position
+- **Self-liquidation**: Users can unwind positions in one transaction
+
+![Lending Protocol Flow](/images/diagrams/ch17-lending-protocol.svg)
+
+## Era 2: Capital Efficiency (2021-2022)
+
+### Aave V3: Efficiency Mode
+
+Aave V3 (March 2022) introduced **efficiency mode (E-Mode)** for correlated assets:
+
+```solidity
+// E-Mode configuration
+struct EModeCategory {
+    uint16 ltv;                // Loan-to-value (e.g., 97%)
+    uint16 liquidationThreshold; // (e.g., 98%)
+    uint16 liquidationBonus;   // (e.g., 1%)
+    address priceSource;       // Custom oracle for category
+    string label;              // "Stablecoins", "ETH correlated"
+}
+
+// stETH/ETH E-Mode example:
+// - LTV: 93% (vs 82.5% normally)
+// - Liquidation threshold: 95% (vs 86%)
+// User can borrow more with correlated assets
+```
+
+**Other V3 Features:**
+
+- **Isolation mode**: New assets start isolated, limiting risk exposure
+- **Portals**: Cross-chain liquidity bridging (mint aTokens on destination chain)
+- **Supply/borrow caps**: Protocol-level risk management
+
+### Compound III (Comet): Radical Simplification
+
+Compound III (August 2022) took a different path—radical simplification:
+
+```solidity
+// Compound III: Single borrowable asset per market
+// USDC market: borrow USDC, supply ETH/wBTC/etc. as collateral
+// No more cTokens, no more cross-collateralization complexity
+
+interface IComet {
+    // Supply collateral
+    function supply(address asset, uint256 amount) external;
+
+    // Withdraw collateral
+    function withdraw(address asset, uint256 amount) external;
+
+    // Borrow base asset (e.g., USDC)
+    function withdraw(address to, uint256 amount) external;
+
+    // Repay borrowed base asset
+    function supply(address asset, uint256 amount) external;
+}
+```
+
+**Design Philosophy:**
+
+| Compound V2 | Compound III |
+|-------------|--------------|
+| Any asset borrowable | Single base asset per market |
+| Complex cross-collateral | Simple: collateral → borrow base |
+| cTokens (ERC-20) | Non-transferable accounting |
+| Oracle per asset | Simpler oracle requirements |
+
+Compound III sacrificed flexibility for security and simplicity—a response to the complexity-driven exploits of 2021-2022.
+
+### Morpho: Rate Optimization Layer (2022-2024)
+
+Morpho emerged as a peer-to-peer layer on top of Aave and Compound, improving rates for both lenders and borrowers.
+
+**The Problem Morpho Solves:**
+
+Pool-based lending has inefficiency: if utilization is 80%, lenders earn 80% of the borrow rate. The 20% idle capital earns nothing but dilutes yields.
+
+```
+Traditional pool lending (Aave/Compound):
+Borrowers pay: 5% APY
+Pool utilization: 80%
+Lenders receive: ~4% APY (diluted by idle capital)
+Spread: ~1% (to protocol + reserves)
+
+Morpho peer-to-peer:
+Borrowers pay: 4.5% APY (better than pool)
+Lenders receive: 4.5% APY (better than pool)
+When matched: Both sides benefit from direct P2P rate
+When unmatched: Falls back to underlying pool
+```
+
+**How It Works:**
+
+```solidity
+// Simplified Morpho matching logic
+function supply(address asset, uint256 amount) external {
+    // 1. Try to match with existing borrowers
+    uint256 matched = matchWithBorrowers(asset, amount);
+
+    // 2. Unmatched portion goes to underlying pool
+    uint256 unmatched = amount - matched;
+    if (unmatched > 0) {
+        aavePool.supply(asset, unmatched);
+    }
+
+    // 3. Matched lenders get P2P rate (better than pool)
+    // Matched borrowers pay P2P rate (better than pool)
+}
+```
+
+**Morpho Blue (2024):**
+
+Morpho evolved into Morpho Blue—a minimalist, immutable lending primitive:
+
+- **Isolated markets**: Each market has one collateral, one loan asset, one oracle, one LLTV
+- **Permissionless**: Anyone can create markets with any parameters
+- **No governance**: Core contracts are immutable
+- **Modular**: Risk management via external "vaults" that curate market exposure
+
+```solidity
+// Morpho Blue: Minimal lending primitive
+struct MarketParams {
+    address loanToken;
+    address collateralToken;
+    address oracle;
+    address irm;           // Interest rate model
+    uint256 lltv;          // Liquidation LTV
+}
+
+// Anyone can create a market
+function createMarket(MarketParams memory params) external {
+    // No permission needed
+    // Market defined entirely by parameters
+}
+```
+
+**Why Morpho Matters:** It demonstrates that lending can be decomposed into simpler primitives. Morpho Blue's 650-line core contract is auditable and immutable, with complexity pushed to the periphery (vaults, oracles, IRMs).
+
+### Oracleless Lending: Removing the Oracle Dependency
+
+Traditional lending protocols rely on price oracles for liquidations. Oracle failures can cause bad debt or unfair liquidations. Several protocols explored removing this dependency.
+
+**Ajna Protocol (2023):**
+
+Ajna enables lending without external oracles through market-determined pricing:
+
+```solidity
+// Ajna: Price discovery via lenders
+// Lenders specify the price at which they're willing to lend
+// Creates a "price stack" of liquidity at different LTVs
+
+struct Bucket {
+    uint256 price;           // Price at which liquidity is offered
+    uint256 liquidity;       // Available to borrow at this price
+    uint256 collateral;      // Collateral pledged at this price
+}
+
+// Borrowers borrow from cheapest available buckets
+// Liquidations happen at the bucket's price, not oracle price
+```
+
+**Key Innovation:**
+- Lenders choose their risk by choosing price buckets
+- No external oracle needed—price is set by lender preferences
+- Liquidation price is known in advance
+- Permissionless markets for any asset pair
+
+**Uniswap V4 Lending Hooks:**
+
+Uniswap V4's hooks architecture enables lending functionality within AMM pools:
+
+```solidity
+// Conceptual: Lending via Uniswap V4 hooks
+contract LendingHook is BaseHook {
+    function beforeSwap(
+        address sender,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata params
+    ) external returns (bytes4) {
+        // Use pool liquidity for lending
+        // LP positions as collateral
+        // Swaps can trigger liquidations
+    }
+}
+```
+
+**Why Oracleless Matters:**
+- **Reduces attack surface**: No oracle manipulation
+- **Enables long-tail assets**: Can lend against any asset without Chainlink support
+- **Simplifies risk**: Lenders price risk explicitly via bucket selection
+
+<Callout type="note" title="The Oracle Tradeoff">
+Oracleless lending isn't strictly "better"—it trades oracle risk for liquidity and capital efficiency tradeoffs. Oracle-based systems can offer tighter spreads when prices are reliable. The choice depends on the asset and use case.
+</Callout>
+
+## The Stablecoin Side: MakerDAO and CDP
+
+### MakerDAO: The OG Decentralized Stablecoin
+
+MakerDAO (launched 2017, multi-collateral 2019) pioneered **Collateralized Debt Positions (CDPs)**:
+
+```solidity
+// Simplified CDP mechanics (now called "Vaults")
+struct Vault {
+    uint256 collateral;   // ETH or other collateral locked
+    uint256 debt;         // DAI borrowed (minted)
+}
+
+// Open vault, deposit collateral, mint DAI
+function openVault(uint256 collateralAmount) external {
+    // Deposit collateral
+    collateral.transferFrom(msg.sender, address(this), collateralAmount);
+
+    // Can borrow up to collateral * collateralization ratio
+    // e.g., $1500 ETH collateral at 150% ratio = max 1000 DAI
+}
+
+function mintDAI(uint256 amount) external {
+    require(
+        getCollateralValue(msg.sender) * 100 / (debt[msg.sender] + amount) >= collateralizationRatio,
+        "Undercollateralized"
+    );
+    debt[msg.sender] += amount;
+    DAI.mint(msg.sender, amount);
+}
+```
+
+**The Stability Mechanisms:**
+
+1. **Overcollateralization**: Vaults require 150%+ collateral ratio
+2. **Liquidations**: Undercollateralized vaults are liquidated, repaying debt + penalty
+3. **Stability fee**: Interest on borrowed DAI, paid in DAI
+4. **DAI Savings Rate (DSR)**: Yield for holding DAI, funded by stability fees
+
+**The Governance Problem:**
+
+MakerDAO governance became complex. MKR holders voted on:
+- Collateral types and parameters
+- Stability fees and DSR
+- Risk parameters
+- Protocol upgrades
+
+As DAI grew to billions in circulation, governance became a target. Large MKR holders could influence parameters for their benefit.
+
+### MakerDAO → Sky Protocol (2024)
+
+In 2024, MakerDAO underwent the largest rebrand in DeFi history:
+
+| MakerDAO | Sky Protocol |
+|----------|--------------|
+| DAI | USDS |
+| MKR | SKY |
+| Vaults | Sky Vaults |
+| Maker Protocol | Sky Protocol |
+
+**Why the Rebrand:**
+
+1. **Regulatory positioning**: Fresh identity for evolving regulatory landscape
+2. **RWA focus**: Sky emphasizes Real World Assets integration
+3. **Subprotocol architecture**: Enables specialized protocols under Sky umbrella
+4. **Token migration incentives**: SKY offered rewards for MKR→SKY conversion
+
+```solidity
+// Token migration
+function migrateToSky(uint256 mkrAmount) external {
+    MKR.transferFrom(msg.sender, address(this), mkrAmount);
+    // SKY minted at conversion rate with potential bonus
+    SKY.mint(msg.sender, mkrAmount * conversionRate);
+}
+```
+
+<Callout type="note" title="Migration Status">
+As of 2026, both DAI/MKR and USDS/SKY coexist. The migration is incentivized but not mandatory. Many integrations still use DAI.
+</Callout>
+
+## The Centralized Stablecoin Landscape
+
+### USDC vs USDT: The Regulatory Divide
+
+| Aspect | USDC (Circle) | USDT (Tether) |
+|--------|---------------|---------------|
+| **Regulatory approach** | Proactive compliance | Offshore, minimal |
+| **Reserve attestations** | Monthly, Big Four accountant | Quarterly, less transparent |
+| **Banking** | Traditional US banks | Various, some concerns |
+| **MiCA compliance** | EURC designed for MiCA | Uncertain EU future |
+| **Freeze capability** | Yes, has frozen addresses | Yes, has frozen addresses |
+| **Market cap (2026)** | ~$50B | ~$100B |
+
+**The SVB Crisis (March 2023):**
+
+USDC briefly depegged to $0.87 when Silicon Valley Bank collapsed with $3.3B of Circle's reserves. Key lessons:
+
+1. **Bank concentration risk**: Even "fully backed" stablecoins have counterparty risk
+2. **Flight to safety**: Users fled to DAI and USDT during USDC uncertainty
+3. **Recovery speed**: Circle's transparency enabled quick confidence recovery
+4. **Peg arbitrage**: Traders who bought USDC at $0.87 profited on recovery
+
+### EURC: MiCA-Native Stablecoin
+
+Circle's EURC targets the European market under MiCA (Markets in Crypto-Assets Regulation):
+
+- **1:1 Euro backing** with segregated reserves
+- **Licensed issuer** under MiCA framework
+- **On-chain transparency** with regular attestations
+
+For developers building EU-focused applications, EURC provides regulatory clarity that USDT cannot.
+
+### The Algorithmic Stablecoin Failure
+
+**Terra/UST Collapse (May 2022):**
+
+UST was an algorithmic stablecoin "backed" by LUNA:
+- Mint 1 UST by burning $1 worth of LUNA
+- Redeem 1 UST for $1 worth of LUNA
+- Peg maintained by arbitrage
+
+The death spiral:
+1. Large UST sells create selling pressure
+2. UST depegs slightly below $1
+3. Arbitrageurs redeem UST for LUNA and sell LUNA
+4. LUNA price drops, reducing backing confidence
+5. More UST sells, more LUNA minting, hyperinflation
+6. UST → $0, LUNA → $0, ~$40B market cap destroyed
+
+```
+The collapse sequence:
+Day 1: UST at $0.98, "temporary depeg"
+Day 2: UST at $0.90, LUNA falling
+Day 3: UST at $0.50, LUNA hyperinflating
+Day 4: UST at $0.10, LUNA worthless
+Day 5: Both effectively zero
+```
+
+**Lesson for Builders**: Algorithmic stability is reflexive. When confidence breaks, the mechanism that should restore the peg instead accelerates collapse. Overcollateralization (MakerDAO model) provides actual backing; algorithmic mechanisms provide confidence games.
+
+### Ethena (USDe): Delta-Neutral Stability (2024)
+
+Ethena introduced a novel model: **synthetic dollar backed by delta-neutral positions**.
+
+**How USDe Works:**
+1. Users deposit ETH or stETH as collateral
+2. Protocol opens short perpetual positions equal to the collateral
+3. Long spot ETH + Short perp ETH = market-neutral exposure
+4. Funding rates (usually positive) generate yield
+
+```
+Traditional stablecoin:
+$100 USDC = $100 in bank reserves
+
+DAI (overcollateralized):
+$100 DAI = $150+ worth of ETH locked
+
+USDe (delta-neutral):
+$100 USDe = $100 stETH + $100 short ETH perp
+           Net ETH exposure: $0 (delta neutral)
+           Yield: funding rate income
+```
+
+**Risks:**
+- **Negative funding**: In bear markets, funding can go negative for extended periods
+- **Exchange risk**: Relies on centralized exchanges for perp positions
+- **Liquidity risk**: Large redemptions require unwinding positions
+- **Counterparty risk**: Custodians hold the collateral
+
+**Why It Matters**: Ethena achieved billions in TVL by offering high yields (from funding rates) on a stablecoin. It demonstrated demand for yield-bearing stables beyond traditional lending.
+
+### RAI and HAI: Non-Pegged Stablecoins
+
+Not all stablecoins need a $1 peg. **Reflexer's RAI** pioneered the "pure money" concept.
+
+**RAI Design:**
+- Target price floats based on supply/demand
+- PID controller adjusts redemption rate to reduce volatility
+- No governance, no upgrades, minimal human intervention
+- Started at ~$3.14 (π), floats around that range
+
+```
+Traditional stable: Peg to $1, intervene to maintain peg
+RAI: Let price float, reduce volatility algorithmically
+
+RAI price too high → negative redemption rate → incentivizes selling → price falls
+RAI price too low → positive redemption rate → incentivizes holding → price rises
+```
+
+**HAI (Hai Protocol)**: Fork of RAI on Optimism with similar mechanics.
+
+**Why This Matters**: RAI showed that stability != $1 peg. A low-volatility asset is useful even if it's not pegged to fiat. This matters for:
+- Protocols wanting to minimize governance attack surface
+- Users preferring purely crypto-native stability
+- Reducing regulatory exposure (no fiat peg claims)
+
+### The 2025 Stablecoin Landscape
+
+| Type | Examples | Backing | Risk Profile |
+|------|----------|---------|--------------|
+| **Fiat-backed** | USDC, USDT, EURC | Bank deposits | Regulatory, counterparty |
+| **Overcollateralized** | DAI/USDS, LUSD | Crypto collateral | Oracle, liquidation |
+| **Delta-neutral** | USDe | Spot + short perps | Funding, exchange risk |
+| **Non-pegged** | RAI, HAI | Crypto + algorithm | Adoption, complexity |
+| **Algorithmic** | ~~UST~~ | Token mechanics | ⚠️ Death spiral risk |
+
+<Callout type="warning">
+**Builder Decision**: Choose your stablecoin integration carefully:
+- **USDC**: Best regulatory profile, but centralized
+- **DAI/USDS**: Most Lindy, but MakerDAO governance risk
+- **Native yield**: Consider USDe for yield strategies (understand the risks)
+- **Minimizing trust**: RAI for maximum decentralization
+</Callout>
+
+## Liquidations: The Enforcement Mechanism
+
+### How Liquidations Work
+
+```solidity
+// Simplified liquidation mechanics
+function liquidate(address borrower, address collateral, uint256 repayAmount) external {
+    // 1. Check if position is liquidatable
+    uint256 healthFactor = getHealthFactor(borrower);
+    require(healthFactor < 1e18, "Position healthy");
+
+    // 2. Calculate collateral to seize
+    // Liquidator repays some debt, receives collateral + bonus
+    uint256 collateralPrice = oracle.getPrice(collateral);
+    uint256 collateralToSeize = repayAmount * (1e18 + liquidationBonus) / collateralPrice;
+
+    // 3. Transfer debt token from liquidator
+    debtToken.transferFrom(msg.sender, address(this), repayAmount);
+
+    // 4. Reduce borrower's debt
+    debt[borrower] -= repayAmount;
+
+    // 5. Transfer collateral to liquidator
+    IERC20(collateral).transfer(msg.sender, collateralToSeize);
+}
+```
+
+### The Liquidation Ecosystem
+
+Liquidations are performed by:
+
+1. **MEV searchers**: Monitor mempool for liquidatable positions
+2. **Dedicated bots**: Run 24/7 checking health factors
+3. **Keeper networks**: Decentralized bot infrastructure (Keep3r, Gelato)
+4. **Flash loan liquidators**: Use borrowed funds to liquidate without capital
+
+```solidity
+// Flash loan liquidation pattern
+function flashLiquidate(address borrower, address collateral, uint256 amount) external {
+    // 1. Flash borrow the debt token
+    lendingPool.flashLoan(address(this), debtToken, amount, abi.encode(borrower, collateral));
+}
+
+function executeOperation(/*...*/) external {
+    // 2. Liquidate with borrowed funds
+    lendingPool.liquidate(borrower, collateral, amount);
+
+    // 3. Swap seized collateral to debt token
+    uint256 collateralReceived = IERC20(collateral).balanceOf(address(this));
+    router.swap(collateral, debtToken, collateralReceived);
+
+    // 4. Repay flash loan + fee, keep profit
+    // Profit = liquidation bonus - flash loan fee - gas
+}
+```
+
+### Oracle Dependencies
+
+Lending protocols live or die by their oracles:
+
+| Oracle Failure Mode | Consequence |
+|---------------------|-------------|
+| Price too high | Users borrow more than collateral supports |
+| Price too low | Healthy positions liquidated unfairly |
+| Stale price | Arbitrage against protocol |
+| Manipulation | Theft via artificial liquidations |
+
+Modern protocols use multiple oracle sources, TWAP (time-weighted average prices), and circuit breakers to mitigate oracle risk. See Chapter 22 for detailed oracle coverage.
+
+## The Dependency Tree
+
+```
+                    ┌─────────────────────────────────────┐
+                    │        USER APPLICATIONS            │
+                    │   Leverage, Yield Aggregators       │
+                    └─────────────────┬───────────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │                             │                             │
+        ▼                             ▼                             ▼
+┌───────────────┐           ┌─────────────────┐           ┌─────────────────┐
+│   LEVERAGE    │           │    YIELD        │           │   COLLATERAL    │
+│   TRADING     │           │  AGGREGATORS    │           │    VAULTS       │
+│ (GMX, dYdX)   │           │  (Yearn)        │           │   (Aura)        │
+└───────┬───────┘           └────────┬────────┘           └────────┬────────┘
+        │                            │                             │
+        └────────────────────────────┼─────────────────────────────┘
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │          LENDING PROTOCOLS         │
+                    │      Aave, Compound, Spark         │
+                    └─────────────────┬──────────────────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              │                       │                       │
+              ▼                       ▼                       ▼
+       ┌───────────┐           ┌───────────┐           ┌───────────┐
+       │  ORACLES  │           │STABLECOINS│           │   AMMs    │
+       │ Chainlink │           │DAI/USDC/  │           │Liquidation│
+       │ Chronicle │           │   USDS    │           │  markets  │
+       └───────────┘           └───────────┘           └───────────┘
+```
+
+**What Lending Enables:**
+
+- **Leverage**: Borrow against collateral, buy more collateral, repeat
+- **Yield optimization**: Supply to highest-yield market automatically
+- **Capital efficiency**: Use idle assets productively
+- **Short selling**: Borrow asset, sell it, buy back cheaper later
+
+**What Lending Depends On:**
+
+- **Oracles**: Price feeds for collateral valuation
+- **Stablecoins**: Primary borrow/lend asset
+- **AMMs**: Liquidation execution, collateral swaps
+
+## Building on Lending Protocols
+
+### Integration Patterns
+
+```solidity
+// Aave V3 integration example
+import {IPool} from "@aave/v3-core/contracts/interfaces/IPool.sol";
+
+contract LeverageVault {
+    IPool public aavePool;
+
+    function leverageUp(
+        address collateral,
+        address borrowAsset,
+        uint256 depositAmount,
+        uint256 borrowAmount,
+        uint256 loops
+    ) external {
+        // Initial deposit
+        IERC20(collateral).transferFrom(msg.sender, address(this), depositAmount);
+        IERC20(collateral).approve(address(aavePool), type(uint256).max);
+        aavePool.supply(collateral, depositAmount, address(this), 0);
+
+        // Leverage loops
+        for (uint256 i = 0; i < loops; i++) {
+            // Borrow
+            aavePool.borrow(borrowAsset, borrowAmount, 2, 0, address(this));
+
+            // Swap to collateral (via DEX)
+            uint256 received = swap(borrowAsset, collateral, borrowAmount);
+
+            // Resupply
+            aavePool.supply(collateral, received, address(this), 0);
+        }
+    }
+}
+```
+
+### Risk Considerations
+
+When building on lending protocols:
+
+1. **Health factor monitoring**: Build liquidation protection or alerts
+2. **Oracle trust**: Understand which oracles the protocol uses
+3. **Interest rate exposure**: Variable rates can spike; consider hedging
+4. **Protocol risk**: Smart contract risk, governance risk, oracle risk compound
+
+## What We Learned
+
+**1. Pooled liquidity beats peer-to-peer.** ETHLend required matching; Compound/Aave made lending instant.
+
+**2. Capital efficiency is a spectrum.** V2-style protocols prioritize simplicity; V3 and Comet optimize efficiency with added complexity.
+
+**3. Stablecoin backing matters.** Overcollateralized (DAI) survived; algorithmic (UST) collapsed. Centralized (USDC/USDT) work but have counterparty risk.
+
+**4. Liquidations are features, not bugs.** They keep the system solvent. Build around them, not against them.
+
+**5. Governance evolves.** MakerDAO → Sky shows that even mature protocols must adapt to regulatory and market pressures.
+
+The lending landscape continues evolving. Isolated markets, cross-chain lending, and novel collateral types (NFTs, RWAs) are expanding what's possible. But the core mechanics—overcollateralization, algorithmic rates, and liquidation enforcement—remain constant foundations to build upon.
+
+## Key Figures in DeFi Lending
+
+### Robert Leshner (Compound)
+
+**Background**: B.S. Economics, University of Pennsylvania (Wharton); Chartered Financial Analyst (CFA). Previously CFO at Postmates and chair of San Francisco Revenue Bond Oversight Committee.
+
+**Path to DeFi**: Founded Safe Shepherd (2011), a personal data management startup. Transitioned to crypto, recognizing the potential for algorithmic money markets.
+
+**Contributions**:
+- Founded Compound (2017), designing the pooled lending model that became the industry standard
+- Introduced cTokens—composable receipt tokens representing deposits
+- Launched COMP governance token distribution (June 2020), catalyzing "yield farming" and DeFi Summer
+- Stepped down as CEO in 2023 to found Superstate, bridging TradFi and DeFi
+
+**Significance**: Compound's pooled model replaced peer-to-peer matching with algorithmic rate discovery. Every major lending protocol since—Aave, Morpho, Spark—builds on patterns Leshner established.
+
+### Stani Kulechov (Aave)
+
+**Background**: Law studies in Finland; self-taught developer with an entrepreneurial bent from teenage years.
+
+**Path to Aave**: Founded ETHLend in 2017 as peer-to-peer lending. Recognized the matching problem and pivoted to pooled model with the Aave rebrand in 2020.
+
+**Contributions**:
+- Pioneered **flash loans** (2020)—borrow any amount with zero collateral, repay in same transaction
+- Introduced variable and stable rate options for borrowers
+- Led Aave V2 (2020) and V3 (2022) with E-mode, isolation mode, and portals
+- Founded Lens Protocol for decentralized social media
+
+**Significance**: Flash loans were paradigm-shifting for DeFi capital efficiency, enabling liquidations without capital, atomic arbitrage, and complex collateral operations in single transactions.
+
+### The Stablecoin Pioneers
+
+**Rune Christensen (MakerDAO)**: Founded MakerDAO in 2014, introducing the CDP model. Navigated the protocol through The DAO era, DeFi Summer, and the Sky rebrand.
+
+**Guy Young (Ethena)**: Launched USDe's delta-neutral model (2024), achieving rapid TVL growth through funding rate yield.
+
+**Dan Larimer & Charles Hoskinson (BitUSD)**: Created the first crypto-collateralized stablecoin (2014), though it ultimately failed. Larimer later built EOS and Steemit; Hoskinson founded Cardano.
+
+## Common Misattributions
+
+### 1. "DeFi lending is like traditional lending"
+
+**Misconception**: Same mechanics, just on blockchain.
+
+**Reality**: Fundamental differences:
+- **Overcollateralized**: No credit scores, identity, or underwriting
+- **Algorithmic rates**: Market-clearing prices without human intervention
+- **Instant liquidation**: No collections process; automated enforcement
+- **Permissionless**: Anyone can supply/borrow without approval
+
+Traditional lending accepts credit risk and uses legal systems for enforcement. DeFi lending eliminates credit risk through overcollateralization and uses smart contracts for enforcement.
+
+### 2. "Flash loans are primarily for attacks"
+
+**Misconception**: Flash loans exist to enable exploits.
+
+**Reality**: The vast majority of flash loan volume is legitimate:
+- **Arbitrage**: Maintaining price consistency across venues (market efficiency)
+- **Liquidations**: Enabling anyone to liquidate without capital (protocol health)
+- **Collateral swaps**: Changing collateral type without closing positions (user convenience)
+- **Self-liquidation**: Users unwinding their own positions efficiently
+
+Exploits are a minority use case. Flash loans democratize capital access for legitimate MEV extraction and capital-efficient operations.
+
+### 3. "Higher APY means better protocol"
+
+**Misconception**: Compare protocols by yield alone.
+
+**Reality**: APY depends on multiple factors:
+- **Token incentives**: Often temporary; can disappear after campaigns end
+- **Utilization**: High utilization means idle capital is minimal
+- **Risk parameters**: Higher yields often compensate for higher risk
+- **Protocol sustainability**: Unsustainable yield leads to eventual collapse
+
+A 15% APY on a protocol with questionable security is worse than 4% on audited, battle-tested infrastructure.
+
+### 4. "Compound invented DeFi lending"
+
+**Misconception**: Compound was the first DeFi lending protocol.
+
+**Reality**: ETHLend (now Aave) predates Compound. However, Compound invented the **pooled lending model** with algorithmic interest rates that became the industry standard. The innovation wasn't lending—it was eliminating the need for counterparty matching.
+
+### 5. "All stablecoins are the same risk"
+
+**Misconception**: USDC, DAI, and UST had equivalent risk profiles.
+
+**Reality**: Vastly different risk structures:
+- **USDC**: Bank-held reserves; realized SVB risk briefly in March 2023
+- **DAI**: Overcollateralized with crypto; liquidation and oracle risk
+- **UST**: Algorithmic with no real backing; realized death spiral catastrophically
+
+Understanding stablecoin design determines appropriate use cases and risk management.
+
+## Research Citations
+
+This chapter draws on the following foundational sources:
+
+**Lending Protocols**:
+- Compound Protocol Whitepaper (Leshner & Hayes, 2019) [@online_compound_whitepaper_2019]
+- Aave Protocol V3 Documentation [@online_aave_v3_2022]
+- Flash Boys 2.0: Frontrunning in Decentralized Exchanges (Daian et al., 2019) [@article_daian_flashboys_2019]—foundational MEV research
+
+**Stablecoins**:
+- MakerDAO Whitepaper (2017) [@online_makerdao_whitepaper_2017]—formalized CDPs, liquidation ratios, stability fees
+- BitShares BitUSD Documentation (2014)—first crypto-collateralized stablecoin
+
+**Economic Foundations**:
+- Money market theory from traditional finance informed algorithmic rate design
+- Auction theory (Vickrey 1961, mechanism design) underlies liquidation mechanisms
+
+<Callout type="tip" title="Further Reading">
+For deeper technical details on liquidation MEV dynamics, see Chapter 22 (Oracles) and the MEV section in Chapter 16 (AMMs). For stablecoin regulatory considerations, see Chapter 25 (Regulatory Landscape).
+</Callout>

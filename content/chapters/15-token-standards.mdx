@@ -1,0 +1,1203 @@
+---
+title: Token Standards & Evolution
+description: ERC-20, ERC-721, ERC-1155, ERC-4626, and token standard evolution
+chapter: 15
+---
+
+# Token Standards & Evolution
+
+Tokens are the fundamental building blocks of the EVM ecosystem. They represent programmable value—from fungible currencies to unique digital collectibles, from governance rights to representations of real-world assets. Every DeFi protocol, every NFT marketplace, every DAO governance system builds on token standards.
+
+Understanding tokens isn't just about knowing the interface. It's about understanding *why* each standard evolved, what problems it solved, and how the standards interact to enable composability.
+
+## The Evolution of Token Standards
+
+### Pre-Ethereum Tokens: Bitcoin's Colored Coins (2012-2014)
+
+Before Ethereum, tokenization attempts happened on Bitcoin:
+
+**Colored Coins (2012-2013):**
+- Mark specific satoshis to represent external assets
+- Limited by Bitcoin Script constraints
+- No smart contract logic
+- Influenced later designs
+
+**Mastercoin/Omni (2013):**
+- Layer-2 protocol on Bitcoin
+- Enabled token creation and DEX functionality
+- Tether (USDT) originally launched on Omni in 2014
+- J.R. Willett's "Second Bitcoin Whitepaper" proposed the concept
+
+**Counterparty (2014):**
+- Smart contracts on Bitcoin via OP_RETURN
+- XCP token distributed via proof-of-burn
+- More programmability than Colored Coins
+- Still constrained by Bitcoin's architecture
+
+**Lesson**: The demand for tokens predated Ethereum. Bitcoin's scripting limitations pushed innovation to purpose-built platforms.
+
+### Life Before Standards (2015-2017)
+
+When Ethereum launched in 2015, anyone could create a token contract. The problem was that every implementation was different. Wallets couldn't display arbitrary tokens. Exchanges had to write custom integration code for each token. The friction was enormous.
+
+**Early tokens** each had their own interfaces:
+- Different function names (`send` vs `transfer` vs `give`)
+- Different event formats
+- Different decimal handling
+- No guarantee of behavior
+
+**The cost:** Every integration required custom development. A wallet supporting 100 tokens needed 100 different integrations.
+
+### The ERC-20 Breakthrough (2015-2017)
+
+Fabian Vogelsteller and Vitalik Buterin proposed ERC-20 in November 2015. It defined a minimal common interface that all fungible tokens could implement.
+
+**The insight:** Standardization enables composability. A wallet that understands ERC-20 can display *any* ERC-20 token. A DEX that supports ERC-20 can trade *any* ERC-20 token.
+
+**Timeline:**
+- November 2015: ERC-20 proposed
+- September 2017: ERC-20 finalized
+- 2017 ICO boom: ERC-20 became ubiquitous
+- Today: Hundreds of thousands of ERC-20 tokens exist
+
+**Developer Lesson:** Standards compound. The value of ERC-20 isn't the interface—it's that every wallet, exchange, and protocol speaks the same language.
+
+### The NFT Revolution (2017-2021)
+
+ERC-20's fungibility was limiting. Each token is identical to every other. But what about unique items—art, collectibles, domain names, real estate?
+
+**CryptoKitties (2017)** exposed the need. Each kitty was unique, with its own genetics and traits. They couldn't be ERC-20 tokens because one kitty isn't interchangeable with another.
+
+**ERC-721** (January 2018) solved this by tracking individual token IDs. Each token has an owner, and tokens are distinguishable by their ID.
+
+**ERC-1155** (June 2018) went further—a single contract managing both fungible and non-fungible tokens, with batch operations for gas efficiency.
+
+### The DeFi Standardization (2022-2024)
+
+As DeFi matured, patterns emerged that needed standardization:
+- Yield-bearing tokens (aTokens, cTokens, yTokens) each had different interfaces
+- Governance tokens needed delegation and voting snapshots
+- Cross-protocol composability was hindered by inconsistent interfaces
+
+**ERC-4626** (2022) standardized tokenized vaults—any yield-bearing wrapper around ERC-20 tokens.
+
+**Developer Lesson:** Standards follow practice. ERC-4626 didn't invent yield vaults—it standardized the pattern that Yearn, Aave, and Compound had already established.
+
+## ERC-20: Fungible Tokens
+
+ERC-20 is the most widely used token standard. It defines a common interface that allows any token to be traded on exchanges, held in wallets, and used in DeFi protocols.
+
+### The ERC-20 Interface
+
+```solidity
+interface IERC20 {
+    // Returns the total token supply
+    function totalSupply() external view returns (uint256);
+
+    // Returns the balance of an account
+    function balanceOf(address account) external view returns (uint256);
+
+    // Transfers tokens to a recipient
+    function transfer(address to, uint256 amount) external returns (bool);
+
+    // Returns the remaining allowance for a spender
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    // Sets allowance for a spender
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    // Transfers tokens on behalf of another address
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+```
+
+### The Approve-TransferFrom Pattern
+
+ERC-20 introduced a two-step pattern that became foundational to DeFi:
+
+```
+Step 1: User approves protocol to spend tokens
+        user.approve(protocol, amount)
+
+Step 2: Protocol pulls tokens from user
+        protocol.transferFrom(user, protocol, amount)
+```
+
+This pattern enables:
+- DEXs pulling tokens for swaps
+- Lending protocols taking collateral
+- Any contract that needs to move user tokens
+
+### Basic ERC-20 Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleToken {
+    string public name = "Simple Token";
+    string public symbol = "SIMP";
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor(uint256 initialSupply) {
+        totalSupply = initialSupply * 10**decimals;
+        balanceOf[msg.sender] = totalSupply;
+        emit Transfer(address(0), msg.sender, totalSupply);
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Insufficient balance");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(balanceOf[from] >= amount, "Insufficient balance");
+        require(allowance[from][msg.sender] >= amount, "Insufficient allowance");
+
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+
+        emit Transfer(from, to, amount);
+        return true;
+    }
+}
+```
+
+<Callout type="warning">
+For production use, use OpenZeppelin's ERC-20 implementation. The example above lacks security features like overflow protection (handled by Solidity 0.8+) and edge case handling.
+</Callout>
+
+### Using OpenZeppelin
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MyToken is ERC20 {
+    constructor(uint256 initialSupply) ERC20("My Token", "MTK") {
+        _mint(msg.sender, initialSupply * 10**decimals());
+    }
+}
+```
+
+### Common ERC-20 Extensions
+
+**ERC20Burnable** — Allows token holders to destroy their tokens:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+```
+
+**ERC20Pausable** — Allows pausing all transfers in emergencies:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+```
+
+**ERC20Capped** — Enforces a maximum supply:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+```
+
+**ERC20Permit (EIP-2612)** — Allows gasless approvals via signatures:
+```solidity
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+```
+
+### EIP-2612: Permit (Gasless Approvals)
+
+The original approve-transferFrom pattern requires two transactions. EIP-2612 allows approvals via signed messages:
+
+```solidity
+// User signs a permit off-chain
+// Protocol submits the permit and transferFrom in one transaction
+
+interface IERC20Permit {
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+}
+```
+
+**Benefits:**
+- Users approve and execute in one transaction
+- Gas savings for users
+- Better UX for DeFi protocols
+
+Most major tokens (USDC, DAI, UNI) support permit.
+
+## ERC-721: Non-Fungible Tokens
+
+ERC-721 defines a standard for NFTs—tokens where each unit is unique and distinguishable.
+
+### The ERC-721 Interface
+
+```solidity
+interface IERC721 {
+    // Returns the number of tokens owned by an address
+    function balanceOf(address owner) external view returns (uint256);
+
+    // Returns the owner of a specific token
+    function ownerOf(uint256 tokenId) external view returns (address);
+
+    // Transfers a token (with safety check)
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+
+    // Transfers a token (without safety check)
+    function transferFrom(address from, address to, uint256 tokenId) external;
+
+    // Approves another address to transfer a specific token
+    function approve(address to, uint256 tokenId) external;
+
+    // Sets approval for all tokens owned by sender
+    function setApprovalForAll(address operator, bool approved) external;
+
+    // Returns approved address for a token
+    function getApproved(uint256 tokenId) external view returns (address);
+
+    // Checks if operator is approved for all of owner's tokens
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+
+    // Events
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+}
+```
+
+### Key Differences from ERC-20
+
+| Aspect | ERC-20 | ERC-721 |
+|--------|--------|---------|
+| Fungibility | All tokens identical | Each token unique |
+| Balance | Amount (`uint256`) | Count of owned tokens |
+| Transfer | Amount-based | Token ID-based |
+| Approval | Amount to spender | Specific token or all tokens |
+
+### Safe Transfers
+
+ERC-721 introduced `safeTransferFrom`, which checks if the recipient can receive NFTs:
+
+```solidity
+interface IERC721Receiver {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4);
+}
+```
+
+If the recipient is a contract that doesn't implement this interface, the transfer reverts. This prevents NFTs from being locked in contracts that can't handle them.
+
+### ERC-721 Metadata
+
+The metadata extension adds name, symbol, and tokenURI:
+
+```solidity
+interface IERC721Metadata {
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function tokenURI(uint256 tokenId) external view returns (string memory);
+}
+```
+
+The `tokenURI` typically returns a URL pointing to a JSON file:
+
+```json
+{
+    "name": "My NFT #1",
+    "description": "A unique digital collectible",
+    "image": "ipfs://Qm.../image.png",
+    "attributes": [
+        {"trait_type": "Color", "value": "Blue"},
+        {"trait_type": "Rarity", "value": "Rare"}
+    ]
+}
+```
+
+### Simple ERC-721 Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract SimpleNFT is ERC721, Ownable {
+    uint256 private _nextTokenId;
+    string private _baseTokenURI;
+
+    constructor() ERC721("Simple NFT", "SNFT") Ownable(msg.sender) {}
+
+    function mint(address to) public onlyOwner returns (uint256) {
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(to, tokenId);
+        return tokenId;
+    }
+
+    function setBaseURI(string memory baseURI) public onlyOwner {
+        _baseTokenURI = baseURI;
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return _baseTokenURI;
+    }
+}
+```
+
+### Metadata Storage Patterns
+
+**On-chain metadata:**
+```solidity
+mapping(uint256 => string) private _tokenURIs;
+```
+- Fully decentralized
+- Expensive to store
+- Used for high-value, permanent NFTs
+
+**IPFS metadata:**
+```
+ipfs://QmXxx.../metadata.json
+```
+- Content-addressed (immutable if pinned)
+- Requires IPFS infrastructure
+- Standard for most NFT projects
+
+**Centralized metadata:**
+```
+https://api.example.com/token/123
+```
+- Cheapest to implement
+- Can change or disappear
+- Not recommended for valuable NFTs
+
+<Callout type="warning">
+NFT metadata durability matters. If the server hosting your metadata goes down, your NFT becomes a pointer to nothing. Consider IPFS or on-chain storage for permanent NFTs.
+</Callout>
+
+## ERC-1155: Multi-Token Standard
+
+ERC-1155 allows a single contract to manage multiple token types—both fungible and non-fungible:
+
+### Why ERC-1155?
+
+| Scenario | ERC-20/721 | ERC-1155 |
+|----------|------------|----------|
+| Game with 10 item types | 10 contracts | 1 contract |
+| Batch transfer 5 items | 5 transactions | 1 transaction |
+| Mixed fungible + NFTs | 2+ contracts | 1 contract |
+
+### Basic Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
+contract GameItems is ERC1155 {
+    uint256 public constant GOLD = 0;      // Fungible (high supply)
+    uint256 public constant SILVER = 1;    // Fungible (high supply)
+    uint256 public constant SWORD = 2;     // Semi-fungible (limited supply)
+    uint256 public constant UNIQUE_ITEM = 3; // Non-fungible (supply = 1)
+
+    constructor() ERC1155("https://game.example/api/item/{id}.json") {
+        _mint(msg.sender, GOLD, 10**18, "");
+        _mint(msg.sender, SILVER, 10**18, "");
+        _mint(msg.sender, SWORD, 100, "");
+        _mint(msg.sender, UNIQUE_ITEM, 1, "");
+    }
+}
+```
+
+### Batch Operations
+
+ERC-1155's killer feature is batch operations:
+
+```solidity
+// Transfer multiple token types in one transaction
+function safeBatchTransferFrom(
+    address from,
+    address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+) external;
+
+// Check multiple balances in one call
+function balanceOfBatch(
+    address[] calldata accounts,
+    uint256[] calldata ids
+) external view returns (uint256[] memory);
+```
+
+**Gas savings:** Transferring 10 different items costs roughly the same as transferring 2-3 in separate ERC-721 transactions.
+
+### When to Use Each Standard
+
+| Use Case | Recommended Standard |
+|----------|---------------------|
+| Currency, governance token | ERC-20 |
+| Unique art, collectibles | ERC-721 |
+| Game items, mixed collections | ERC-1155 |
+| Yield-bearing tokens | ERC-4626 |
+
+## ERC-4626: Tokenized Vaults
+
+ERC-4626 standardizes yield-bearing vaults—contracts that accept deposits of an underlying token and issue shares representing a claim on the deposited assets plus yield.
+
+### The Problem ERC-4626 Solves
+
+Before ERC-4626, every yield protocol had a different interface:
+
+| Protocol | Deposit | Withdraw | Share Token |
+|----------|---------|----------|-------------|
+| Yearn | `deposit(amount)` | `withdraw(shares)` | yToken |
+| Aave | `deposit(asset, amount, onBehalfOf, referralCode)` | `withdraw(asset, amount, to)` | aToken |
+| Compound | `mint(amount)` | `redeem(cTokens)` | cToken |
+
+**The cost:** Every protocol that wanted to integrate yield vaults needed custom code for each vault type.
+
+### The ERC-4626 Interface
+
+```solidity
+interface IERC4626 is IERC20 {
+    // The underlying token
+    function asset() external view returns (address);
+
+    // Total assets managed by the vault
+    function totalAssets() external view returns (uint256);
+
+    // Convert assets to shares
+    function convertToShares(uint256 assets) external view returns (uint256);
+
+    // Convert shares to assets
+    function convertToAssets(uint256 shares) external view returns (uint256);
+
+    // Maximum deposit allowed
+    function maxDeposit(address receiver) external view returns (uint256);
+
+    // Preview shares received for deposit
+    function previewDeposit(uint256 assets) external view returns (uint256);
+
+    // Deposit assets, receive shares
+    function deposit(uint256 assets, address receiver) external returns (uint256 shares);
+
+    // Maximum mint allowed
+    function maxMint(address receiver) external view returns (uint256);
+
+    // Preview assets needed for mint
+    function previewMint(uint256 shares) external view returns (uint256);
+
+    // Mint specific shares amount
+    function mint(uint256 shares, address receiver) external returns (uint256 assets);
+
+    // Maximum withdraw allowed
+    function maxWithdraw(address owner) external view returns (uint256);
+
+    // Preview shares burned for withdraw
+    function previewWithdraw(uint256 assets) external view returns (uint256);
+
+    // Withdraw specific assets amount
+    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
+
+    // Maximum redeem allowed
+    function maxRedeem(address owner) external view returns (uint256);
+
+    // Preview assets received for redeem
+    function previewRedeem(uint256 shares) external view returns (uint256);
+
+    // Redeem shares for assets
+    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets);
+
+    // Events
+    event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
+    event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares);
+}
+```
+
+### How Vaults Work
+
+```
+User deposits 1000 USDC
+├── Vault has 10,000 USDC total, 10,000 shares outstanding
+├── Exchange rate: 1 share = 1 USDC
+└── User receives 1000 shares
+
+... time passes, vault earns 10% yield ...
+
+User redeems 1000 shares
+├── Vault now has 11,000 USDC total, 10,000 shares outstanding
+├── Exchange rate: 1 share = 1.1 USDC
+└── User receives 1100 USDC
+```
+
+### Simple Vault Implementation
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+
+contract SimpleVault is ERC4626 {
+    constructor(
+        IERC20 asset_,
+        string memory name_,
+        string memory symbol_
+    ) ERC4626(asset_) ERC20(name_, symbol_) {}
+
+    // The vault earns yield through external strategies
+    // totalAssets() returns current value of all deposits + yield
+}
+```
+
+### Real-World ERC-4626 Examples
+
+| Protocol | Vault Type | Underlying |
+|----------|------------|------------|
+| Yearn V3 | Yield aggregator | Various |
+| Aave V3 | Lending | Various |
+| Compound V3 | Lending | USDC, ETH |
+| Morpho | Optimized lending | Various |
+| EigenLayer | Restaking | stETH, ETH |
+
+**Developer Lesson:** ERC-4626 enabled a cambrian explosion of vault composability. A protocol that supports ERC-4626 automatically supports every vault that implements it.
+
+## Governance Token Extensions
+
+Governance tokens need additional functionality beyond basic ERC-20: voting power tracking, delegation, and historical snapshots.
+
+### ERC20Votes
+
+OpenZeppelin's ERC20Votes extension adds:
+
+```solidity
+interface IVotes {
+    // Get current voting power
+    function getVotes(address account) external view returns (uint256);
+
+    // Get voting power at a past block
+    function getPastVotes(address account, uint256 blockNumber) external view returns (uint256);
+
+    // Get total supply at a past block
+    function getPastTotalSupply(uint256 blockNumber) external view returns (uint256);
+
+    // Delegate voting power
+    function delegate(address delegatee) external;
+
+    // Delegate via signature
+    function delegateBySig(
+        address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+}
+```
+
+### Why Delegation?
+
+Most token holders don't vote on every proposal. Delegation allows:
+- Passive holders to delegate to active participants
+- Expert delegates to accumulate voting power
+- Participation without constant attention
+
+```solidity
+// Alice holds 1000 tokens but doesn't want to vote
+// She delegates to Bob, a governance expert
+alice.delegate(bob);
+
+// Now Bob has voting power of his own tokens + Alice's tokens
+// Alice can reclaim her delegation at any time
+alice.delegate(alice);
+```
+
+### Checkpoint-Based Voting
+
+Governance tokens must prevent "vote buying" attacks:
+
+```
+Attacker buys tokens
+├── Attacker votes with bought tokens
+├── Attacker sells tokens
+└── Attacker profits (or attacks again)
+```
+
+**Solution:** Voting power is determined at a snapshot block, not current balance:
+
+```solidity
+// Proposal created at block 1000
+// Voting power = balance at block 1000
+// Buying tokens after block 1000 doesn't increase voting power
+```
+
+### Implementation Example
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+
+contract GovernanceToken is ERC20, ERC20Permit, ERC20Votes {
+    constructor()
+        ERC20("Governance Token", "GOV")
+        ERC20Permit("Governance Token")
+    {
+        _mint(msg.sender, 1000000 * 10**decimals());
+    }
+
+    // Required overrides for ERC20Votes
+    function _update(address from, address to, uint256 value)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._update(from, to, value);
+    }
+
+    function nonces(address owner)
+        public
+        view
+        override(ERC20Permit, Nonces)
+        returns (uint256)
+    {
+        return super.nonces(owner);
+    }
+}
+```
+
+## Wrapped Tokens
+
+Wrapped tokens represent other assets in ERC-20 form, enabling them to participate in the EVM ecosystem.
+
+### WETH: Wrapped Ether
+
+ETH is the native currency of Ethereum but isn't ERC-20 compatible. WETH wraps ETH as an ERC-20 token:
+
+```solidity
+// Simplified WETH
+contract WETH9 {
+    mapping(address => uint256) public balanceOf;
+
+    function deposit() public payable {
+        balanceOf[msg.sender] += msg.value;
+    }
+
+    function withdraw(uint256 amount) public {
+        require(balanceOf[msg.sender] >= amount);
+        balanceOf[msg.sender] -= amount;
+        payable(msg.sender).transfer(amount);
+    }
+
+    // ... ERC-20 functions
+}
+```
+
+**Why WETH exists:** DEXs, lending protocols, and other DeFi contracts expect ERC-20 tokens. WETH lets ETH participate without special-casing native currency.
+
+### WBTC: Wrapped Bitcoin
+
+WBTC brings Bitcoin to Ethereum as an ERC-20 token:
+
+| Aspect | Details |
+|--------|---------|
+| Custodian | BitGo holds the BTC |
+| Minting | Merchants deposit BTC, receive WBTC |
+| Burning | Burn WBTC, receive BTC |
+| Trust | Custodial—trust BitGo |
+
+**Tradeoff:** WBTC enables Bitcoin in DeFi but requires trusting a custodian.
+
+### Bridge-Based Wrapped Tokens
+
+Cross-chain bridges create wrapped tokens:
+
+```
+User locks ETH on Ethereum
+├── Bridge mints "Wrapped ETH" on Arbitrum
+└── User can now use ETH on Arbitrum
+
+User burns Wrapped ETH on Arbitrum
+├── Bridge unlocks ETH on Ethereum
+└── User receives original ETH
+```
+
+<Callout type="warning">
+Bridge security varies enormously. Some bridges are trusted multisigs; others are trustless with fraud proofs or validity proofs. The wrapped token is only as secure as its bridge.
+</Callout>
+
+## Token Economics and Distribution
+
+Token standards define *how* tokens work. Token economics defines *why* they have value and how they're distributed.
+
+### Supply Schedules
+
+**Fixed supply:**
+```solidity
+constructor() {
+    _mint(msg.sender, 1_000_000 * 10**18);
+    // No more minting possible
+}
+```
+
+**Inflationary (continuous minting):**
+```solidity
+function mint(address to, uint256 amount) external onlyOwner {
+    _mint(to, amount);
+    // New tokens can always be created
+}
+```
+
+**Deflationary (burning):**
+```solidity
+function burn(uint256 amount) external {
+    _burn(msg.sender, amount);
+    // Supply decreases over time
+}
+```
+
+### Vesting Contracts
+
+Team and investor tokens typically vest over time to align incentives:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/finance/VestingWallet.sol";
+
+// Tokens vest linearly over duration
+contract TeamVesting is VestingWallet {
+    constructor(
+        address beneficiary,
+        uint64 startTimestamp,
+        uint64 durationSeconds
+    ) VestingWallet(beneficiary, startTimestamp, durationSeconds) {}
+}
+```
+
+**Common patterns:**
+- **Cliff:** No tokens until cliff date, then linear vesting
+- **Linear:** Tokens release steadily over time
+- **Milestone:** Tokens release upon achieving goals
+
+### Airdrop Mechanics
+
+Airdrops distribute tokens to a set of addresses, typically based on past behavior:
+
+**Merkle airdrop (gas-efficient):**
+```solidity
+contract MerkleAirdrop {
+    bytes32 public merkleRoot;
+    mapping(address => bool) public claimed;
+
+    function claim(uint256 amount, bytes32[] calldata proof) external {
+        require(!claimed[msg.sender], "Already claimed");
+
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
+        require(MerkleProof.verify(proof, merkleRoot, leaf), "Invalid proof");
+
+        claimed[msg.sender] = true;
+        token.transfer(msg.sender, amount);
+    }
+}
+```
+
+**Why Merkle:** Instead of storing every eligible address on-chain, store only the Merkle root. Users provide proofs of inclusion.
+
+## Token Security Considerations
+
+### The Approve Race Condition
+
+The ERC-20 `approve` function has a known race condition:
+
+```
+Alice has approved Bob for 100 tokens
+Alice wants to change approval to 50 tokens
+
+1. Alice sends approve(bob, 50)
+2. Bob sees pending transaction
+3. Bob quickly spends 100 tokens
+4. Alice's transaction executes (approve = 50)
+5. Bob spends 50 more tokens
+6. Bob got 150 tokens instead of 100 or 50
+```
+
+**Defense:** Use `increaseAllowance`/`decreaseAllowance`:
+
+```solidity
+// Instead of: token.approve(spender, newAmount)
+token.decreaseAllowance(spender, 50);
+// or
+token.approve(spender, 0);
+token.approve(spender, newAmount);
+```
+
+### Reentrancy in Token Transfers
+
+Some tokens (ERC-777, some ERC-721) have callback hooks:
+
+```solidity
+// ERC-777 calls tokensReceived() on recipient
+// Malicious recipient can reenter the calling contract
+```
+
+**Defense:** Checks-effects-interactions pattern and ReentrancyGuard.
+
+### Non-Standard Tokens
+
+Some tokens don't follow standards exactly:
+
+| Token | Issue |
+|-------|-------|
+| USDT | No return value from `transfer` |
+| Fee tokens | Transfer less than specified |
+| Rebasing | Balance changes without transfer |
+| Pausable | Transfers can be blocked |
+| Blacklistable | Certain addresses blocked |
+
+**Defense:** Use SafeERC20 from OpenZeppelin:
+
+```solidity
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+using SafeERC20 for IERC20;
+
+function deposit(IERC20 token, uint256 amount) external {
+    // Handles non-standard return values
+    token.safeTransferFrom(msg.sender, address(this), amount);
+}
+```
+
+### Fee-on-Transfer Tokens
+
+Some tokens take a fee on every transfer:
+
+```solidity
+// User sends 100 tokens
+// Protocol receives 99 tokens (1% fee)
+// Protocol's accounting is now wrong
+```
+
+**Defense:** Check actual received amount:
+
+```solidity
+uint256 balanceBefore = token.balanceOf(address(this));
+token.safeTransferFrom(msg.sender, address(this), amount);
+uint256 actualReceived = token.balanceOf(address(this)) - balanceBefore;
+```
+
+## Real-World Token Examples
+
+### Stablecoins
+
+| Token | Type | Peg Mechanism |
+|-------|------|---------------|
+| USDC | Fiat-backed | 1:1 USD reserves |
+| USDT | Fiat-backed | 1:1 USD reserves (disputed) |
+| DAI/USDS | Crypto-backed | CDP overcollateralization |
+| FRAX | Hybrid | Partial reserves + algorithmic |
+
+### Governance Tokens
+
+| Token | Protocol | Voting Rights |
+|-------|----------|---------------|
+| UNI | Uniswap | Protocol parameters, treasury |
+| AAVE | Aave | Protocol parameters, safety module |
+| COMP | Compound | Protocol parameters |
+| MKR/SKY | Maker/Sky | Collateral types, stability fees |
+
+### LP Tokens
+
+Liquidity provider tokens represent shares in a liquidity pool:
+
+| Protocol | LP Token Type | Standard |
+|----------|---------------|----------|
+| Uniswap V2 | Fungible | ERC-20 |
+| Uniswap V3 | Position NFT | ERC-721 |
+| Curve | Fungible | ERC-20 |
+| Balancer | Fungible | ERC-20 |
+
+## The Token Dependency Tree
+
+Tokens are the foundation layer that everything else builds on:
+
+```
+             ┌─────────────────────────────────────┐
+             │       APPLICATIONS                   │
+             │  (Games, Social, Identity)          │
+             └─────────────────┬───────────────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        │                      │                      │
+        ▼                      ▼                      ▼
+┌───────────────┐    ┌─────────────────┐    ┌───────────────┐
+│  GOVERNANCE   │    │   DEFI STACK    │    │ NFT ECOSYSTEM │
+│   (DAOs)      │    │ (DEX, Lending)  │    │ (Marketplaces)│
+└───────┬───────┘    └────────┬────────┘    └───────┬───────┘
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌───────────────────────────────────────────────────────────┐
+│                    TOKEN STANDARDS                         │
+│  ERC-20 │ ERC-721 │ ERC-1155 │ ERC-4626 │ ERC20Votes     │
+└───────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+              ┌─────────────────────────────────┐
+              │           EVM CHAIN             │
+              └─────────────────────────────────┘
+```
+
+**Developer Lesson:** Master token standards first. Every DeFi protocol, every NFT marketplace, every DAO governance system builds on these primitives. Understanding tokens deeply unlocks understanding everything built on top.
+
+## Conclusions
+
+Token standards evolved to solve real problems:
+
+- **ERC-20** enabled fungible token interoperability
+- **ERC-721** enabled unique digital ownership
+- **ERC-1155** enabled efficient multi-token systems
+- **ERC-4626** standardized yield-bearing vaults
+- **ERC20Votes** enabled on-chain governance
+
+Each standard builds on what came before. The power isn't in any single standard—it's in the composability they enable together. A governance token (ERC20Votes) can be deposited in a vault (ERC-4626) that's traded on a DEX, all because they speak the same language.
+
+Understanding tokens deeply is essential for building anything on the EVM.
+
+## ERC-6551: Token Bound Accounts (2023)
+
+ERC-6551 introduced a paradigm shift: **every NFT can own assets**.
+
+### The Concept
+
+Traditional NFTs are passive—they can be owned but cannot own things themselves. ERC-6551 gives each NFT its own smart contract wallet:
+
+```
+Traditional NFT:
+User wallet → owns → NFT (passive asset)
+
+ERC-6551:
+User wallet → owns → NFT → owns → [tokens, other NFTs, assets]
+```
+
+### How It Works
+
+```solidity
+interface IERC6551Account {
+    // Returns the NFT this account is bound to
+    function token() external view returns (
+        uint256 chainId,
+        address tokenContract,
+        uint256 tokenId
+    );
+
+    // Current state (nonce for transaction ordering)
+    function state() external view returns (uint256);
+
+    // Check if address can sign for this account
+    function isValidSigner(address signer, bytes calldata context)
+        external view returns (bytes4);
+}
+```
+
+Each NFT gets a deterministic account address derived from:
+- Chain ID
+- Token contract address
+- Token ID
+- Implementation address
+- Salt
+
+### Use Cases
+
+| Use Case | Description |
+|----------|-------------|
+| **Character inventories** | Game character NFT owns equipment NFTs |
+| **Bundle transfers** | Transfer NFT and all its contents together |
+| **NFT-owned DAOs** | NFT communities with shared treasuries |
+| **Profile pages** | Social NFT owns reputation, credentials |
+| **Airdrop recipients** | Projects airdrop to NFTs, not users |
+
+### Implementation
+
+```solidity
+// Create a Token Bound Account for an NFT
+function createAccount(
+    address implementation,
+    uint256 chainId,
+    address tokenContract,
+    uint256 tokenId,
+    uint256 salt,
+    bytes calldata initData
+) external returns (address account);
+
+// Get the deterministic address for an NFT's account
+function account(
+    address implementation,
+    uint256 chainId,
+    address tokenContract,
+    uint256 tokenId,
+    uint256 salt
+) external view returns (address);
+```
+
+**Significance**: ERC-6551 transforms NFTs from passive assets into active agents that can hold value, interact with protocols, and accumulate history.
+
+## Security Tokens and RWA Standards
+
+### ERC-1400: Security Token Standard (2018)
+
+For real-world assets requiring regulatory compliance:
+
+```solidity
+interface IERC1400 {
+    // Partition-based balances (different share classes)
+    function balanceOfByPartition(bytes32 partition, address tokenHolder)
+        external view returns (uint256);
+
+    // Transfer with compliance checking
+    function transferByPartition(
+        bytes32 partition,
+        address to,
+        uint256 value,
+        bytes calldata data
+    ) external returns (bytes32);
+
+    // Check if transfer is allowed
+    function canTransferByPartition(
+        address from,
+        address to,
+        bytes32 partition,
+        uint256 value,
+        bytes calldata data
+    ) external view returns (bytes1, bytes32, bytes32);
+}
+```
+
+**Key features:**
+- Partitioned balances for share classes
+- Document management for legal compliance
+- Transfer restrictions (whitelisting, accreditation)
+- Forced transfers (legal/compliance requirements)
+
+### ERC-3643: T-REX Protocol (2021)
+
+On-chain identity verification for permissioned transfers:
+
+```solidity
+// Transfer only allowed if both parties have valid identity claims
+function transfer(address to, uint256 amount) external returns (bool) {
+    require(identityRegistry.isVerified(msg.sender), "Sender not verified");
+    require(identityRegistry.isVerified(to), "Recipient not verified");
+    require(compliance.canTransfer(msg.sender, to, amount), "Transfer not compliant");
+    return super.transfer(to, amount);
+}
+```
+
+### Real World Asset Tokenization (2024-2025)
+
+| Product | Issuer | Type | Notes |
+|---------|--------|------|-------|
+| BUIDL | BlackRock | Treasury Fund | $2.3B+ AUM; largest tokenized fund |
+| OUSG | Ondo Finance | Treasury ETF | Tokenized BlackRock ETF exposure |
+| USDY | Ondo Finance | Yield-bearing USD | Treasury + bank deposit yield |
+| BENJI | Franklin Templeton | Money Market | First SEC-registered on-chain fund |
+
+**Key insight**: RWAs bridge TradFi and DeFi, bringing real-world yield on-chain while requiring permissioned access for regulatory compliance.
+
+## Common Misattributions
+
+### 1. "NFTs are just art/JPEGs"
+
+**Misconception**: NFTs only have value for digital art.
+
+**Reality**: ERC-721/1155 is a primitive for any unique digital asset:
+- Domain names (ENS)
+- Financial positions (Uniswap V3 LP positions)
+- Event tickets
+- Identity credentials
+- Real estate deeds
+- Game items
+
+Art is one application; the primitive is ownership of unique digital objects.
+
+### 2. "ERC-20 is obsolete"
+
+**Misconception**: ERC-777 or newer standards replaced ERC-20.
+
+**Reality**: ERC-20 remains dominant due to:
+- Universal wallet/exchange support
+- Simple, well-audited implementations
+- ERC-777's hooks introduced reentrancy attack vectors
+- Network effects make switching costly
+
+### 3. "Tokens are only for speculation"
+
+**Misconception**: Tokens have no utility beyond trading.
+
+**Reality**: Tokens enable:
+- Governance participation (voting rights)
+- Protocol revenue sharing (fee distribution)
+- Access control (gated content/features)
+- Coordination mechanisms (staking, bonding)
+- Collateral for lending
+- Reputation and identity
+
+### 4. "Standards are just about compatibility"
+
+**Misconception**: Token standards only matter for wallets and exchanges.
+
+**Reality**: Standards enable *composability*—the ability for protocols to build on each other without coordination. ERC-4626 means any vault can work with any protocol expecting that interface. This is the foundation of DeFi's "money legos."
+
+## Research Citations
+
+This chapter draws on the following foundational sources:
+
+**Original EIPs:**
+- EIP-20: Token Standard (Vogelsteller & Buterin, 2015) [@eip_vogelsteller_erc20_2015]
+- EIP-721: Non-Fungible Token Standard (Entriken et al., 2018) [@eip_entriken_erc721_2018]
+- EIP-1155: Multi-Token Standard (Radomski et al., 2018) [@eip_radomski_erc1155_2018]
+- EIP-4626: Tokenized Vault Standard (2022) [@eip_4626_2022]
+- EIP-6551: Non-fungible Token Bound Accounts (2023)
+- EIP-1400: Security Token Standard (2018)
+
+**Historical Context:**
+- Mastercoin whitepaper (Willett, 2012)—"The Second Bitcoin Whitepaper"
+- Colored Coins documentation (2012-2013)
+
+<Callout type="tip" title="Further Reading">
+For governance token mechanics, see Chapter 18 (Governance & DAOs). For vault strategies and yield, see Chapter 17 (Lending). For NFT marketplaces and trading, see Chapter 19 (NFT Evolution).
+</Callout>

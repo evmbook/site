@@ -1,0 +1,834 @@
+---
+title: "Prediction Markets"
+description: From Augur to Polymarket - how prediction markets found product-market fit
+chapter: 21
+---
+
+# Prediction Markets
+
+Prediction markets let people bet on future outcomes—elections, sports, economic indicators, anything with a verifiable resolution. In theory, they're powerful information aggregation tools: prices reflect collective probability estimates better than polls or pundits.
+
+On-chain prediction markets promised censorship resistance, global access, and trustless settlement. Early attempts like Augur struggled with complexity and low usage. Polymarket cracked the code in 2024, becoming the most-used prediction market in history during the US presidential election.
+
+This chapter traces that evolution, examining what worked, what didn't, and how to build on these primitives.
+
+## Why Prediction Markets On-Chain?
+
+Traditional prediction markets face constraints:
+
+- **Regulatory barriers**: Gambling laws restrict most prediction market activity
+- **Geographic limits**: PredictIt (US) capped at $850/market; Betfair (UK) unavailable in many countries
+- **Custody risk**: Centralized platforms can freeze funds or refuse payouts
+- **Market manipulation**: Opaque order books enable manipulation
+
+Blockchain-based prediction markets offer:
+
+- **Permissionless participation**: Anyone with a wallet can trade
+- **Trustless settlement**: Outcomes resolve via oracles, not company decisions
+- **Composability**: Prediction market positions can integrate with DeFi
+- **Censorship resistance**: No central point of control (in theory)
+
+The challenge: building this in practice while achieving usability and liquidity.
+
+## Era 0: Augur - The Pioneer (2015-2020)
+
+### The Ambitious Vision
+
+Augur launched on Ethereum mainnet in 2018 after years of development. It was the first major decentralized prediction market, with an ambitious design:
+
+```solidity
+// Augur market creation (simplified)
+struct Market {
+    address creator;
+    bytes32 topic;
+    uint256 endTime;
+    uint256[] outcomes;          // e.g., [0, 1] for binary
+    uint256 creatorFee;          // Fee to market creator
+    address designatedReporter;   // First reporter
+    MarketState state;
+}
+
+function createMarket(
+    uint256 endTime,
+    uint256 feePerEthInWei,
+    address designatedReporter,
+    uint256[] memory outcomes,
+    string memory description
+) external returns (address) {
+    // Create new market contract
+    // Requires validity bond (returned if market resolves validly)
+}
+```
+
+### The Resolution Mechanism
+
+Augur's most innovative (and complex) feature was decentralized resolution:
+
+```
+Market Resolution Flow:
+
+1. Market ends → Designated Reporter has 24h to report
+2. If DR doesn't report → Open reporting begins
+3. Anyone can dispute by staking REP tokens
+4. Disputed markets go to next fee window
+5. Multiple dispute rounds possible
+6. Final resolution: REP holders vote, losers' stake redistributed
+
+"Forking" for contentious markets:
+- If dispute stake exceeds threshold, Augur forks
+- Two versions of reality: "Outcome A won" vs "Outcome B won"
+- REP holders choose which universe to migrate to
+- Economic consensus determines truth
+```
+
+### Why Augur Struggled
+
+**1. UX complexity**: Creating markets required bonds, understanding fee windows, and navigating a confusing interface. Trading required understanding "shares" that paid out in ETH.
+
+**2. Resolution delays**: Markets didn't resolve for days or weeks after events concluded. Users couldn't access winnings promptly.
+
+**3. Gas costs**: Every trade was an on-chain transaction. During 2020-2021, this meant $50+ per trade.
+
+**4. Liquidity fragmentation**: Anyone could create markets, leading to duplicate markets splitting liquidity.
+
+**5. Invalid market risk**: Poorly worded markets could resolve as "Invalid," frustrating participants.
+
+```solidity
+// Augur's Invalid outcome
+// If market is ambiguous, resolves to "Invalid"
+// All shares worth equal amount (proportional refund)
+// Created perverse incentives to attack market wording
+```
+
+**6. Token complexity**: REP token was needed for reporting and disputes, adding friction. Most users just wanted to bet, not participate in governance.
+
+<Callout type="note" title="Augur's Legacy">
+Despite commercial failure, Augur proved prediction markets could work on-chain. Its open-source code and research influenced every subsequent project. The team continued with Augur V2 and eventually Augur Turbo, each iteration simplifying the model.
+</Callout>
+
+## Era 1: Gnosis - Conditional Tokens (2020)
+
+### The Primitive Approach
+
+Gnosis took a different path: instead of building a complete prediction market, they created **Conditional Tokens**—a primitive that others could build on.
+
+```solidity
+// Conditional Token Framework (CTF)
+// Positions are ERC-1155 tokens representing outcomes
+
+interface IConditionalTokens {
+    // Split collateral into outcome tokens
+    function splitPosition(
+        IERC20 collateralToken,
+        bytes32 parentCollectionId,
+        bytes32 conditionId,
+        uint256[] calldata partition,
+        uint256 amount
+    ) external;
+
+    // Merge outcome tokens back to collateral
+    function mergePositions(
+        IERC20 collateralToken,
+        bytes32 parentCollectionId,
+        bytes32 conditionId,
+        uint256[] calldata partition,
+        uint256 amount
+    ) external;
+
+    // Redeem winning positions after resolution
+    function redeemPositions(
+        IERC20 collateralToken,
+        bytes32 parentCollectionId,
+        bytes32 conditionId,
+        uint256[] calldata indexSets
+    ) external;
+}
+```
+
+**How It Works:**
+
+```
+1. Create condition: "Will X happen by date Y?"
+   Condition has N outcomes (e.g., Yes/No)
+
+2. Split collateral: Deposit $100 USDC
+   Receive: 100 "Yes" tokens + 100 "No" tokens
+   (One set will be worth $1 each, other worth $0)
+
+3. Trade outcomes: Sell "No" tokens if you think Yes will win
+   AMM or order book determines prices
+
+4. Resolution: Oracle reports outcome
+
+5. Redemption: Winning tokens redeem for collateral
+   100 "Yes" tokens → $100 USDC (if Yes won)
+```
+
+### Omen: The Gnosis Frontend
+
+Gnosis launched Omen as a frontend for Conditional Tokens, using their own AMM for liquidity:
+
+```solidity
+// Fixed Product Market Maker (FPMM)
+// Similar to Uniswap but for outcome tokens
+
+function calcBuyAmount(
+    uint256 investmentAmount,
+    uint256 outcomeIndex
+) public view returns (uint256) {
+    uint256[] memory poolBalances = getPoolBalances();
+    uint256 investmentAmountMinusFees = investmentAmount - (investmentAmount * fee / 1e18);
+
+    uint256 buyTokenPoolBalance = poolBalances[outcomeIndex];
+    uint256 endingOutcomeBalance = buyTokenPoolBalance * 1e18;
+
+    for (uint256 i = 0; i < poolBalances.length; i++) {
+        if (i != outcomeIndex) {
+            uint256 poolBalance = poolBalances[i];
+            endingOutcomeBalance = endingOutcomeBalance * poolBalance /
+                (poolBalance + investmentAmountMinusFees);
+        }
+    }
+    endingOutcomeBalance = endingOutcomeBalance / 1e18;
+
+    return buyTokenPoolBalance - endingOutcomeBalance;
+}
+```
+
+**Omen's Contribution:**
+
+- Proved simpler AMM-based trading worked
+- Reality.eth integration for decentralized resolution
+- Open-source infrastructure others could fork
+
+**Omen's Limitations:**
+
+- Still on Ethereum L1 (gas costs)
+- Limited market selection
+- UI less polished than centralized alternatives
+
+## Era 2: Polymarket - Product-Market Fit (2020-Present)
+
+### What Polymarket Got Right
+
+Polymarket launched in 2020 and iterated toward product-market fit by 2024. During the 2024 US presidential election, Polymarket processed over $3.2 billion in trading volume on election markets alone. Its probability estimates outperformed traditional polling aggregates and became a primary news source—Bloomberg, CNBC, and major outlets regularly cited Polymarket odds alongside or instead of polls.
+
+**Key Design Decisions:**
+
+**1. USDC denomination**: All markets settle in USDC, not volatile tokens. Users think in dollars.
+
+```solidity
+// Polymarket uses USDC as collateral
+// Positions are Conditional Tokens (via Gnosis CTF)
+// But UX abstracts this completely
+
+// User sees: "Buy YES on 'Trump wins' at $0.52"
+// Under hood: Split USDC → sell NO tokens → hold YES tokens
+```
+
+**2. Polygon deployment**: Low gas costs (~$0.01/trade) enabled frequent trading and smaller positions.
+
+**3. UMA Oracle integration**: Resolution via UMA's optimistic oracle—disputes are rare, resolution is fast.
+
+```solidity
+// UMA Optimistic Oracle pattern
+// 1. Proposer asserts outcome, posts bond
+// 2. 2-hour dispute window
+// 3. If no dispute, assertion accepted
+// 4. If disputed, goes to UMA token holder vote
+
+interface IOptimisticOracle {
+    function proposePrice(
+        address requester,
+        bytes32 identifier,
+        uint256 timestamp,
+        bytes memory ancillaryData,
+        int256 proposedPrice
+    ) external;
+
+    function disputePrice(
+        address requester,
+        bytes32 identifier,
+        uint256 timestamp,
+        bytes memory ancillaryData
+    ) external;
+}
+```
+
+**4. Central Limit Order Book (CLOB)**: Professional trading interface with limit orders, not just AMM swaps.
+
+**5. Curated markets**: Polymarket team creates and words markets, avoiding Invalid resolution and liquidity fragmentation.
+
+**6. Mobile-first design**: Clean UI optimized for retail users, not DeFi natives.
+
+### The Polymarket Architecture
+
+```
+User Interface (Web/Mobile)
+        │
+        ▼
+┌─────────────────────────────────┐
+│      Polymarket Backend         │
+│  - Order matching (off-chain)   │
+│  - Market curation              │
+│  - Price feeds                  │
+└───────────────┬─────────────────┘
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+┌──────────────┐ ┌──────────────┐
+│   Polygon    │ │     UMA      │
+│  Settlement  │ │   Oracle     │
+│  (CTF + USDC)│ │  Resolution  │
+└──────────────┘ └──────────────┘
+```
+
+**Trade Flow:**
+
+1. User deposits USDC to Polymarket contract on Polygon
+2. Places order via Polymarket interface (signed message)
+3. Order matched off-chain by Polymarket matching engine
+4. Settlement on-chain: CTF positions transferred
+5. At resolution: UMA oracle reports outcome
+6. Winning positions redeemed for USDC
+
+### Tradeoffs
+
+Polymarket achieved usability through centralization:
+
+| Aspect | Augur | Polymarket |
+|--------|-------|------------|
+| Market creation | Permissionless | Team-curated |
+| Order matching | On-chain | Off-chain (centralized) |
+| Resolution | REP token voting | UMA oracle |
+| Network | Ethereum L1 | Polygon |
+| Collateral | ETH | USDC |
+| KYC | None | Required for US users |
+
+**The Centralization Debate:**
+
+Critics argue Polymarket isn't truly decentralized:
+- Order book is centralized (could be censored)
+- Team controls market creation
+- UMA disputes rely on token holder votes
+
+Defenders argue:
+- Settlement is on-chain (positions are yours)
+- UMA is decentralized enough
+- Better than centralized alternatives that don't exist for many markets
+
+<Callout type="warning" title="Regulatory Status">
+Polymarket faced CFTC enforcement action in 2022 and settled for $1.4M. It now blocks US users (with varying effectiveness). Prediction markets remain legally ambiguous in most jurisdictions.
+</Callout>
+
+## Building Prediction Markets
+
+### Minimal Implementation
+
+```solidity
+// Simple binary prediction market
+contract BinaryMarket {
+    IERC20 public immutable collateral;
+    IConditionalTokens public immutable ctf;
+
+    bytes32 public conditionId;
+    bytes32 public questionId;
+    address public oracle;
+
+    uint256 public constant YES_INDEX = 0;
+    uint256 public constant NO_INDEX = 1;
+
+    bool public resolved;
+    uint256 public outcome; // 0 = No, 1 = Yes
+
+    constructor(
+        address _collateral,
+        address _ctf,
+        address _oracle,
+        bytes32 _questionId
+    ) {
+        collateral = IERC20(_collateral);
+        ctf = IConditionalTokens(_ctf);
+        oracle = _oracle;
+        questionId = _questionId;
+
+        // Prepare condition with 2 outcomes
+        ctf.prepareCondition(oracle, questionId, 2);
+        conditionId = ctf.getConditionId(oracle, questionId, 2);
+    }
+
+    // Buy outcome tokens
+    function buy(uint256 amount, uint256 outcomeIndex) external {
+        require(outcomeIndex <= 1, "Invalid outcome");
+
+        collateral.transferFrom(msg.sender, address(this), amount);
+        collateral.approve(address(ctf), amount);
+
+        // Split into outcome tokens
+        uint256[] memory partition = new uint256[](2);
+        partition[0] = 1; // YES
+        partition[1] = 2; // NO
+
+        ctf.splitPosition(
+            collateral,
+            bytes32(0),
+            conditionId,
+            partition,
+            amount
+        );
+
+        // Transfer desired outcome to user, keep other
+        uint256 positionId = ctf.getPositionId(
+            collateral,
+            ctf.getCollectionId(bytes32(0), conditionId, 1 << outcomeIndex)
+        );
+        ctf.safeTransferFrom(address(this), msg.sender, positionId, amount, "");
+    }
+
+    // Resolve market (oracle only)
+    function resolve(uint256 _outcome) external {
+        require(msg.sender == oracle, "Not oracle");
+        require(!resolved, "Already resolved");
+        require(_outcome <= 1, "Invalid outcome");
+
+        resolved = true;
+        outcome = _outcome;
+
+        // Report to CTF
+        uint256[] memory payouts = new uint256[](2);
+        payouts[_outcome] = 1;
+
+        ctf.reportPayouts(questionId, payouts);
+    }
+
+    // Redeem winning tokens
+    function redeem() external {
+        require(resolved, "Not resolved");
+
+        uint256[] memory indexSets = new uint256[](1);
+        indexSets[0] = 1 << outcome;
+
+        ctf.redeemPositions(
+            collateral,
+            bytes32(0),
+            conditionId,
+            indexSets
+        );
+
+        // Transfer collateral to caller
+        uint256 balance = collateral.balanceOf(address(this));
+        collateral.transfer(msg.sender, balance);
+    }
+}
+```
+
+### Adding an AMM
+
+The automated market making for prediction markets has a rich academic history that predates DeFi. Understanding this lineage helps explain why prediction markets pioneered AMM concepts.
+
+#### Hanson's LMSR (2003)
+
+Robin Hanson's **Logarithmic Market Scoring Rule (LMSR)** was the first practical automated market maker for prediction markets. Published in "Combinatorial Information Market Design" (2003), LMSR solved a critical problem: how to provide liquidity in markets with few participants.
+
+```
+LMSR Cost Function:
+C(q) = b * ln(Σ exp(q_i / b))
+
+Where:
+- q_i = quantity of shares for outcome i
+- b = liquidity parameter (controls price sensitivity)
+- Price of outcome i: p_i = exp(q_i / b) / Σ exp(q_j / b)
+```
+
+**Key Properties:**
+- Prices always sum to 1 (probability constraint)
+- Bounded loss for market maker (~b * ln(n) for n outcomes)
+- No liquidity providers needed—market maker is the protocol
+
+**LMSR vs Constant Product:**
+
+| Property | LMSR | Constant Product (x*y=k) |
+|----------|------|--------------------------|
+| Origin | Hanson (2003) | Uniswap (2018) |
+| Domain | Prediction markets | Token exchanges |
+| Prices | Sum to 1 | Ratio-determined |
+| Bounded loss | Yes (parameter b) | No (impermanent loss) |
+| Liquidity | Subsidized by creator | Provided by LPs |
+
+The conceptual leap from LMSR to Uniswap's constant product formula represents one of DeFi's key intellectual debts to prediction market research. Both use mathematical invariants to determine prices without order books.
+
+<Note>
+**Historical Connection**: Gnosis (2017) built on LMSR for their prediction market. Vitalik Buterin proposed Reddit's "Let's run on Ethereum" market in 2017 using LMSR concepts. The intellectual path from academic prediction market research to DeFi AMMs is direct.
+</Note>
+
+#### Modern Prediction Market AMMs
+
+```solidity
+// AMM for outcome tokens
+contract PredictionMarketAMM {
+    // Pool holds both YES and NO tokens
+    // Price determined by relative balances
+
+    uint256 public yesBalance;
+    uint256 public noBalance;
+    uint256 public liquidityParam; // LMSR 'b' parameter
+
+    function getPrice(uint256 outcomeIndex) public view returns (uint256) {
+        // Simplified LMSR pricing
+        // YES price = exp(yesBalance/b) / (exp(yesBalance/b) + exp(noBalance/b))
+        // Approximation using constant product for gas efficiency:
+        uint256 total = yesBalance + noBalance;
+        if (outcomeIndex == 0) {
+            return noBalance * 1e18 / total;
+        } else {
+            return yesBalance * 1e18 / total;
+        }
+    }
+
+    function buy(uint256 outcomeIndex, uint256 amount, uint256 minReceived) external {
+        // Most implementations use constant product for simplicity
+        // Pure LMSR requires exponential calculations (expensive on-chain)
+        // Hybrid approaches balance accuracy vs gas costs
+    }
+}
+```
+
+### Oracle Integration Patterns
+
+**Option 1: Trusted Oracle**
+```solidity
+// Simple but centralized
+address public trustedOracle;
+
+function resolve(uint256 outcome) external {
+    require(msg.sender == trustedOracle);
+    // Resolve market
+}
+```
+
+**Option 2: UMA Optimistic Oracle**
+```solidity
+// Decentralized with dispute mechanism
+function requestResolution() external {
+    optimisticOracle.requestPrice(
+        identifier,
+        timestamp,
+        ancillaryData,
+        currency,
+        reward
+    );
+}
+
+function settleResolution() external {
+    int256 price = optimisticOracle.settleAndGetPrice(
+        identifier,
+        timestamp,
+        ancillaryData
+    );
+    // price encodes outcome
+}
+```
+
+**Option 3: Reality.eth**
+```solidity
+// Crowd-sourced with escalation
+function askQuestion(string memory question) external returns (bytes32) {
+    return realityEth.askQuestion(
+        templateId,
+        question,
+        arbitrator,
+        timeout,
+        openingTimestamp,
+        nonce
+    );
+}
+
+function getAnswer(bytes32 questionId) external view returns (bytes32) {
+    return realityEth.getFinalAnswer(questionId);
+}
+```
+
+## Lessons from Prediction Market Evolution
+
+**1. UX trumps decentralization.** Augur was more decentralized than Polymarket but unusable. Users want to bet, not participate in dispute resolution.
+
+**2. Liquidity is everything.** Prediction markets have strong network effects. One dominant market beats ten fragmented ones.
+
+**3. Resolution must be fast.** Users expect to access winnings immediately after events conclude. Multi-week resolution killed Augur.
+
+**4. Curated beats permissionless.** Permissionless market creation leads to duplicates, poorly worded questions, and manipulation opportunities.
+
+**5. Stablecoins matter.** Denominating in volatile tokens (ETH, REP) adds friction and risk that users don't want.
+
+**6. L2s enable retail.** Sub-cent gas costs make small bets viable. Ethereum L1 priced out casual users.
+
+## The Dependency Position
+
+```
+                    ┌─────────────────────────────────────┐
+                    │        INFORMATION MARKETS          │
+                    │  Election forecasts, event pricing  │
+                    └─────────────────┬───────────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │                             │                             │
+        ▼                             ▼                             ▼
+┌───────────────┐           ┌─────────────────┐           ┌─────────────────┐
+│   HEDGING     │           │     TRADING     │           │   INFORMATION   │
+│ Event risk    │           │  Speculation    │           │   Discovery     │
+│ management    │           │  on outcomes    │           │   Price = prob  │
+└───────┬───────┘           └────────┬────────┘           └────────┬────────┘
+        │                            │                             │
+        └────────────────────────────┼─────────────────────────────┘
+                                     │
+                                     ▼
+                    ┌────────────────────────────────────┐
+                    │       PREDICTION MARKETS           │
+                    │  Polymarket, Augur, custom         │
+                    └─────────────────┬──────────────────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              │                       │                       │
+              ▼                       ▼                       ▼
+       ┌───────────┐           ┌───────────┐           ┌───────────┐
+       │  ORACLES  │           │STABLECOINS│           │   AMMs    │
+       │   UMA     │           │   USDC    │           │ Liquidity │
+       │ Reality   │           │   Price   │           │ provision │
+       └───────────┘           └───────────┘           └───────────┘
+```
+
+## Advanced Prediction Market Primitives
+
+Beyond basic binary markets, researchers have developed sophisticated primitives for special use cases: governance, privacy, and anti-collusion.
+
+### Conditional Tokens: The ERC-1155 Foundation
+
+Gnosis's Conditional Token Framework (CTF) uses ERC-1155 multi-tokens to represent outcome positions. This matters because:
+
+- **Composability**: Positions are standard tokens, usable across DeFi
+- **Nested conditions**: Markets can depend on other market outcomes
+- **Fractional positions**: Split and merge positions freely
+
+```solidity
+// Conditional tokens enable complex market structures
+// "If candidate A wins, what's the probability of policy X passing?"
+
+bytes32 conditionA = prepareCondition(oracle, questionA, 2); // A wins / A loses
+bytes32 conditionX = prepareCondition(oracle, questionX, 2); // X passes / X fails
+
+// Position: "A wins AND X passes"
+// Only valuable if both conditions resolve favorably
+bytes32 nestedPosition = getCollectionId(
+    getCollectionId(bytes32(0), conditionA, 1), // A wins
+    conditionX,
+    1  // X passes
+);
+```
+
+### Futarchy: Governance by Prediction Market
+
+Futarchy, proposed by economist Robin Hanson, uses prediction markets to make governance decisions: "Vote on values, bet on beliefs."
+
+**The Concept:**
+
+```
+Traditional governance:
+1. Propose action X
+2. Token holders vote
+3. Majority wins
+
+Futarchy:
+1. Propose action X
+2. Create conditional markets:
+   - "Token price IF X passes"
+   - "Token price IF X fails"
+3. Execute whichever action the market predicts leads to higher price
+4. Cancel the conditional market for the path not taken
+```
+
+**Gnosis Futarchy Specification:**
+
+Gnosis developed a framework for implementing futarchy:
+
+```solidity
+// Simplified futarchy implementation
+struct FutarchyProposal {
+    bytes32 passCondition;    // "Proposal passes"
+    bytes32 failCondition;    // "Proposal fails"
+    address metricOracle;     // Reports success metric (e.g., token price)
+    uint256 decisionDeadline; // When to compare market prices
+    uint256 metricDeadline;   // When to measure actual outcome
+}
+
+function resolveDecision(uint256 proposalId) external {
+    FutarchyProposal storage p = proposals[proposalId];
+
+    // Compare conditional market prices
+    uint256 priceIfPass = getMarketPrice(p.passCondition);
+    uint256 priceIfFail = getMarketPrice(p.failCondition);
+
+    // Execute higher-predicted-value option
+    if (priceIfPass > priceIfFail) {
+        executeProposal(proposalId);
+        // Resolve passCondition market, cancel failCondition
+    } else {
+        // Don't execute
+        // Resolve failCondition market, cancel passCondition
+    }
+}
+```
+
+**MetaDAO Research:**
+
+MetaDAO pioneered practical futarchy implementation on Solana, demonstrating:
+- Conditional vaults for pass/fail scenarios
+- Automated decision execution
+- TWAP-based price determination
+
+### MACI: Anti-Collusion Infrastructure
+
+MACI (Minimal Anti-Collusion Infrastructure) uses zero-knowledge proofs to prevent vote buying and collusion in on-chain voting—critical for prediction market governance.
+
+**The Problem:**
+
+```
+Traditional on-chain voting:
+1. Votes are public
+2. Vote buyers can verify how you voted
+3. Bribery and collusion are possible
+
+"I'll pay you $100 to vote for X"
+Voter votes for X, bribe paid—collusion works
+```
+
+**MACI's Solution:**
+
+```
+MACI voting:
+1. Voters register public keys with coordinator
+2. Votes are encrypted to coordinator's key
+3. Coordinator processes votes using ZK proofs
+4. Results are verifiable, but individual votes are hidden
+
+"I'll pay you $100 to vote for X"
+Voter can claim they voted for X, but can't prove it
+Briber can't verify—collusion fails
+```
+
+```solidity
+// MACI message structure (simplified)
+struct Message {
+    uint256[10] data;  // Encrypted vote data
+    PubKey encPubKey;  // Ephemeral key for encryption
+}
+
+// Voters can override previous votes (key to anti-collusion)
+// If bribed, submit one vote, then override with true preference
+// Only final vote counts, but briber can't tell
+```
+
+**MACI in Prediction Markets:**
+
+- Prevents manipulation of resolution votes
+- Enables private governance decisions
+- Reduces plutocratic influence in disputes
+
+### Nightmarket: Privacy-Preserving Prediction Markets
+
+Nightmarket (research project) explores private prediction market trading using ZK proofs:
+
+**Privacy Properties:**
+- **Position privacy**: Others can't see your positions
+- **Trade privacy**: Trades don't reveal your beliefs
+- **Resolution privacy**: Redemptions don't link to original positions
+
+```
+Traditional prediction market:
+Public: Alice bought $10K of "Yes" → signals strong belief
+
+Nightmarket:
+Private: Trade happens, liquidity changes
+Observer knows: Someone traded (market moved)
+Observer doesn't know: Who, how much, which direction
+```
+
+**Implementation Approach:**
+
+```solidity
+// Conceptual: Private prediction market using commitments
+mapping(bytes32 => bool) public positionCommitments;
+
+function privatePosition(
+    bytes32 commitment,      // hash(position, blinding factor)
+    bytes calldata zkProof   // Proves position is valid
+) external {
+    require(verifyProof(zkProof, commitment), "Invalid proof");
+    positionCommitments[commitment] = true;
+}
+
+function privateRedeem(
+    uint256 outcome,
+    uint256 amount,
+    bytes32 blinding,
+    bytes calldata zkProof
+) external {
+    // Prove: I have valid commitment for winning outcome
+    // Without revealing: original position details
+}
+```
+
+### ETC Olympia Futarchy Markets
+
+The Ethereum Classic community is implementing futarchy governance through the Olympia upgrade, combining prediction markets with treasury decisions.
+
+**The ETC Approach:**
+
+With Olympia's treasury mechanism (ECIP-1112), ETC has a native funding source. Futarchy enables:
+- Protocol-funded development decisions via market signals
+- "Should we fund project X?" resolved by predicted impact on metrics
+- Treasury allocation based on collective intelligence
+
+**Research Reference:** The [chippr-robotics/prediction-dao-research](https://github.com/chippr-robotics/prediction-dao-research) repository explores practical futarchy implementation for ETC governance.
+
+**Key Components:**
+- Conditional tokens for pass/fail funding scenarios
+- Metric oracles tracking treasury and ecosystem health
+- Quadratic funding combined with prediction market signals
+
+<Callout type="info" title="Futarchy's Promise">
+Futarchy aligns incentives: those who believe a proposal will succeed can profit by buying the "pass" conditional token. This creates information markets around governance decisions, potentially improving decision quality beyond simple token-weighted voting.
+</Callout>
+
+## What's Next
+
+Prediction markets are evolving toward:
+
+**1. More markets**: AI-assisted market creation could enable long-tail markets without curation bottlenecks.
+
+**2. Combinatorial markets**: Bet on combinations of outcomes (e.g., "Trump wins AND inflation > 5%").
+
+**3. Conditional on participation**: Markets that only resolve if enough people participate, reducing manipulation.
+
+**4. Integration with DeFi**: Use prediction market positions as collateral, create structured products around outcomes.
+
+**5. Decentralized frontends**: Reduce regulatory surface area by decentralizing the interface layer.
+
+**6. Futarchy governance**: Using prediction markets for DAO decisions, not just information aggregation.
+
+**7. Privacy preservation**: MACI-style anti-collusion and private trading to reduce manipulation and coercion.
+
+Polymarket proved prediction markets can achieve mainstream adoption. The next generation will build on that foundation—incorporating privacy, anti-collusion, and governance applications—while addressing remaining centralization and regulatory challenges.
+
+---
+
+## Research & Citations
+
+This chapter draws on foundational research and primary sources:
+
+- [@article_hanson_lmsr_2003] — Robin Hanson's Logarithmic Market Scoring Rule, foundational to prediction market AMMs
+- [@article_hanson_futarchy_2000] — Original futarchy proposal for governance by prediction market
+- [@misc_gnosis_conditional_tokens_2019] — Conditional Token Framework specification
+- [@misc_uma_optimistic_oracle_2020] — UMA's optimistic oracle design
+- [@misc_buterin_prediction_markets_2014] — Early Ethereum prediction market concepts
+
+For practical implementation references, see the Gnosis Conditional Token Framework documentation and Polymarket's open-source components.

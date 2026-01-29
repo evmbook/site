@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FAFBFC"/>
+      <stop offset="100%" style="stop-color:#F0F4F8"/>
+    </linearGradient>
+
+    <!-- Drop shadow filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.12"/>
+    </filter>
+
+    <!-- Step gradients -->
+    <linearGradient id="userGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="100%" style="stop-color:#4B6DD0"/>
+    </linearGradient>
+    <linearGradient id="mempoolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#D97706"/>
+    </linearGradient>
+    <linearGradient id="validatorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3AB83A"/>
+      <stop offset="100%" style="stop-color:#2D8F2D"/>
+    </linearGradient>
+    <linearGradient id="evmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="blockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4"/>
+      <stop offset="100%" style="stop-color:#0891B2"/>
+    </linearGradient>
+
+    <!-- Arrow marker -->
+    <marker id="arrowhead" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#9CA3AF"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#627EEA"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+
+  <!-- Subtle grid -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E7EB" stroke-width="0.5"/>
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>
+
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1a3a">
+    Transaction Lifecycle
+  </text>
+  <text x="400" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6B7280">
+    From signature to confirmed state change
+  </text>
+
+  <!-- Main flow line (background) -->
+  <path d="M 80 200 L 720 200" stroke="#E5E7EB" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Step 1: User/Wallet -->
+  <g transform="translate(80, 200)" filter="url(#dropShadow)">
+    <rect x="-55" y="-50" width="110" height="100" rx="12" fill="url(#userGradient)"/>
+    <circle cx="0" cy="-25" r="18" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#FFF">👤</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">User</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#E0E7FF">Signs Transaction</text>
+    <text y="38" text-anchor="middle" font-family="monospace" font-size="8" fill="#C7D2FE">ECDSA secp256k1</text>
+  </g>
+  <!-- Step number -->
+  <circle cx="80" cy="270" r="14" fill="#627EEA"/>
+  <text x="80" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">1</text>
+
+  <!-- Arrow 1→2 -->
+  <path d="M 140 200 L 195 200" stroke="#627EEA" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 2: Mempool -->
+  <g transform="translate(240, 200)" filter="url(#dropShadow)">
+    <rect x="-55" y="-50" width="110" height="100" rx="12" fill="url(#mempoolGradient)"/>
+    <circle cx="0" cy="-25" r="18" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#FFF">📋</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Mempool</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#FEF3C7">Pending Queue</text>
+    <text y="38" text-anchor="middle" font-family="monospace" font-size="8" fill="#FDE68A">P2P Broadcast</text>
+  </g>
+  <circle cx="240" cy="270" r="14" fill="#F59E0B"/>
+  <text x="240" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">2</text>
+
+  <!-- Arrow 2→3 -->
+  <path d="M 300 200 L 355 200" stroke="#627EEA" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 3: Validator -->
+  <g transform="translate(400, 200)" filter="url(#dropShadow)">
+    <rect x="-55" y="-50" width="110" height="100" rx="12" fill="url(#validatorGradient)"/>
+    <circle cx="0" cy="-25" r="18" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#FFF">⛏️</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Block</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#D1FAE5">Producer</text>
+    <text y="38" text-anchor="middle" font-family="monospace" font-size="8" fill="#A7F3D0">PoW/PoS</text>
+  </g>
+  <circle cx="400" cy="270" r="14" fill="#3AB83A"/>
+  <text x="400" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">3</text>
+
+  <!-- Arrow 3→4 -->
+  <path d="M 460 200 L 515 200" stroke="#627EEA" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 4: EVM -->
+  <g transform="translate(560, 200)" filter="url(#dropShadow)">
+    <rect x="-55" y="-50" width="110" height="100" rx="12" fill="url(#evmGradient)"/>
+    <circle cx="0" cy="-25" r="18" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#FFF">⚙️</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">EVM</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#EDE9FE">Execution</text>
+    <text y="38" text-anchor="middle" font-family="monospace" font-size="8" fill="#DDD6FE">Opcodes → State</text>
+  </g>
+  <circle cx="560" cy="270" r="14" fill="#8B5CF6"/>
+  <text x="560" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">4</text>
+
+  <!-- Arrow 4→5 -->
+  <path d="M 620 200 L 675 200" stroke="#627EEA" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 5: Block -->
+  <g transform="translate(720, 200)" filter="url(#dropShadow)">
+    <rect x="-55" y="-50" width="110" height="100" rx="12" fill="url(#blockGradient)"/>
+    <circle cx="0" cy="-25" r="18" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#FFF">📦</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Block</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#CFFAFE">Confirmed</text>
+    <text y="38" text-anchor="middle" font-family="monospace" font-size="8" fill="#A5F3FC">Immutable</text>
+  </g>
+  <circle cx="720" cy="270" r="14" fill="#06B6D4"/>
+  <text x="720" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">5</text>
+
+  <!-- Detail boxes below -->
+  <g transform="translate(80, 320)">
+    <rect x="-50" y="-5" width="100" height="55" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="12" text-anchor="middle" font-family="monospace" font-size="9" fill="#4B5563">nonce</text>
+    <text y="24" text-anchor="middle" font-family="monospace" font-size="9" fill="#4B5563">to, value</text>
+    <text y="36" text-anchor="middle" font-family="monospace" font-size="9" fill="#4B5563">data, gas</text>
+  </g>
+
+  <g transform="translate(240, 320)">
+    <rect x="-50" y="-5" width="100" height="55" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Sorted by</text>
+    <text y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">gas price</text>
+    <text y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#6B7280">(priority fee)</text>
+  </g>
+
+  <g transform="translate(400, 320)">
+    <rect x="-50" y="-5" width="100" height="55" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Selects txs</text>
+    <text y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Orders block</text>
+    <text y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#6B7280">(MEV possible)</text>
+  </g>
+
+  <g transform="translate(560, 320)">
+    <rect x="-50" y="-5" width="100" height="55" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Stack ops</text>
+    <text y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Storage writes</text>
+    <text y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#6B7280">(gas consumed)</text>
+  </g>
+
+  <g transform="translate(720, 320)">
+    <rect x="-50" y="-5" width="100" height="55" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Receipt</text>
+    <text y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4B5563">Logs/Events</text>
+    <text y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#6B7280">(status: 0/1)</text>
+  </g>
+
+  <!-- Transaction Types callout -->
+  <g transform="translate(160, 75)">
+    <rect x="-90" y="-25" width="180" height="75" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+    <text y="-8" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400E">Transaction Types</text>
+    <text x="-75" y="8" font-family="monospace" font-size="7" fill="#B45309">Type 0: Legacy</text>
+    <text x="-75" y="18" font-family="monospace" font-size="7" fill="#B45309">Type 1: Access List (2930)</text>
+    <text x="-75" y="28" font-family="monospace" font-size="7" fill="#B45309">Type 2: EIP-1559</text>
+    <text x="-75" y="38" font-family="monospace" font-size="7" fill="#B45309">Type 3: Blob (4844)</text>
+  </g>
+  <path d="M 160 125 L 160 145 L 240 145" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4,3" fill="none"/>
+
+  <!-- Gas callout -->
+  <g transform="translate(480, 95)">
+    <rect x="-60" y="-25" width="120" height="50" rx="8" fill="#F0FDF4" stroke="#3AB83A" stroke-width="1.5"/>
+    <text y="-10" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#166534">Gas Economics</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#15803D">gasUsed × gasPrice</text>
+    <text y="15" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#15803D">= transaction fee</text>
+  </g>
+  <path d="M 480 120 L 480 145 L 560 145" stroke="#3AB83A" stroke-width="1.5" stroke-dasharray="4,3" fill="none"/>
+
+  <!-- Key insight -->
+  <g transform="translate(400, 430)">
+    <rect x="-180" y="-20" width="360" height="60" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+    <text y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#1E40AF">Key Insight</text>
+    <text y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#1D4ED8">Transactions are atomic: either all state changes apply, or none do.</text>
+    <text y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#1D4ED8">Reverted transactions still consume gas up to the point of failure.</text>
+  </g>
+</svg>

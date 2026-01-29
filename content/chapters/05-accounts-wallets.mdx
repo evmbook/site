@@ -1,0 +1,684 @@
+---
+title: Accounts, Keys & Wallets
+description: EOAs, contracts, key management, HD wallets, and modern wallet technology
+chapter: 5
+---
+
+# Accounts, Keys & Wallets
+
+Every interaction with the EVM starts with an account. Understanding accounts—what they are, how they're secured, and how keys relate to addresses—is foundational knowledge for EVM developers.
+
+This chapter covers the complete stack: from cryptographic keys at the bottom, through account types in the middle, to wallets at the top.
+
+## The Account Model
+
+The EVM uses an **account-based model**, in contrast to Bitcoin's UTXO model. Every account has a balance, a nonce, and optional code and storage. The blockchain tracks account state directly.
+
+### What Is an Account?
+
+An account in Ethereum is identified by a 20-byte (160-bit) address. Every account has four fields in its state:
+
+```
+Account State:
+├── nonce: Number of transactions sent (or contracts created)
+├── balance: Wei owned by this account
+├── storageRoot: Hash of the account's storage (contracts only)
+└── codeHash: Hash of the account's code (contracts only)
+```
+
+### Two Types of Accounts
+
+**Externally Owned Accounts (EOAs):**
+- Controlled by a private key
+- Can initiate transactions
+- No code, no storage
+- The only account type that can start transaction execution
+
+**Contract Accounts:**
+- Controlled by code
+- Cannot initiate transactions (only respond to them)
+- Have code and storage
+- Created when a contract is deployed
+
+| Feature | EOA | Contract Account |
+|---------|-----|------------------|
+| Controlled by | Private key | Code |
+| Has code | No | Yes |
+| Has storage | No | Yes |
+| Can send transactions | Yes | No (only internal calls) |
+| Address derivation | From public key | From creator + nonce |
+
+### Account State and Nonce
+
+**The nonce** is crucial for transaction ordering and replay protection:
+
+```
+For EOAs:
+├── nonce = number of transactions sent
+├── Starts at 0
+├── Increments with each transaction
+└── Prevents replay attacks (same tx can't execute twice)
+
+For Contract Accounts:
+├── nonce = number of contracts created by this contract
+└── Used in CREATE opcode address calculation
+```
+
+**Why nonces matter:**
+1. **Ordering**: Transactions must be executed in nonce order
+2. **Replay protection**: A signed transaction is only valid for one specific nonce
+3. **Pending transactions**: If nonce 5 is pending, nonce 6 can't execute
+
+### Address Derivation
+
+EOA addresses are derived from public keys:
+
+```
+1. Generate random 256-bit private key
+2. Derive public key using ECDSA (secp256k1 curve)
+3. Hash public key with Keccak-256
+4. Take last 20 bytes = address
+```
+
+Contract addresses are derived deterministically:
+
+```
+CREATE (standard deployment):
+address = keccak256(rlp([sender, nonce]))[12:]
+
+CREATE2 (deterministic deployment):
+address = keccak256(0xff ++ sender ++ salt ++ keccak256(initCode))[12:]
+```
+
+**Developer Lesson:** CREATE2 enables counterfactual addresses—you can compute a contract's address before deploying it, enabling patterns like factory contracts and gasless wallet deployment.
+
+![Ethereum Account Model](/images/diagrams/ch05-account-model.svg)
+
+## Keys and Cryptography
+
+Every EOA is secured by a private key. Understanding the cryptographic relationship between private keys, public keys, and addresses is essential.
+
+### Private Keys: The Foundation
+
+A private key is simply a 256-bit random number:
+
+```
+Private key (hex): 0x4c0883a69102937d6231471b5dbb6204fe512961708279238...
+Private key (decimal): 34287493287429837492837493287429...
+```
+
+**Requirements:**
+- Must be truly random (not derived from passwords, names, etc.)
+- Must be in range [1, n-1] where n is the secp256k1 curve order
+- Must be kept secret—anyone with the private key controls the account
+
+### Public Keys and ECDSA
+
+The public key is derived from the private key using elliptic curve cryptography (specifically, the secp256k1 curve):
+
+```
+public_key = private_key × G
+
+Where:
+- G is the generator point on secp256k1
+- × is elliptic curve point multiplication
+- Result is a point (x, y) on the curve
+```
+
+The public key is 64 bytes (512 bits): 32 bytes for x-coordinate, 32 bytes for y-coordinate.
+
+**Key property:** You can derive the public key from the private key, but not the reverse. This is the one-way function that secures all accounts.
+
+### From Public Key to Address
+
+The address is derived by hashing the public key:
+
+```solidity
+// Pseudocode
+address = keccak256(publicKey)[12:32]
+
+// publicKey is 64 bytes (uncompressed, without 0x04 prefix)
+// keccak256 produces 32 bytes
+// Take last 20 bytes (index 12-31)
+```
+
+**Example:**
+```
+Public key (64 bytes): 6e145ccef1033dea239875dd00dfb4fee6e3348b84985c92f103444683bae07b83b5c38e5e2b0c8529d7fa3f64d46daa1ece2d9ac14cab9477d042c84c32ccd0
+
+Keccak-256 hash: 2a5bc342ed616b5ba5732269001d3f1ef827552ae1114027bd3ecf1f086ba0f9
+
+Address (last 20 bytes): 0x001d3f1ef827552ae1114027bd3ecf1f086ba0f9
+```
+
+### Signatures and Transaction Authorization
+
+To send a transaction from an EOA, you sign it with the private key:
+
+```
+Transaction data:
+├── nonce: 5
+├── to: 0x123...
+├── value: 1 ETH
+├── gasLimit: 21000
+├── maxFeePerGas: 50 gwei
+└── data: 0x...
+
+Sign with private key → (v, r, s) signature
+
+Anyone can verify:
+├── The signature is valid
+├── It was signed by the holder of the private key
+└── The signer owns address 0xABC...
+```
+
+**The signature proves ownership** without revealing the private key.
+
+## Wallets: Key Management
+
+The word "wallet" is overloaded in the EVM ecosystem. It can mean:
+
+1. **Key management system**: Software that stores and manages private keys
+2. **User interface**: Application for interacting with the blockchain
+3. **Smart contract wallet**: A contract that holds assets (like Safe)
+
+This section focuses on key management—how wallets store, derive, and protect private keys.
+
+### Wallet Technology Overview
+
+A key consideration in wallet design is balancing **convenience** and **privacy**:
+
+- **Most convenient**: Single address for everything → privacy nightmare
+- **Most private**: New address for every transaction → management nightmare
+
+Modern HD wallets solve this by deriving unlimited addresses from a single seed.
+
+<Callout type="note">
+Wallets contain keys, not ether or tokens. The blockchain stores balances. Wallets store the keys needed to authorize transactions affecting those balances.
+</Callout>
+
+### Nondeterministic (Random) Wallets
+
+The simplest wallet: each key is independently generated.
+
+```json
+{
+    "address": "001d3f1ef827552ae1114027bd3ecf1f086ba0f9",
+    "crypto": {
+        "cipher": "aes-128-ctr",
+        "ciphertext": "233a9f4d236ed0c13394b504b6da5df02587c8bf...",
+        "kdf": "scrypt",
+        "kdfparams": {
+            "n": 262144,
+            "r": 8,
+            "p": 1
+        }
+    }
+}
+```
+
+**Problems:**
+- Every key needs separate backup
+- Lose the file, lose the funds
+- No key relationship means no recovery from partial data
+
+<Callout type="warning">
+Nondeterministic wallets are only appropriate for testing. For any real use, use HD wallets with mnemonic backup.
+</Callout>
+
+### Deterministic (Seeded) Wallets
+
+All keys derived from a single **seed**. Back up the seed once, recover everything.
+
+```
+Seed (random 256 bits)
+    │
+    ├── Key 1
+    ├── Key 2
+    ├── Key 3
+    └── ... (unlimited keys)
+```
+
+**Advantage:** Single backup protects unlimited keys.
+
+### Hierarchical Deterministic Wallets (BIP-32)
+
+HD wallets organize derived keys in a tree structure:
+
+```
+Master Key (m)
+    │
+    ├── m/0 (first child)
+    │     ├── m/0/0 (first grandchild)
+    │     └── m/0/1 (second grandchild)
+    │
+    ├── m/1 (second child)
+    │     ├── m/1/0
+    │     └── m/1/1
+    │
+    └── ...
+```
+
+**Why hierarchical?**
+1. **Organization**: Different branches for different purposes
+2. **Delegation**: Share a branch without exposing master key
+3. **Watch-only**: Export public keys for monitoring without spending ability
+
+### Extended Keys
+
+In BIP-32, keys are "extended" with a chain code that enables derivation:
+
+```
+Extended Private Key (xprv):
+├── Private key (256 bits)
+└── Chain code (256 bits)
+
+Extended Public Key (xpub):
+├── Public key (512 bits)
+└── Chain code (256 bits)
+```
+
+**The xpub trick:** From an extended public key, you can derive child public keys without knowing any private keys. This enables:
+
+- Watch-only wallets
+- Receiving addresses generated by an insecure server
+- Cold storage where the xprv stays offline
+
+### Hardened vs Normal Derivation
+
+**Normal derivation:** Child keys derivable from parent public key + chain code.
+
+**Hardened derivation:** Child keys only derivable from parent private key.
+
+```
+m/0  → Normal child (index 0)
+m/0' → Hardened child (index 0 + 2³¹)
+```
+
+**Why hardened?** If a normal child private key leaks along with the parent chain code, an attacker can derive the parent private key. Hardened derivation prevents this.
+
+**Best practice:** Use hardened derivation for the first levels of the tree (purpose, coin type, account).
+
+## Mnemonic Codes (BIP-39)
+
+A mnemonic is a human-readable encoding of a seed:
+
+```
+Hex seed:    FCCF1AB3329FD5DA3DA9577511F8F137
+Mnemonic:    wolf juice proud gown wool unfair wall cliff insect more detail hub
+```
+
+### How Mnemonics Work
+
+1. **Generate entropy** (128-256 bits of randomness)
+2. **Add checksum** (first bits of SHA-256 hash)
+3. **Split into 11-bit segments**
+4. **Map each segment to a word** from BIP-39 wordlist (2048 words)
+
+| Entropy (bits) | Checksum (bits) | Words |
+|----------------|-----------------|-------|
+| 128 | 4 | 12 |
+| 160 | 5 | 15 |
+| 192 | 6 | 18 |
+| 224 | 7 | 21 |
+| 256 | 8 | 24 |
+
+### From Mnemonic to Seed
+
+The mnemonic becomes a seed through PBKDF2 key stretching:
+
+```
+seed = PBKDF2(
+    password = mnemonic_words,
+    salt = "mnemonic" + optional_passphrase,
+    iterations = 2048,
+    algorithm = HMAC-SHA512
+)
+```
+
+**The optional passphrase:**
+- Adds a second factor (something you know)
+- Every passphrase produces a valid, different wallet
+- No "wrong" passphrase—all lead somewhere (usually empty)
+
+<Callout type="warning">
+If you use a passphrase and forget it, your funds are lost. There's no recovery—every passphrase leads to a different valid wallet.
+</Callout>
+
+### Example Mnemonic Derivation
+
+| Field | Value |
+|-------|-------|
+| **Entropy** | `0c1e24e5917779d297e14d45f14e1a1a` |
+| **Mnemonic** | `army van defense carry jealous true garbage claim echo media make crunch` |
+| **Passphrase** | (none) |
+| **Seed** | `5b56c417303faa3fcba7e57400e120a0...` |
+
+With passphrase "SuperDuperSecret":
+
+| Field | Value |
+|-------|-------|
+| **Mnemonic** | (same) |
+| **Passphrase** | `SuperDuperSecret` |
+| **Seed** | `3b5df16df2157104cfdd22830162a5e1...` (completely different) |
+
+## HD Wallet Paths (BIP-43/44)
+
+BIP-44 standardizes the HD wallet structure:
+
+```
+m / purpose' / coin_type' / account' / change / address_index
+```
+
+| Level | Value | Meaning |
+|-------|-------|---------|
+| purpose | 44' | BIP-44 compliant |
+| coin_type | 60' | Ethereum (61' for ETC) |
+| account | 0', 1', ... | Separate accounts |
+| change | 0 | External (receive) addresses |
+| address_index | 0, 1, 2, ... | Individual addresses |
+
+**Examples:**
+
+| Path | Description |
+|------|-------------|
+| `m/44'/60'/0'/0/0` | First Ethereum address |
+| `m/44'/60'/0'/0/1` | Second Ethereum address |
+| `m/44'/60'/1'/0/0` | First address of second account |
+| `m/44'/61'/0'/0/0` | First Ethereum Classic address |
+
+### Cross-Chain Considerations
+
+The same mnemonic can derive addresses for multiple chains:
+
+```
+12-word mnemonic
+    │
+    ├── m/44'/0'/...  → Bitcoin addresses
+    ├── m/44'/60'/... → Ethereum addresses
+    ├── m/44'/61'/... → Ethereum Classic addresses
+    └── m/44'/501'/...→ Solana addresses
+```
+
+**Warning:** Some chains share address formats (like EVM chains). Your Ethereum address works on Arbitrum, Base, Polygon, etc.—same private key, same address.
+
+## Modern Wallet Technology
+
+The wallet landscape has evolved significantly since BIP-32/39/44 were standardized.
+
+### Smart Contract Wallets
+
+Instead of an EOA, use a contract as your "wallet":
+
+```solidity
+// Simplified smart contract wallet
+contract Wallet {
+    address public owner;
+
+    function execute(address to, uint256 value, bytes calldata data) external {
+        require(msg.sender == owner, "Not owner");
+        (bool success,) = to.call{value: value}(data);
+        require(success, "Execution failed");
+    }
+}
+```
+
+**Advantages over EOAs:**
+- **Multi-signature**: Require multiple keys to approve
+- **Social recovery**: Recover access through trusted contacts
+- **Spending limits**: Daily limits, whitelists
+- **Batched transactions**: Multiple operations in one transaction
+- **Gas abstraction**: Pay gas in tokens, not ETH
+
+### Safe (formerly Gnosis Safe)
+
+The most widely used smart contract wallet:
+
+```
+Safe Features:
+├── Multi-signature (M-of-N signers)
+├── Module system (extend functionality)
+├── Guard system (transaction validation)
+├── Batched transactions
+└── Off-chain signature collection
+```
+
+**How Safe works:**
+1. Owners sign transactions off-chain
+2. Anyone can submit the collected signatures
+3. Contract verifies M signatures are valid
+4. Transaction executes
+
+### Account Abstraction (EIP-4337)
+
+EIP-4337 enables smart contract wallets without protocol changes:
+
+```
+Traditional Flow:
+EOA → Transaction → Mempool → Block
+
+EIP-4337 Flow:
+Smart Wallet → UserOperation → Bundler → EntryPoint Contract → Block
+```
+
+**Key components:**
+- **UserOperation**: Like a transaction, but from smart wallets
+- **Bundlers**: Nodes that collect and submit UserOperations
+- **EntryPoint**: Singleton contract that validates and executes
+- **Paymaster**: Can sponsor gas for users
+
+**What this enables:**
+- Gas payment in any token
+- Batched operations
+- Session keys (limited permissions)
+- Social recovery built-in
+
+### EIP-7702: Native Account Abstraction (Pectra)
+
+EIP-7702 (deployed with Pectra upgrade, 2025) lets EOAs temporarily act as smart contracts:
+
+```
+EOA signs a "delegation designation"
+→ EOA temporarily has contract code
+→ Can use smart wallet features
+→ Delegation can be revoked
+```
+
+**This bridges EOAs and smart wallets** without requiring migration.
+
+### Social Recovery Wallets
+
+Recovery without seed phrases:
+
+```
+Setup:
+├── Owner: Your primary key
+├── Guardians: 3 trusted contacts (friends, family, institutions)
+└── Threshold: 2 of 3 guardians needed for recovery
+
+Recovery:
+├── Lose access to owner key
+├── Contact 2 of 3 guardians
+├── They sign recovery transaction
+└── New owner key is set
+```
+
+**Examples:** Argent, Soul Wallet
+
+**Tradeoff:** Requires trusting guardians, but eliminates catastrophic seed phrase loss.
+
+## Hardware Wallets
+
+Hardware wallets store private keys in dedicated secure hardware:
+
+### How Hardware Wallets Work
+
+```
+Computer (compromised)          Hardware Wallet (secure)
+        │                              │
+        │  "Sign this transaction"     │
+        ├─────────────────────────────>│
+        │                              │
+        │                     ┌────────┴────────┐
+        │                     │ Display tx      │
+        │                     │ User confirms   │
+        │                     │ Sign in secure  │
+        │                     │ enclave         │
+        │                     └────────┬────────┘
+        │                              │
+        │  "Here's the signature"      │
+        │<─────────────────────────────┤
+        │                              │
+```
+
+**Key insight:** The private key never leaves the hardware device. Even if your computer is compromised, the attacker can't steal keys—only trick you into signing malicious transactions.
+
+### Security Model
+
+| Threat | Protection |
+|--------|------------|
+| Malware on computer | Keys never leave device |
+| Phishing | Verify address on device screen |
+| Physical theft | PIN protection |
+| Device loss | Recover from seed phrase |
+| Supply chain attack | Verify device authenticity |
+
+### Major Hardware Wallets
+
+| Device | Features |
+|--------|----------|
+| **Ledger** | Secure element, wide coin support, Ledger Live app |
+| **Trezor** | Open source firmware, passphrase support |
+| **GridPlus** | Large touchscreen, SafeCard backup |
+
+### Hardware Wallet Best Practices
+
+1. **Buy direct from manufacturer** (not Amazon/eBay)
+2. **Verify device is factory sealed**
+3. **Generate seed on device** (never import)
+4. **Store seed backup separately** from device
+5. **Always verify addresses on device screen**
+6. **Use passphrase** for high-value accounts (optional)
+
+## Wallet Security Practices
+
+### Seed Phrase Storage
+
+**DO:**
+- Write on paper or metal (fire/water resistant)
+- Store in secure location (safe, safety deposit box)
+- Consider splitting across locations
+- Use passphrase for additional security
+
+**DON'T:**
+- Store digitally (phone, computer, cloud)
+- Take photos
+- Email or message to anyone
+- Store near the device
+
+### Backup Strategies
+
+**Single seed, multiple copies:**
+```
+Copy 1: Home safe
+Copy 2: Bank safety deposit box
+Copy 3: Trusted family member (sealed)
+```
+
+**Shamir's Secret Sharing:**
+Split seed into M-of-N shares. Any M shares reconstruct the seed.
+
+```
+3-of-5 split:
+├── Share 1: You
+├── Share 2: Spouse
+├── Share 3: Parent
+├── Share 4: Lawyer
+└── Share 5: Safety deposit box
+
+Any 3 shares → full recovery
+```
+
+### Threat Modeling
+
+Think through your specific risks:
+
+| Threat | Mitigation |
+|--------|------------|
+| Device loss/theft | Backup seed, PIN protect |
+| House fire | Off-site backup |
+| $5 wrench attack | Duress wallet, plausible deniability |
+| Inheritance | Documented procedure, trusted executor |
+| Memory loss | Multiple backups, trusted contacts |
+| Sophisticated attacker | Hardware wallet, multisig, timelock |
+
+### Hot vs Cold Storage
+
+**Hot wallet:** Connected to internet, convenient for regular use
+- MetaMask, Rabby, phone wallets
+- For daily transactions, smaller amounts
+
+**Cold storage:** Offline, maximum security
+- Hardware wallets
+- Air-gapped computers
+- For long-term holdings, larger amounts
+
+**Best practice:** Use both. Hot wallet for convenience (small amounts), cold storage for security (bulk of holdings).
+
+## Wallet Evolution Timeline
+
+| Era | Technology | Limitation |
+|-----|------------|------------|
+| 2014 | Keystore files | Single key, manual backups |
+| 2015 | HD wallets (BIP-32) | Complex derivation paths |
+| 2016 | Mnemonics (BIP-39) | Still single point of failure |
+| 2017 | Hardware wallets mainstream | Requires hardware purchase |
+| 2018 | Gnosis Safe | Requires ETH for gas |
+| 2021 | EIP-4337 proposed | Bundler infrastructure needed |
+| 2023 | EIP-4337 deployed | Still early adoption |
+| 2025 | EIP-7702 (Pectra) | EOAs get smart wallet features |
+
+**Developer Lesson:** Wallet technology continues to evolve. Smart contract wallets and account abstraction are gaining adoption, but EOAs with hardware wallets remain a secure default for many use cases.
+
+## Choosing the Right Wallet Setup
+
+| Use Case | Recommended Setup |
+|----------|-------------------|
+| Learning/testing | Browser wallet (MetaMask) with test funds |
+| Regular DeFi user | Hardware wallet + browser wallet for small amounts |
+| High-value holder | Hardware wallet + multisig (Safe) |
+| Organization treasury | Multisig with multiple signers |
+| Developer | Multiple wallets (test accounts, deployment, personal) |
+
+### For Developers
+
+**Separate your wallets:**
+
+```
+Development:
+├── Test accounts (throw away, use Anvil's default keys)
+├── Testnet deployer (faucet funds)
+└── Mainnet deployer (hardware wallet)
+
+Personal:
+├── Hot wallet (daily use)
+└── Cold storage (holdings)
+```
+
+**Never use the same key for testing and production.**
+
+## Conclusions
+
+The account-key-wallet stack is foundational to EVM development:
+
+1. **Accounts** are state containers identified by addresses—either EOAs (controlled by keys) or contracts (controlled by code).
+
+2. **Keys** secure EOAs through ECDSA cryptography. Private key → public key → address is a one-way derivation.
+
+3. **HD wallets** derive unlimited keys from a single seed, backed up as a mnemonic phrase.
+
+4. **Modern wallets** are evolving toward smart contract wallets with account abstraction, enabling features impossible with EOAs alone.
+
+5. **Security** requires understanding your threat model and implementing appropriate protections—there's no single right answer for everyone.
+
+Whether you're building a wallet, integrating wallet connection, or just trying to secure your own funds, understanding these fundamentals helps you make informed decisions about tradeoffs between convenience, privacy, and security.

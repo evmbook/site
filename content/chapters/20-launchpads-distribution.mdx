@@ -1,0 +1,768 @@
+---
+title: "Launchpads & Token Distribution"
+description: From ICO contracts to bonding curves and Pump.fun-style launches
+chapter: 20
+---
+
+# Launchpads & Token Distribution
+
+How tokens enter the market shapes everything that follows: who holds them, at what price, and with what expectations. This chapter traces the evolution of token distribution from the ICO boom through modern launchpad designs.
+
+By 2026, the landscape has fractured: institutional tokens use regulated offerings, DeFi tokens use liquidity bootstrapping, and memecoins use bonding curve launchpads. Understanding these mechanisms helps you choose the right approach—or identify which model a project used and why.
+
+## The Distribution Problem
+
+New tokens face a bootstrapping challenge:
+
+1. **No liquidity**: Can't trade without liquidity, can't get liquidity without trading
+2. **Price discovery**: What's the token worth? Nobody knows yet
+3. **Fair access**: Early access to insiders creates resentment and legal risk
+4. **Sybil attacks**: Fake accounts grab disproportionate allocations
+
+Different distribution mechanisms solve these problems differently—with different tradeoffs for fairness, efficiency, and regulatory risk.
+
+## Era 0: ICO Contracts (2016-2018)
+
+### The Simple Crowdsale
+
+ICOs (Initial Coin Offerings) were simple: send ETH, receive tokens at a fixed rate.
+
+```solidity
+// Basic ICO contract (2017 era)
+contract SimpleCrowdsale {
+    uint256 public rate;           // Tokens per ETH
+    uint256 public weiRaised;
+    uint256 public cap;
+    uint256 public startTime;
+    uint256 public endTime;
+    IERC20 public token;
+
+    function buyTokens() public payable {
+        require(block.timestamp >= startTime && block.timestamp <= endTime, "Sale not active");
+        require(weiRaised + msg.value <= cap, "Cap exceeded");
+
+        uint256 tokens = msg.value * rate;
+        weiRaised += msg.value;
+
+        token.transfer(msg.sender, tokens);
+    }
+
+    // Team withdraws ETH after sale
+    function withdraw() external onlyOwner {
+        payable(owner).transfer(address(this).balance);
+    }
+}
+```
+
+**Variations:**
+
+- **Whitelisted sales**: Required KYC/registration before participating
+- **Tiered pricing**: Early buyers got better rates
+- **Soft/hard caps**: Minimum to succeed, maximum to raise
+- **Vesting**: Tokens released over time to prevent dumps
+
+### The Problems
+
+**1. FOMO and gas wars**: Popular ICOs sold out in seconds. Users competed by paying extreme gas fees, pricing out small participants.
+
+**2. Insider advantages**: Teams often sold to friends/VCs before public sale at lower prices.
+
+**3. No price discovery**: Fixed price meant the market couldn't find equilibrium. Tokens often 10x on first trade (missed value for project) or crashed immediately (disappointed buyers).
+
+**4. Regulatory backlash**: The SEC determined most ICO tokens were unregistered securities. Projects faced lawsuits; many shut down.
+
+### The ICO Bust
+
+The 2018 bear market revealed that most ICO projects had no product, no users, and no path to value. The model was exploited for exit scams and cash grabs. Trust collapsed.
+
+<Callout type="warning" title="Regulatory Reality">
+In most jurisdictions, selling tokens to raise funds for development constitutes a securities offering. Projects that did ICOs without proper registration faced SEC enforcement, investor lawsuits, and shutdowns. The "utility token" defense largely failed.
+</Callout>
+
+## Era 1: The Regulatory Scramble (2018-2020)
+
+The SEC crackdown on ICOs (2017-2018) didn't kill token distribution—it drove it underground and forced innovation. Every subsequent distribution mechanism was shaped by the need to avoid being classified as a securities offering.
+
+### The Post-ICO Landscape
+
+**What projects tried:**
+
+| Mechanism | Rationale | Problem |
+|-----------|-----------|---------|
+| **Private sales** | Accredited investors only, no public offering | Insider advantages, excluded retail |
+| **SAFTs** | Simple Agreement for Future Tokens, deferred delivery | Still securities, delayed token utility |
+| **Token vesting** | 6-24 month lockups, reduce dump risk | Complex, didn't solve securities issue |
+| **Fairlaunch claims** | "No presale, no team allocation" | Often false; team controlled initial supply |
+| **CEX launchpads** | Exchange handles KYC, provides legitimacy | Centralized gatekeeping, geographic restrictions |
+
+### The Rise of CEX Launchpads
+
+Binance Launchpad (2019) introduced the IEO (Initial Exchange Offering) model. The exchange became the trusted intermediary:
+
+- **KYC handled**: Exchange verified investor identity
+- **Legitimacy signal**: Binance listing implied vetting
+- **Distribution mechanism**: Lottery or holding-based allocation
+- **Instant liquidity**: Trading began immediately on exchange
+
+Other exchanges followed: Huobi Prime, OKEx Jumpstart, Gate.io Startup.
+
+**The tradeoffs:**
+- Centralized control over which projects launched
+- Geographic restrictions (US excluded from most)
+- High fees and listing requirements
+- But proved massive demand for structured token launches
+
+### What This Era Taught
+
+The regulatory scramble proved that token distribution would find a way. Each mechanism that emerged solved one problem while creating others. Private sales created insider advantages. Vesting created complexity. CEX launchpads created centralization.
+
+The market was searching for a model that could provide: permissionless access, fair price discovery, built-in liquidity, and regulatory distance. That search led to DeFi-native mechanisms.
+
+## Era 2: Liquidity Bootstrapping Pools (2020-2021)
+
+### Balancer LBP: Discovering Price
+
+Balancer introduced **Liquidity Bootstrapping Pools (LBPs)**: a Dutch auction mechanism using weighted AMM pools.
+
+```solidity
+// LBP concept (simplified)
+// Start: 95% project token / 5% collateral (e.g., USDC)
+// End: 50% project token / 50% collateral
+// Price naturally decreases as weights shift
+
+function getSpotPrice(
+    uint256 tokenBalanceIn,
+    uint256 tokenWeightIn,
+    uint256 tokenBalanceOut,
+    uint256 tokenWeightOut
+) public pure returns (uint256) {
+    // Weighted AMM formula
+    // price = (balanceIn / weightIn) / (balanceOut / weightOut)
+    return (tokenBalanceIn * tokenWeightOut) / (tokenBalanceOut * tokenWeightIn);
+}
+
+// Weight shifting over time creates downward price pressure
+function updateWeights() external {
+    uint256 elapsed = block.timestamp - startTime;
+    uint256 progress = elapsed * 1e18 / duration;
+
+    // Linear interpolation from start weights to end weights
+    uint256 currentTokenWeight = startTokenWeight - (startTokenWeight - endTokenWeight) * progress / 1e18;
+    uint256 currentCollateralWeight = 1e18 - currentTokenWeight;
+
+    // Update pool weights
+}
+```
+
+**How It Works:**
+
+```
+Hour 0:  Token weight 95%, USDC weight 5%
+         → Very high token price
+         → Few buyers (waiting for better price)
+
+Hour 24: Token weight 70%, USDC weight 30%
+         → Price lower
+         → Some buyers enter
+
+Hour 48: Token weight 50%, USDC weight 50%
+         → Final price discovered by market
+         → Most buying occurs
+```
+
+**Advantages:**
+
+- **Price discovery**: Market finds equilibrium price naturally
+- **Anti-whale**: Buying early costs more; waiting costs nothing
+- **Anti-bot**: No specific moment to frontrun
+- **Fair access**: Anyone can participate during the window
+
+**Disadvantages:**
+
+- **Capital inefficient**: Project provides most initial liquidity
+- **Complexity**: Users must understand Dutch auction mechanics
+- **Gaming**: Sophisticated actors still have timing advantages
+
+## Era 3: UI-Driven Launchpads (2021)
+
+### Pinksale and the BSC Explosion
+
+While LBPs served sophisticated DeFi protocols, a parallel innovation democratized launchpad creation itself. **Pinksale** (and similar platforms) provided web UIs that let anyone create token launches without writing smart contracts.
+
+**Pinksale's Innovation:**
+
+- **No-code launchpad creation**: Web forms instead of Solidity
+- **Multiple contract types**: Presale, fair launch, Dutch auction
+- **Built-in token locking**: Vesting schedules for team tokens
+- **LP locking**: Lock liquidity to signal commitment
+
+This was a critical driver of BSC (Binance Smart Chain) adoption during the 2021 bull cycle. Low fees + easy launch UI = explosion of token creation.
+
+**The 2021 Pattern:**
+
+```
+Easy token creation
+       ↓
+Flood of projects (legitimate and scams)
+       ↓
+"Rug pull" becomes endemic
+       ↓
+Creators withdraw LP, token crashes
+       ↓
+Market demands better solutions
+```
+
+**The Rug Pull Problem:**
+
+Most 2021 BSC launches followed a predictable pattern:
+1. Create token via Pinksale or similar
+2. Run presale, collect funds
+3. Add liquidity to PancakeSwap
+4. Wait for price pump
+5. Remove liquidity, disappear
+
+The "rug pull" became so common it spawned an entire vocabulary: "rugged," "devs do something," "LP locked?" The 2021 cycle proved that low barriers to launch were a double-edged sword.
+
+**What Pinksale Got Right:**
+
+- LP locking features (when used) provided real protection
+- Token vesting reduced immediate dump pressure
+- Audit integrations (when projects paid for them)
+- Built infrastructure that legitimate projects could use
+
+**What It Set Up:**
+
+The Pinksale era established that the market wanted:
+1. Simple token creation (web UI, not code)
+2. Built-in launch mechanics
+3. Some form of LP protection
+4. Social discovery layer
+
+Pump.fun would later solve these problems more elegantly—by making LP burn automatic on graduation, eliminating the "will they rug?" question entirely.
+
+## Era 4: Bonding Curves (2017-Present)
+
+### The Bancor Formula
+
+Bonding curves create continuous liquidity through mathematical price functions. Bancor pioneered this with their formula:
+
+```solidity
+// Bancor bonding curve formula
+// Price = ReserveBalance / (Supply * ReserveRatio)
+// Where ReserveRatio (CW) determines curve steepness
+
+function calculatePurchaseReturn(
+    uint256 supply,           // Current token supply
+    uint256 reserveBalance,   // ETH/USDC in reserve
+    uint32 reserveRatio,      // Connector Weight (e.g., 500000 = 50%)
+    uint256 depositAmount     // Amount being deposited
+) public pure returns (uint256) {
+    // Formula: Return = Supply * ((1 + DepositAmount/ReserveBalance)^(ReserveRatio/1000000) - 1)
+
+    // For linear curve (CW = 50%):
+    // More you buy → higher the price
+    // Sell pressure → price decreases
+
+    uint256 baseN = reserveBalance + depositAmount;
+    uint256 result;
+
+    // Power function calculation (simplified)
+    if (reserveRatio == 1000000) {
+        result = supply * depositAmount / reserveBalance;
+    } else {
+        // Use logarithms for fractional exponents
+        result = supply * (power(baseN, reserveRatio, reserveBalance, 1000000) - 1e18) / 1e18;
+    }
+
+    return result;
+}
+
+function calculateSaleReturn(
+    uint256 supply,
+    uint256 reserveBalance,
+    uint32 reserveRatio,
+    uint256 sellAmount
+) public pure returns (uint256) {
+    // Inverse of purchase formula
+    // Guarantees: buy at price X, immediate sell returns X (minus fees)
+}
+```
+
+### Curve Shapes
+
+The reserve ratio determines curve behavior:
+
+```
+Reserve Ratio: 100% (Linear)
+Price only increases with buying, no reserve accumulation
+
+Reserve Ratio: 50% (Square Root)
+Common for most bonding curves, balanced appreciation
+
+Reserve Ratio: 33% (Cubic Root)
+Slower price increase, more accessible
+
+Reserve Ratio: 10% (Steep)
+Rapid price increase, benefits early buyers significantly
+```
+
+**Visual:**
+```
+Price
+  │      100% RR (linear)
+  │     ╱
+  │    ╱   50% RR
+  │   ╱  ╱
+  │  ╱ ╱
+  │ ╱╱    33% RR
+  │╱___________
+  └───────────── Supply
+```
+
+### Implementing a Basic Bonding Curve
+
+```solidity
+// Simple linear bonding curve
+contract BondingCurve {
+    uint256 public totalSupply;
+    uint256 public reserveBalance;
+    uint256 public reserveRatio = 500000; // 50%
+
+    mapping(address => uint256) public balances;
+
+    // Buy tokens with ETH
+    function buy() external payable returns (uint256) {
+        uint256 tokensToMint = calculatePurchaseReturn(
+            totalSupply,
+            reserveBalance,
+            reserveRatio,
+            msg.value
+        );
+
+        reserveBalance += msg.value;
+        totalSupply += tokensToMint;
+        balances[msg.sender] += tokensToMint;
+
+        return tokensToMint;
+    }
+
+    // Sell tokens for ETH
+    function sell(uint256 amount) external returns (uint256) {
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+
+        uint256 ethToReturn = calculateSaleReturn(
+            totalSupply,
+            reserveBalance,
+            reserveRatio,
+            amount
+        );
+
+        balances[msg.sender] -= amount;
+        totalSupply -= amount;
+        reserveBalance -= ethToReturn;
+
+        payable(msg.sender).transfer(ethToReturn);
+
+        return ethToReturn;
+    }
+}
+```
+
+## Era 5: Pump.fun and Memecoin Launchpads (2024-Present)
+
+### The Memecoin Phenomenon
+
+Before diving into launchpad mechanics, understanding the memecoin evolution provides context for why these platforms exist.
+
+**The Memecoin Timeline:**
+
+| Year | Token | Innovation | Impact |
+|------|-------|------------|--------|
+| 2013 | **DOGE** | First memecoin, "joke" cryptocurrency | Proved people buy for community, not utility |
+| 2020 | **SHIB** | "DOGE killer," community-driven on Ethereum | Billions in market cap with no product |
+| 2023 | **PEPE** | Pure meme token, Ethereum-native | Revived memecoin mania, gas war launches |
+| 2023 | **BONK** | Solana memecoin, community airdrop | Showed Solana could host viral tokens |
+| 2024 | **WIF** | Dog-with-hat meme, Solana | Billions from pure meme energy |
+
+**Why Memecoins Matter for Developers:**
+
+1. **Onboarding**: Many users first buy crypto for memecoins, then discover DeFi
+2. **Liquidity**: Memecoin trading volume funds DEX liquidity and protocol fees
+3. **Testing ground**: New mechanics (bonding curves, fair launches) often debut with memecoins
+4. **Cultural layer**: Memes are how crypto communities form and communicate
+
+<Callout type="info">
+**The Serious Point**: Memecoins are often dismissed as "not serious," but they reveal genuine market dynamics. The demand for speculation, community belonging, and fun is real. Platforms that serve this demand (like Pump.fun) can become significant infrastructure.
+</Callout>
+
+### The Pump.fun Model
+
+Pump.fun launched on Solana in 2024 and became the dominant memecoin launchpad, proving that simple bonding curve mechanics with social features could generate massive volume.
+
+**The Mechanics:**
+
+1. **Anyone can create**: Pay small fee, deploy token with bonding curve
+2. **Bonding curve phase**: Buy/sell through curve, price increases with purchases
+3. **Graduation**: When market cap hits threshold (~$69K on Pump.fun), liquidity migrates to DEX
+4. **Raydium listing**: Token becomes tradeable on standard AMM
+
+```solidity
+// Pump.fun-style launchpad (EVM implementation)
+contract MemecoinLaunchpad {
+    struct TokenLaunch {
+        address token;
+        address creator;
+        uint256 virtualReserve;     // Virtual liquidity for pricing
+        uint256 realReserve;        // Actual ETH collected
+        uint256 tokensSold;
+        uint256 graduationThreshold; // Market cap to graduate
+        bool graduated;
+    }
+
+    mapping(address => TokenLaunch) public launches;
+
+    uint256 public constant INITIAL_VIRTUAL_RESERVE = 30 ether; // Virtual liquidity
+    uint256 public constant TOTAL_SUPPLY = 1_000_000_000 ether; // 1B tokens
+    uint256 public constant GRADUATION_THRESHOLD = 85 ether;     // ~$200K market cap
+
+    function createToken(string memory name, string memory symbol) external payable {
+        require(msg.value >= 0.01 ether, "Creation fee required");
+
+        // Deploy new token
+        MemeToken token = new MemeToken(name, symbol, TOTAL_SUPPLY);
+
+        launches[address(token)] = TokenLaunch({
+            token: address(token),
+            creator: msg.sender,
+            virtualReserve: INITIAL_VIRTUAL_RESERVE,
+            realReserve: 0,
+            tokensSold: 0,
+            graduationThreshold: GRADUATION_THRESHOLD,
+            graduated: false
+        });
+    }
+
+    function buy(address token) external payable {
+        TokenLaunch storage launch = launches[token];
+        require(!launch.graduated, "Already graduated");
+
+        // Bonding curve calculation
+        // Uses constant product with virtual reserves
+        uint256 tokensOut = getAmountOut(
+            msg.value,
+            launch.virtualReserve + launch.realReserve,
+            TOTAL_SUPPLY - launch.tokensSold
+        );
+
+        launch.realReserve += msg.value;
+        launch.tokensSold += tokensOut;
+
+        MemeToken(token).transfer(msg.sender, tokensOut);
+
+        // Check graduation
+        if (launch.realReserve >= launch.graduationThreshold) {
+            graduate(token);
+        }
+    }
+
+    function graduate(address token) internal {
+        TokenLaunch storage launch = launches[token];
+        launch.graduated = true;
+
+        // Add liquidity to Uniswap
+        uint256 liquidityTokens = TOTAL_SUPPLY - launch.tokensSold;
+        uint256 liquidityEth = launch.realReserve;
+
+        MemeToken(token).approve(address(uniswapRouter), liquidityTokens);
+
+        uniswapRouter.addLiquidityETH{value: liquidityEth}(
+            token,
+            liquidityTokens,
+            0,
+            0,
+            address(0), // Burn LP tokens (locked liquidity)
+            block.timestamp
+        );
+    }
+}
+```
+
+### Why It Works
+
+**1. Zero barrier to entry**: Anyone can launch a token for minimal cost
+
+**2. Built-in liquidity**: Bonding curve provides immediate trading without LP bootstrapping
+
+**3. Graduation mechanics**: Successful tokens get "real" DEX liquidity automatically
+
+**4. Social features**: Leaderboards, chat, and gamification drive engagement
+
+**5. Rug-pull resistance**: Creator doesn't receive funds directly; liquidity locked on graduation
+
+### The Reality Check: A Rugging Factory
+
+The Pump.fun model works mechanically—but the outcomes are brutal.
+
+**By the Numbers:**
+
+- Millions of tokens created
+- Less than 2% ever graduate to DEX
+- Most die in the bonding curve phase, never reaching threshold
+- Average token lifespan: hours to days
+
+The platform became known as a "rugging factory"—not because creators could withdraw LP (they can't after graduation), but because:
+
+1. **Pre-graduation rugs**: Creators dump their allocation before graduation
+2. **Post-graduation abandonment**: No ongoing development after launch
+3. **Attention economics**: Only the first few buyers profit; latecomers lose
+4. **Influencer extraction**: Paid promoters dump on followers
+
+<Callout type="warning" title="Honest Assessment">
+Pump.fun proved the bonding curve + graduation + LP burn model works *mechanically*. It also proved that removing creator rug capability doesn't prevent value extraction—it just changes who extracts and when.
+</Callout>
+
+### Why the Innovation Still Matters
+
+Despite the poor outcomes for most token buyers, Pump.fun's innovation was significant:
+
+**1. Market creation infrastructure**: Proved you can create liquid micro-markets from web forms
+
+**2. Ecosystem development**: Spawned an entire supporting stack:
+
+| Component | Function | Examples |
+|-----------|----------|----------|
+| **Wallet** | Simplified Solana UX | Phantom |
+| **Discovery** | Token analytics and tracking | DexScreener, Birdeye |
+| **Social** | Promotion and community | Telegram bots, Twitter/X |
+| **Trading bots** | Automated sniping and selling | Various |
+| **Copy platforms** | EVM replications | Multiple chains |
+
+**3. Chain adoption driver**: Pump.fun was a significant driver of Solana retail adoption in 2024, similar to how Pinksale drove BSC adoption in 2021.
+
+**4. Primitive refinement**: The graduation + LP burn pattern is now understood infrastructure that other projects build on.
+
+### Cross-Chain Launchpad Evolution
+
+| Year | Chain | Platform | Innovation |
+|------|-------|----------|------------|
+| 2017 | Ethereum | ICO contracts | Smart contract crowdsales |
+| 2019 | Centralized | Binance Launchpad | Exchange-backed IEOs |
+| 2020 | Ethereum | Balancer LBP | Dutch auction via weighted AMM |
+| 2021 | BSC | Pinksale | UI-driven presale creation |
+| 2024 | Solana | Pump.fun | Bonding curve + graduation + LP burn |
+| 2024+ | Base, others | Pump.fun clones | Cross-chain replication |
+
+### EVM Implementations
+
+After Pump.fun's success on Solana, EVM implementations emerged:
+
+- **friend.tech** (Base): Social tokens with bonding curves
+- **pump.fun forks**: Direct ports to EVM chains
+- **Custom implementations**: Protocol-specific launchpads
+
+```solidity
+// Key differences for EVM implementation:
+
+// 1. Gas considerations - batch operations where possible
+function buyMultiple(address[] calldata tokens, uint256[] calldata amounts) external payable {
+    uint256 totalEth = 0;
+    for (uint256 i = 0; i < tokens.length; i++) {
+        totalEth += amounts[i];
+    }
+    require(msg.value >= totalEth, "Insufficient ETH");
+
+    for (uint256 i = 0; i < tokens.length; i++) {
+        _buy(tokens[i], amounts[i]);
+    }
+}
+
+// 2. MEV protection - commit-reveal or private mempools
+mapping(bytes32 => uint256) public commitments;
+
+function commit(bytes32 hash) external payable {
+    commitments[hash] = block.number;
+}
+
+function reveal(address token, uint256 amount, bytes32 salt) external {
+    bytes32 hash = keccak256(abi.encodePacked(msg.sender, token, amount, salt));
+    require(commitments[hash] != 0, "No commitment");
+    require(block.number > commitments[hash], "Same block");
+
+    _buy(token, amount);
+    delete commitments[hash];
+}
+```
+
+## Distribution Strategy Matrix
+
+| Mechanism | Best For | Regulatory Risk | Fairness | Complexity |
+|-----------|----------|-----------------|----------|------------|
+| **ICO/Token Sale** | Established projects with legal counsel | High | Medium | Low |
+| **LBP** | DeFi protocols, fair launches | Medium | High | Medium |
+| **Bonding Curve** | Continuous fundraising, social tokens | Medium | High | Medium |
+| **Pump.fun Style** | Memecoins, experiments | Low* | Medium | Low |
+| **Airdrop** | Community building, decentralization | Medium | Varies | Low |
+| **Liquidity Mining** | Protocol bootstrapping | Medium | Medium | Low |
+
+*Regulatory risk for memecoin launchpads depends on how they're marketed and whether there's expectation of profit from others' efforts.
+
+## The Dependency Position
+
+```
+                    ┌─────────────────────────────────────┐
+                    │         LIQUID MARKETS              │
+                    │    CEX listings, deep liquidity     │
+                    └─────────────────┬───────────────────┘
+                                      │
+                                      │ Graduation
+                                      ▼
+                    ┌─────────────────────────────────────┐
+                    │             DEX POOLS               │
+                    │   Uniswap, Aerodrome, Curve         │
+                    └─────────────────┬───────────────────┘
+                                      │
+                                      │ Liquidity migration
+                                      ▼
+                    ┌─────────────────────────────────────┐
+                    │         LAUNCHPADS                  │
+                    │   Bonding curves, LBPs, sales       │
+                    └─────────────────┬───────────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+             ┌───────────┐     ┌───────────┐     ┌───────────┐
+             │  TOKEN    │     │  ORACLE   │     │  SOCIAL   │
+             │ FACTORY   │     │   FEEDS   │     │  LAYER    │
+             │  ERC-20   │     │  Prices   │     │  Virality │
+             └───────────┘     └───────────┘     └───────────┘
+```
+
+## Building a Launchpad
+
+### Minimal Viable Launchpad
+
+```solidity
+// Complete simple launchpad with graduation
+contract SimpleLaunchpad {
+    using SafeERC20 for IERC20;
+
+    struct Launch {
+        IERC20 token;
+        uint256 tokensForSale;
+        uint256 tokensSold;
+        uint256 ethRaised;
+        uint256 targetRaise;
+        uint256 startTime;
+        uint256 endTime;
+        bool finalized;
+    }
+
+    mapping(uint256 => Launch) public launches;
+    mapping(uint256 => mapping(address => uint256)) public contributions;
+    uint256 public launchCount;
+
+    IUniswapV2Router02 public immutable router;
+
+    constructor(address _router) {
+        router = IUniswapV2Router02(_router);
+    }
+
+    function createLaunch(
+        address token,
+        uint256 tokensForSale,
+        uint256 targetRaise,
+        uint256 duration
+    ) external returns (uint256 launchId) {
+        launchId = launchCount++;
+
+        IERC20(token).safeTransferFrom(msg.sender, address(this), tokensForSale);
+
+        launches[launchId] = Launch({
+            token: IERC20(token),
+            tokensForSale: tokensForSale,
+            tokensSold: 0,
+            ethRaised: 0,
+            targetRaise: targetRaise,
+            startTime: block.timestamp,
+            endTime: block.timestamp + duration,
+            finalized: false
+        });
+    }
+
+    function contribute(uint256 launchId) external payable {
+        Launch storage launch = launches[launchId];
+        require(block.timestamp >= launch.startTime, "Not started");
+        require(block.timestamp <= launch.endTime, "Ended");
+        require(!launch.finalized, "Finalized");
+
+        contributions[launchId][msg.sender] += msg.value;
+        launch.ethRaised += msg.value;
+    }
+
+    function finalize(uint256 launchId) external {
+        Launch storage launch = launches[launchId];
+        require(block.timestamp > launch.endTime, "Not ended");
+        require(!launch.finalized, "Already finalized");
+
+        launch.finalized = true;
+
+        if (launch.ethRaised >= launch.targetRaise) {
+            // Success: create liquidity pool
+            uint256 liquidityTokens = launch.tokensForSale / 2;
+            uint256 liquidityEth = launch.ethRaised / 2;
+
+            launch.token.approve(address(router), liquidityTokens);
+
+            router.addLiquidityETH{value: liquidityEth}(
+                address(launch.token),
+                liquidityTokens,
+                0,
+                0,
+                address(0), // Burn LP
+                block.timestamp
+            );
+        }
+        // If failed, contributors can claim refunds
+    }
+
+    function claim(uint256 launchId) external {
+        Launch storage launch = launches[launchId];
+        require(launch.finalized, "Not finalized");
+
+        uint256 contribution = contributions[launchId][msg.sender];
+        require(contribution > 0, "Nothing to claim");
+
+        contributions[launchId][msg.sender] = 0;
+
+        if (launch.ethRaised >= launch.targetRaise) {
+            // Success: claim tokens
+            uint256 tokenAmount = contribution * (launch.tokensForSale / 2) / launch.ethRaised;
+            launch.token.safeTransfer(msg.sender, tokenAmount);
+        } else {
+            // Failed: refund ETH
+            payable(msg.sender).transfer(contribution);
+        }
+    }
+}
+```
+
+## What We Learned
+
+**1. Regulatory pressure drives innovation.** The SEC crackdown on ICOs didn't end token distribution—it forced the market toward DeFi-native mechanisms. Private sales → CEX launchpads → LBPs → bonding curves → Pump.fun. Each step moved further from traditional securities frameworks.
+
+**2. Price discovery matters.** Fixed-price ICOs left value on the table or disappointed buyers. LBPs and bonding curves let markets find equilibrium.
+
+**3. Fairness is relative.** No mechanism is perfectly fair. LBPs favor patient capital; bonding curves favor early buyers; ICOs favor insiders. Choose based on which unfairness you can accept.
+
+**4. UI democratization is double-edged.** Pinksale's no-code launchpads drove BSC adoption but also enabled a flood of low-quality projects. Lower barriers mean more participation—legitimate and predatory.
+
+**5. Social drives adoption.** Pump.fun succeeded not just on mechanics but on gamification, leaderboards, and community. The supporting ecosystem (wallets, analytics, bots) matters as much as the protocol.
+
+**6. Graduation solves bootstrapping.** Starting with bonding curves and graduating to AMM pools solves the initial liquidity problem elegantly.
+
+**7. LP burn/lock as trust mechanism.** When it works (post-graduation), burned LP provides permanent liquidity. But it only works if you get there—and most tokens don't.
+
+**8. Market creation infrastructure > individual outcomes.** Pump.fun has poor outcomes for most tokens, but proved that permissionless market creation is viable. The infrastructure matters more than any single token's success.
+
+The launchpad space continues evolving. AI-generated tokens, cross-chain launches, and novel curve designs are emerging. But the core challenge remains: how do you distribute new tokens fairly while providing liquidity and discovering price? The mechanisms described here are tools—choose based on your project's goals, regulatory constraints, and target community.

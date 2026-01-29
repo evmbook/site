@@ -1,0 +1,814 @@
+---
+title: Deployment & Upgrades
+description: Deployment strategies, contract verification, and safe upgrade practices
+chapter: 12
+---
+
+# Deployment & Upgrades
+
+You've written and tested your contracts. Now comes the critical phase: deploying to production where real value is at stake. This chapter covers deployment strategies, contract verification, upgrade procedures, and multi-chain deployment patterns.
+
+## Deployment Fundamentals
+
+### The Contract Creation Transaction
+
+When you deploy a contract, you send a transaction with:
+- `to`: Empty (null address)
+- `data`: The contract's creation bytecode (constructor + runtime code)
+- `value`: Any ETH to send to the contract
+
+The EVM executes the creation bytecode, which:
+1. Runs the constructor
+2. Returns the runtime bytecode to be stored on-chain
+
+The contract's address is determined by:
+- **CREATE**: `keccak256(rlp([sender, nonce]))[12:]`
+- **CREATE2**: `keccak256(0xff ++ sender ++ salt ++ keccak256(initCode))[12:]`
+
+CREATE2 enables deterministic addresses—you can know the address before deployment.
+
+## Foundry Deployment Scripts
+
+Foundry's `forge script` runs Solidity scripts for deployment, providing type safety and simulation before broadcasting.
+
+### Basic Deployment Script
+
+```solidity
+// script/Deploy.s.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import "../src/Token.sol";
+import "../src/Vault.sol";
+
+contract DeployScript is Script {
+    function run() external {
+        // Load private key from environment
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        // Start broadcasting transactions
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy contracts
+        Token token = new Token("MyToken", "MTK");
+        Vault vault = new Vault(address(token));
+
+        console.log("Token deployed to:", address(token));
+        console.log("Vault deployed to:", address(vault));
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+### Running Deployment Scripts
+
+```bash
+# Simulate deployment (no actual transactions)
+$ forge script script/Deploy.s.sol --rpc-url $RPC_URL
+
+# Broadcast to network
+$ forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast
+
+# Verify contracts on block explorer
+$ forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast --verify
+
+# Resume failed broadcast
+$ forge script script/Deploy.s.sol --rpc-url $RPC_URL --resume
+```
+
+### Multi-Network Deployment
+
+```solidity
+contract DeployScript is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        // Get chain ID to determine configuration
+        uint256 chainId = block.chainid;
+
+        address oracle;
+        if (chainId == 1) {
+            // Ethereum Mainnet
+            oracle = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; // ETH/USD
+        } else if (chainId == 61) {
+            // Ethereum Classic
+            oracle = 0x1234...; // ETC oracle address
+        } else if (chainId == 11155111) {
+            // Sepolia testnet
+            oracle = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
+        } else {
+            revert("Unsupported chain");
+        }
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        Vault vault = new Vault(oracle);
+        console.log("Vault deployed to:", address(vault));
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+### Deterministic Deployment with CREATE2
+
+```solidity
+contract DeterministicDeploy is Script {
+    // CREATE2 deployer (same address on all EVM chains)
+    address constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        // Salt determines the address
+        bytes32 salt = keccak256("my-vault-v1");
+
+        // Predict address before deployment
+        bytes memory creationCode = abi.encodePacked(
+            type(Vault).creationCode,
+            abi.encode(msg.sender)  // constructor args
+        );
+
+        address predicted = computeCreate2Address(
+            salt,
+            keccak256(creationCode),
+            CREATE2_DEPLOYER
+        );
+
+        console.log("Will deploy to:", predicted);
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy via CREATE2
+        Vault vault = new Vault{salt: salt}(msg.sender);
+
+        require(address(vault) == predicted, "Address mismatch");
+
+        vm.stopBroadcast();
+    }
+
+    function computeCreate2Address(
+        bytes32 salt,
+        bytes32 initCodeHash,
+        address deployer
+    ) internal pure returns (address) {
+        return address(uint160(uint256(keccak256(abi.encodePacked(
+            bytes1(0xff),
+            deployer,
+            salt,
+            initCodeHash
+        )))));
+    }
+}
+```
+
+## Contract Verification
+
+Contract verification publishes your source code to block explorers, building trust by letting users read the code they're interacting with.
+
+### Automatic Verification with Foundry
+
+```bash
+# Verify during deployment
+$ forge script script/Deploy.s.sol \
+    --rpc-url $RPC_URL \
+    --broadcast \
+    --verify \
+    --etherscan-api-key $ETHERSCAN_API_KEY
+
+# Verify existing contract
+$ forge verify-contract \
+    --chain-id 1 \
+    --constructor-args $(cast abi-encode "constructor(address)" 0x123...) \
+    0xContractAddress \
+    src/Vault.sol:Vault \
+    --etherscan-api-key $ETHERSCAN_API_KEY
+```
+
+### Verification Configuration
+
+```toml
+# foundry.toml
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_API_KEY}" }
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+classic = { key = "${BLOCKSCOUT_API_KEY}", url = "https://etc.blockscout.com/api" }
+mordor = { key = "${BLOCKSCOUT_API_KEY}", url = "https://etc-mordor.blockscout.com/api" }
+arbitrum = { key = "${ARBISCAN_API_KEY}" }
+optimism = { key = "${OPTIMISM_API_KEY}" }
+base = { key = "${BASESCAN_API_KEY}" }
+```
+
+### Manual Verification for Complex Cases
+
+For proxies and libraries, you may need manual verification:
+
+```solidity
+// Generate standard JSON input
+$ forge verify-contract --show-standard-json-input \
+    0xContractAddress \
+    src/Vault.sol:Vault > verify.json
+```
+
+Then submit `verify.json` to the block explorer's verification page.
+
+### Sourcify Verification
+
+Sourcify provides decentralized verification:
+
+```bash
+$ forge verify-contract \
+    --chain-id 1 \
+    0xContractAddress \
+    src/Vault.sol:Vault \
+    --verifier sourcify
+```
+
+## Deployment Checklists
+
+### Pre-Deployment Checklist
+
+```markdown
+## Pre-Deployment Checklist
+
+### Code Quality
+- [ ] All tests passing (`forge test`)
+- [ ] 100% coverage on critical paths (`forge coverage`)
+- [ ] No compiler warnings
+- [ ] Static analysis clean (`slither .`)
+- [ ] Gas optimized for hot paths
+
+### Security
+- [ ] External audit completed (for mainnet value > $X)
+- [ ] Internal security review
+- [ ] Access control verified
+- [ ] Upgrade path tested
+- [ ] Emergency pause mechanism tested
+- [ ] No hardcoded addresses (use constructor/initializer)
+
+### Configuration
+- [ ] Constructor arguments verified
+- [ ] Admin addresses confirmed (preferably multisig)
+- [ ] Oracle addresses confirmed
+- [ ] Fee parameters within expected ranges
+- [ ] Timelock delay appropriate
+
+### Documentation
+- [ ] Deployment addresses documented
+- [ ] ABI published
+- [ ] User documentation updated
+- [ ] Integration guide prepared
+```
+
+### Post-Deployment Checklist
+
+```markdown
+## Post-Deployment Checklist
+
+### Verification
+- [ ] Contract verified on block explorer
+- [ ] Source code matches deployment
+- [ ] Constructor args correct
+
+### Configuration
+- [ ] Ownership transferred to multisig
+- [ ] Initial parameters set
+- [ ] Roles granted appropriately
+- [ ] Pause functionality tested
+
+### Monitoring
+- [ ] Event monitoring configured
+- [ ] Alerts set up for critical functions
+- [ ] TVL tracking enabled
+
+### Documentation
+- [ ] Deployment record created with:
+  - Contract addresses
+  - Block number
+  - Transaction hashes
+  - Git commit hash
+  - Compiler version
+```
+
+## Upgrade Deployment
+
+Deploying upgrades requires extra care to avoid corrupting state or breaking functionality.
+
+### UUPS Upgrade Script
+
+```solidity
+// script/Upgrade.s.sol
+contract UpgradeScript is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        address proxy = vm.envAddress("PROXY_ADDRESS");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy new implementation
+        VaultV2 newImplementation = new VaultV2();
+        console.log("New implementation:", address(newImplementation));
+
+        // Upgrade proxy (UUPS pattern)
+        VaultV2(proxy).upgradeTo(address(newImplementation));
+
+        // Verify upgrade worked
+        require(
+            VaultV2(proxy).version() == 2,
+            "Upgrade verification failed"
+        );
+
+        console.log("Upgrade successful!");
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+### Transparent Proxy Upgrade
+
+```solidity
+contract TransparentUpgradeScript is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        address proxyAdmin = vm.envAddress("PROXY_ADMIN");
+        address proxy = vm.envAddress("PROXY_ADDRESS");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy new implementation
+        VaultV2 newImplementation = new VaultV2();
+
+        // Upgrade via ProxyAdmin
+        ProxyAdmin(proxyAdmin).upgrade(
+            ITransparentUpgradeableProxy(proxy),
+            address(newImplementation)
+        );
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+### Upgrade with Initialization
+
+When the new version adds state that needs initialization:
+
+```solidity
+contract VaultV2 is VaultV1 {
+    uint256 public newStateVariable;
+    bool private _v2Initialized;
+
+    function initializeV2(uint256 _newValue) external {
+        require(!_v2Initialized, "Already initialized");
+        require(msg.sender == owner(), "Only owner");
+
+        _v2Initialized = true;
+        newStateVariable = _newValue;
+    }
+}
+
+// In upgrade script:
+contract UpgradeScript is Script {
+    function run() external {
+        // ... deploy new implementation ...
+
+        // Upgrade and initialize atomically using upgradeAndCall
+        VaultV2(proxy).upgradeToAndCall(
+            address(newImplementation),
+            abi.encodeWithSelector(VaultV2.initializeV2.selector, 100)
+        );
+    }
+}
+```
+
+### Storage Layout Verification
+
+Before upgrading, verify storage compatibility:
+
+```bash
+# Install storage layout tools
+$ forge install openzeppelin/openzeppelin-upgrades
+
+# Generate storage layout
+$ forge inspect VaultV1 storage-layout > v1-storage.json
+$ forge inspect VaultV2 storage-layout > v2-storage.json
+
+# Compare (manually or with diff tool)
+$ diff v1-storage.json v2-storage.json
+```
+
+OpenZeppelin's upgrade plugins can automate this:
+
+```javascript
+// hardhat.config.js
+require('@openzeppelin/hardhat-upgrades');
+
+// In deployment script
+const VaultV2 = await ethers.getContractFactory("VaultV2");
+await upgrades.upgradeProxy(proxyAddress, VaultV2);
+```
+
+## Timelock Deployments
+
+Production upgrades should go through a timelock to give users time to react:
+
+```solidity
+// script/QueueUpgrade.s.sol
+contract QueueUpgradeScript is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+
+        address timelock = vm.envAddress("TIMELOCK");
+        address proxy = vm.envAddress("PROXY");
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy new implementation
+        VaultV2 newImpl = new VaultV2();
+
+        // Queue the upgrade through timelock
+        bytes memory upgradeCall = abi.encodeWithSelector(
+            UUPSUpgradeable.upgradeTo.selector,
+            address(newImpl)
+        );
+
+        TimelockController(payable(timelock)).schedule(
+            proxy,           // target
+            0,               // value
+            upgradeCall,     // data
+            bytes32(0),      // predecessor
+            bytes32(0),      // salt
+            2 days           // delay
+        );
+
+        console.log("Upgrade queued. Execute after:", block.timestamp + 2 days);
+
+        vm.stopBroadcast();
+    }
+}
+
+// script/ExecuteUpgrade.s.sol (run after timelock delay)
+contract ExecuteUpgradeScript is Script {
+    function run() external {
+        // ...
+        TimelockController(payable(timelock)).execute(
+            proxy,
+            0,
+            upgradeCall,
+            bytes32(0),
+            bytes32(0)
+        );
+    }
+}
+```
+
+## Multi-Chain Deployment Strategy
+
+### Same Address Across Chains
+
+Using CREATE2 with the same salt and bytecode produces identical addresses:
+
+```solidity
+contract MultiChainDeploy is Script {
+    // Universal CREATE2 deployer - same address on all EVM chains
+    address constant UNIVERSAL_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+
+    function run() external {
+        bytes32 salt = keccak256("myprotocol-vault-v1");
+
+        // This will produce the same address on any EVM chain
+        vm.startBroadcast();
+        Vault vault = new Vault{salt: salt}();
+        vm.stopBroadcast();
+
+        console.log("Deployed to:", address(vault));
+    }
+}
+```
+
+<Tip>
+Same addresses across chains simplifies user experience and documentation. Users can interact with `0x1234...` on any supported chain.
+</Tip>
+
+### Chain-Specific Configuration
+
+```solidity
+contract ConfigurableVault {
+    struct ChainConfig {
+        address oracle;
+        address weth;
+        uint256 minDeposit;
+    }
+
+    ChainConfig public config;
+
+    constructor(ChainConfig memory _config) {
+        config = _config;
+    }
+}
+
+// Deployment script with chain-specific configs
+contract DeployVault is Script {
+    function getConfig() internal view returns (ConfigurableVault.ChainConfig memory) {
+        uint256 chainId = block.chainid;
+
+        if (chainId == 1) { // Ethereum
+            return ConfigurableVault.ChainConfig({
+                oracle: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419,
+                weth: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+                minDeposit: 0.1 ether
+            });
+        } else if (chainId == 61) { // ETC
+            return ConfigurableVault.ChainConfig({
+                oracle: 0x...,
+                weth: 0x...,
+                minDeposit: 1 ether
+            });
+        } else if (chainId == 42161) { // Arbitrum
+            return ConfigurableVault.ChainConfig({
+                oracle: 0x...,
+                weth: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,
+                minDeposit: 0.01 ether
+            });
+        }
+        revert("Unsupported chain");
+    }
+}
+```
+
+### Deployment Registry
+
+Maintain a registry of deployments:
+
+```json
+// deployments/deployments.json
+{
+  "Vault": {
+    "1": {
+      "address": "0x...",
+      "blockNumber": 18000000,
+      "txHash": "0x...",
+      "gitCommit": "abc123",
+      "version": "1.0.0"
+    },
+    "61": {
+      "address": "0x...",
+      "blockNumber": 19000000,
+      "txHash": "0x...",
+      "gitCommit": "abc123",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+Generate automatically with deployment script:
+
+```solidity
+function exportDeployment(
+    string memory name,
+    address addr,
+    uint256 chainId
+) internal {
+    string memory json = string(abi.encodePacked(
+        '{"address":"', vm.toString(addr),
+        '","blockNumber":', vm.toString(block.number),
+        ',"chainId":', vm.toString(chainId),
+        '}'
+    ));
+
+    string memory path = string(abi.encodePacked(
+        "deployments/",
+        vm.toString(chainId),
+        "/",
+        name,
+        ".json"
+    ));
+
+    vm.writeFile(path, json);
+}
+```
+
+## Infrastructure Considerations
+
+### RPC Provider Selection
+
+Don't depend on a single RPC provider:
+
+```bash
+# Use multiple providers with fallback
+export ETH_RPC_URL="https://eth-mainnet.g.alchemy.com/v2/$ALCHEMY_KEY"
+export ETH_RPC_BACKUP="https://mainnet.infura.io/v3/$INFURA_KEY"
+
+# For ETC, use public endpoints or run your own node
+export ETC_RPC_URL="https://etc.rivet.link"
+```
+
+For production, consider:
+- **Running your own node** for critical operations
+- **Dshackle** for RPC load balancing across multiple providers
+- **Multiple provider accounts** for rate limit resilience
+
+### Gas Price Strategy
+
+```solidity
+contract DeployWithGasStrategy is Script {
+    function run() external {
+        // Get current gas prices
+        uint256 gasPrice = tx.gasprice;
+        uint256 baseFee = block.basefee;
+
+        // Set max fee with buffer
+        uint256 maxFeePerGas = baseFee * 2;
+        uint256 maxPriorityFee = 2 gwei;
+
+        console.log("Base fee:", baseFee);
+        console.log("Max fee:", maxFeePerGas);
+
+        vm.startBroadcast();
+        // Foundry uses EIP-1559 by default on supported chains
+        // ...
+        vm.stopBroadcast();
+    }
+}
+```
+
+Command line gas options:
+
+```bash
+# Set gas price (legacy)
+$ forge script ... --gas-price 50gwei
+
+# Set EIP-1559 parameters
+$ forge script ... --priority-gas-price 2gwei
+
+# Set gas limit
+$ forge script ... --gas-limit 3000000
+```
+
+## Emergency Procedures
+
+### Pause Mechanism
+
+Include pause functionality for emergencies:
+
+```solidity
+import "@openzeppelin/contracts/utils/Pausable.sol";
+
+contract Vault is Pausable, Ownable {
+    function deposit() external payable whenNotPaused {
+        // ...
+    }
+
+    function withdraw(uint256 amount) external whenNotPaused {
+        // ...
+    }
+
+    // Emergency pause - should be behind multisig
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    // Emergency withdrawal even when paused
+    function emergencyWithdraw() external whenPaused {
+        uint256 balance = balances[msg.sender];
+        balances[msg.sender] = 0;
+        payable(msg.sender).transfer(balance);
+    }
+}
+```
+
+### Emergency Upgrade Script
+
+```solidity
+// script/EmergencyUpgrade.s.sol
+contract EmergencyUpgradeScript is Script {
+    function run() external {
+        uint256 privateKey = vm.envUint("EMERGENCY_KEY");
+        address proxy = vm.envAddress("PROXY");
+
+        vm.startBroadcast(privateKey);
+
+        // 1. Pause the contract immediately
+        Vault(proxy).pause();
+        console.log("Contract paused");
+
+        // 2. Deploy patched implementation
+        VaultPatched newImpl = new VaultPatched();
+        console.log("Patched implementation:", address(newImpl));
+
+        // 3. Upgrade (bypassing timelock in emergency)
+        // Note: This requires special emergency permissions
+        Vault(proxy).emergencyUpgrade(address(newImpl));
+        console.log("Upgraded");
+
+        // 4. Unpause after verification
+        // Vault(proxy).unpause();
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+<Warning>
+Emergency upgrade capabilities are powerful and dangerous. Implement with extreme care:
+- Require multiple signatures (multisig)
+- Log all emergency actions prominently
+- Consider time-delayed unpause
+- Document the threat model
+</Warning>
+
+## Deployment Security
+
+### Secure Key Management
+
+Never commit private keys. Use:
+
+```bash
+# Environment variables
+export PRIVATE_KEY=0x...
+
+# Hardware wallet with Frame
+forge script ... --ledger
+
+# AWS KMS
+forge script ... --aws
+```
+
+### Deploy from Fresh Address
+
+For important deployments:
+
+1. Generate new deployer address
+2. Fund with exact needed amount
+3. Deploy
+4. Transfer ownership to multisig
+5. Don't reuse deployer address
+
+```solidity
+function run() external {
+    vm.startBroadcast();
+
+    Vault vault = new Vault();
+
+    // Immediately transfer to multisig
+    vault.transferOwnership(MULTISIG_ADDRESS);
+
+    vm.stopBroadcast();
+}
+```
+
+### Verify Before Transfer
+
+```solidity
+function run() external {
+    vm.startBroadcast();
+
+    Vault vault = new Vault(oracle);
+
+    // Verify configuration before giving up control
+    require(vault.oracle() == oracle, "Oracle mismatch");
+    require(vault.owner() == msg.sender, "Owner mismatch");
+    require(vault.paused() == false, "Should not be paused");
+
+    // Now safe to transfer
+    vault.transferOwnership(MULTISIG_ADDRESS);
+
+    vm.stopBroadcast();
+}
+```
+
+<Callout type="note" title="Code Examples">
+Deployment scripts and patterns covered in this chapter:
+
+- [Deploy.s.sol](../code/chapter-12/script/Deploy.s.sol) — Basic deployment script
+- [DeployUpgradeable.s.sol](../code/chapter-12/script/DeployUpgradeable.s.sol) — Upgradeable contract deployment
+- [MultiChainConfig.s.sol](../code/chapter-12/script/MultiChainConfig.s.sol) — Multi-chain deployment configuration
+- [Token.sol](../code/chapter-12/src/Token.sol) — Simple token contract
+- [UpgradeableToken.sol](../code/chapter-12/src/UpgradeableToken.sol) — Upgradeable token implementation
+</Callout>
+
+## Summary
+
+Safe deployment and upgrades require:
+
+1. **Structured scripts** using Foundry for type-safe, testable deployments
+2. **Verification** on block explorers for transparency
+3. **Checklists** to ensure nothing is missed
+4. **Timelock protection** for upgrades to give users exit time
+5. **Multi-chain strategy** with deterministic addresses where possible
+6. **Emergency procedures** tested and ready but carefully restricted
+
+The deployment phase is where theoretical security becomes real. Take the time to do it right—there are no second chances with immutable contracts managing real value.
+
+Next, we'll dive deep into the EVM internals to understand exactly what happens when your deployed code executes.

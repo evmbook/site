@@ -90,7 +90,11 @@ This appendix provides a reference of all EVM opcodes, their gas costs, and desc
 | GASLIMIT | 0x45 | 2 | 0 → 1 | Block gas limit |
 | CHAINID | 0x46 | 2 | 0 → 1 | Chain ID |
 | SELFBALANCE | 0x47 | 5 | 0 → 1 | Contract balance |
-| BASEFEE | 0x48 | 2 | 0 → 1 | Block base fee |
+| BASEFEE | 0x48 | 2 | 0 → 1 | Block base fee (EIP-3198) |
+| BLOBHASH | 0x49 | 3 | 1 → 1 | Blob versioned hash (EIP-4844)* |
+| BLOBBASEFEE | 0x4A | 2 | 0 → 1 | Blob base fee (EIP-7516)* |
+
+*BLOBHASH and BLOBBASEFEE are ETH-only (Dencun upgrade). On ETC, these opcodes exist for bytecode compatibility but return zero.
 
 ### Stack, Memory, Storage (0x50 - 0x5F)
 
@@ -108,9 +112,23 @@ This appendix provides a reference of all EVM opcodes, their gas costs, and desc
 | MSIZE | 0x59 | 2 | 0 → 1 | Memory size |
 | GAS | 0x5A | 2 | 0 → 1 | Remaining gas |
 | JUMPDEST | 0x5B | 1 | 0 → 0 | Valid jump destination |
+| TLOAD | 0x5C | 100 | 1 → 1 | Load from transient storage (EIP-1153) |
+| TSTORE | 0x5D | 100 | 2 → 0 | Store to transient storage (EIP-1153) |
+| MCOPY | 0x5E | 3* | 3 → 0 | Memory copy (EIP-5656) |
+| PUSH0 | 0x5F | 2 | 0 → 1 | Push zero (EIP-3855) |
 
 *Memory expansion costs apply
 **SSTORE: 20,000 (new) / 5,000 (update) / 100 (warm)
+
+#### New Opcodes (2023-2024)
+
+The following opcodes were added in recent upgrades:
+
+**PUSH0 (0x5F)** — Pushes zero to the stack for 2 gas, saving 1 gas compared to `PUSH1 0x00`. Solidity 0.8.20+ generates PUSH0 by default. Available on ETH since Shanghai (2023), on ETC since Olympia (2025).
+
+**TLOAD/TSTORE (0x5C/0x5D)** — Transient storage that's automatically cleared at the end of a transaction. Useful for reentrancy locks and cross-function communication without persistent storage costs. Available on ETH since Cancun (2024), on ETC since Olympia (2025).
+
+**MCOPY (0x5E)** — Efficient memory-to-memory copy. Replaces awkward patterns of MLOAD/MSTORE loops. Available on ETH since Cancun (2024), on ETC since Olympia (2025).
 
 ### Push Operations (0x60 - 0x7F)
 
@@ -185,8 +203,26 @@ function callOther(address target) public {
 }
 ```
 
+## ETC vs ETH Opcode Differences
+
+Ethereum Classic maintains opcode compatibility with Ethereum through coordinated upgrades. As of the Olympia upgrade (ECIP-1121), ETC supports all opcodes through Cancun/Dencun.
+
+| Opcode | ETH | ETC | Notes |
+|--------|-----|-----|-------|
+| PUSH0 | Shanghai (2023) | Olympia (2025) | Full support |
+| MCOPY | Cancun (2024) | Olympia (2025) | Full support |
+| TLOAD/TSTORE | Cancun (2024) | Olympia (2025) | Full support |
+| BLOBHASH | Cancun (2024) | Olympia (2025) | Returns 0 (no blob txs on PoW) |
+| BLOBBASEFEE | Cancun (2024) | Olympia (2025) | Returns 0 (no blob txs on PoW) |
+| PREVRANDAO | Paris (2022) | Mystique (2022) | Returns difficulty on PoW chains |
+
+<Note>
+SELFDESTRUCT (0xFF) behavior changed with EIP-6780 (Cancun). On ETH, it now only deletes contract state when called in the same transaction as contract creation. ETC will adopt similar semantics with a future upgrade.
+</Note>
+
 ## Resources
 
 - **EVM Codes**: https://www.evm.codes
 - **Ethereum Yellow Paper**: https://ethereum.github.io/yellowpaper
 - **go-ethereum**: https://github.com/ethereum/go-ethereum
+- **ECIPs**: https://github.com/ethereumclassic/ECIPs

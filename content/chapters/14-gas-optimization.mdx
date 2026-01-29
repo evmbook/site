@@ -1,0 +1,640 @@
+---
+title: Gas Optimization
+description: Practical techniques for reducing gas costs in smart contracts
+chapter: 14
+---
+
+# Gas Optimization
+
+Gas costs directly impact user experience and protocol viability. A swap that costs $50 in gas on Ethereum mainnet might be unusable for most users. This chapter provides practical optimization techniques with measurable impact.
+
+## The Cost Hierarchy
+
+Understanding relative costs is essential for prioritization:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                     GAS COST HIERARCHY                         │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  STORAGE (most expensive)                                       │
+│  ├─ SSTORE (new value):     20,000 gas                         │
+│  ├─ SSTORE (update):         5,000 gas                         │
+│  ├─ SSTORE (to zero):        5,000 gas + 4,800 refund          │
+│  └─ SLOAD (cold):            2,100 gas                         │
+│                                                                 │
+│  EXTERNAL CALLS                                                 │
+│  ├─ CALL (cold):             2,600 gas + gas passed            │
+│  ├─ CALL (warm):               100 gas + gas passed            │
+│  └─ CREATE:                 32,000 gas + init code execution   │
+│                                                                 │
+│  MEMORY                                                         │
+│  ├─ MLOAD/MSTORE:                3 gas                         │
+│  └─ Memory expansion:        3 gas per word + quadratic cost   │
+│                                                                 │
+│  COMPUTATION                                                    │
+│  ├─ ADD/SUB/LT/GT:               3 gas                         │
+│  ├─ MUL/DIV:                     5 gas                         │
+│  ├─ SHA3/KECCAK256:             30 gas + 6 per word            │
+│  └─ ECRECOVER:               3,000 gas                         │
+│                                                                 │
+│  TRANSIENT STORAGE (EIP-1153)                                  │
+│  ├─ TLOAD:                     100 gas                         │
+│  └─ TSTORE:                    100 gas                         │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Key insight**: Storage operations are 100-1000x more expensive than computation. Optimize storage first.
+
+![EVM Gas Cost Hierarchy](/images/diagrams/ch14-gas-cost-hierarchy.svg)
+
+## Storage Optimization
+
+### Storage Slot Packing
+
+The EVM stores data in 32-byte slots. Variables smaller than 32 bytes can share a slot:
+
+```solidity
+// BAD: 3 storage slots (60,000 gas to initialize)
+contract Unpacked {
+    uint256 a;      // Slot 0: 32 bytes
+    uint128 b;      // Slot 1: 16 bytes (wastes 16)
+    uint128 c;      // Slot 2: 16 bytes (wastes 16)
+}
+
+// GOOD: 2 storage slots (40,000 gas to initialize)
+contract Packed {
+    uint256 a;      // Slot 0: 32 bytes
+    uint128 b;      // Slot 1: lower 16 bytes
+    uint128 c;      // Slot 1: upper 16 bytes
+}
+```
+
+**Packing rules:**
+- Variables are packed left-to-right in declaration order
+- If a variable doesn't fit in remaining slot space, it starts a new slot
+- Structs and arrays always start new slots
+
+```solidity
+// Optimal struct packing
+struct User {
+    uint128 balance;    // 16 bytes
+    uint64 lastUpdate;  // 8 bytes
+    uint32 nonce;       // 4 bytes
+    bool active;        // 1 byte
+    // Total: 29 bytes, fits in one slot
+}
+
+// Same data, poor packing
+struct UserBad {
+    bool active;        // 1 byte → Slot 0
+    uint128 balance;    // 16 bytes → Slot 1 (too big for slot 0)
+    uint64 lastUpdate;  // 8 bytes → Slot 1
+    uint32 nonce;       // 4 bytes → Slot 1
+    // active wastes an entire slot!
+}
+```
+
+### Reading and Writing Packed Slots
+
+When accessing packed variables, the EVM reads the entire slot then masks/shifts. Writing updates the whole slot:
+
+```solidity
+contract PackedAccess {
+    uint128 public a;
+    uint128 public b;
+
+    // Reading 'a' alone: SLOAD + MASK
+    // Reading 'a' then 'b': SLOAD + MASK + MASK (single storage read)
+
+    function setBoth(uint128 _a, uint128 _b) external {
+        // Single SSTORE writes both values
+        a = _a;
+        b = _b;
+    }
+
+    function setOneAtATime(uint128 _a, uint128 _b) external {
+        a = _a;  // SLOAD (read slot) + modify + SSTORE
+        b = _b;  // SLOAD (read slot) + modify + SSTORE
+        // Actually 2 SSTOREs because slot is warm after first access
+    }
+}
+```
+
+<Tip>
+When updating multiple packed variables, update them together in the same transaction to minimize storage operations.
+</Tip>
+
+### Storage Slot Calculation
+
+Understanding how slots are calculated helps with optimization:
+
+```solidity
+contract StorageLayout {
+    // Fixed variables: sequential slots
+    uint256 public slot0;        // Slot 0
+    uint256 public slot1;        // Slot 1
+
+    // Mappings: keccak256(key . slot)
+    mapping(address => uint256) balances;  // Slot 2
+    // balances[addr] is at keccak256(addr . 2)
+
+    // Dynamic arrays: length at slot, data at keccak256(slot)
+    uint256[] public values;     // Slot 3 (length)
+    // values[i] is at keccak256(3) + i
+
+    // Nested mappings: keccak256(key2 . keccak256(key1 . slot))
+    mapping(address => mapping(address => uint256)) allowances; // Slot 4
+    // allowances[owner][spender] is at keccak256(spender . keccak256(owner . 4))
+}
+```
+
+### EIP-2200 and Gas Refunds
+
+Storage operations have complex gas costs based on current and new values:
+
+| Current Value | New Value | Gas Cost | Refund |
+|--------------|-----------|----------|--------|
+| 0 | Non-zero | 20,000 | 0 |
+| Non-zero | Same | 100 | 0 |
+| Non-zero | Different non-zero | 2,900 | 0 |
+| Non-zero | 0 | 2,900 | 4,800 |
+
+```solidity
+// Exploit refunds: batch clear storage
+function clearBalances(address[] calldata users) external {
+    for (uint i = 0; i < users.length;) {
+        balances[users[i]] = 0;  // 2,900 gas cost, 4,800 refund each
+        unchecked { ++i; }
+    }
+    // Net: saves gas on long lists
+}
+```
+
+### Dirty Storage Pattern
+
+Avoid setting storage to zero if you'll set it again:
+
+```solidity
+// BAD: Zero then set (20,000 + 5,000 gas)
+function resetAndSet(uint256 newValue) external {
+    value = 0;        // SSTORE: 2,900 gas
+    value = newValue; // SSTORE: 20,000 gas (0 → non-zero!)
+}
+
+// GOOD: Direct set (5,000 gas)
+function directSet(uint256 newValue) external {
+    value = newValue; // SSTORE: 2,900-5,000 gas
+}
+```
+
+## Calldata vs Memory
+
+Calldata is read-only and cheaper than memory for function inputs:
+
+```solidity
+// BAD: Copies array to memory
+function sumBad(uint256[] memory arr) external pure returns (uint256) {
+    uint256 total;
+    for (uint i = 0; i < arr.length; i++) {
+        total += arr[i];
+    }
+    return total;
+}
+
+// GOOD: Reads directly from calldata
+function sumGood(uint256[] calldata arr) external pure returns (uint256) {
+    uint256 total;
+    for (uint i = 0; i < arr.length; i++) {
+        total += arr[i];  // CALLDATALOAD: 3 gas
+    }
+    return total;
+}
+```
+
+**Gas comparison for 100-element array:**
+- `memory`: ~15,000 gas (copy cost)
+- `calldata`: ~3,000 gas
+
+### When to Use Each
+
+| Situation | Use |
+|-----------|-----|
+| External function, read-only | `calldata` |
+| External function, need to modify | `memory` (copy first) |
+| Internal function | `memory` or `storage` pointer |
+| Returning data | `memory` |
+
+## Loop Optimization
+
+### Cache Array Length
+
+```solidity
+// BAD: Reads length every iteration
+function sumBad(uint256[] calldata arr) external pure returns (uint256 total) {
+    for (uint i = 0; i < arr.length; i++) {  // arr.length is MLOAD each time
+        total += arr[i];
+    }
+}
+
+// GOOD: Cache length
+function sumGood(uint256[] calldata arr) external pure returns (uint256 total) {
+    uint256 len = arr.length;
+    for (uint i = 0; i < len;) {
+        total += arr[i];
+        unchecked { ++i; }
+    }
+}
+```
+
+### Unchecked Increment
+
+```solidity
+// BAD: Checked increment (~80 gas per iteration)
+for (uint i = 0; i < 100; i++) { }
+
+// GOOD: Unchecked increment (~10 gas per iteration)
+for (uint i = 0; i < 100;) {
+    // loop body
+    unchecked { ++i; }
+}
+```
+
+The `unchecked` block is safe because `i` starts at 0 and we check `i < 100` before incrementing.
+
+### Pre-increment vs Post-increment
+
+```solidity
+// Slightly worse: returns old value, then increments
+i++
+
+// Slightly better: increments, then returns new value
+++i
+```
+
+Difference is minimal (~5 gas) but adds up in tight loops.
+
+### Loop Unrolling
+
+For fixed-size operations, unrolling can save gas:
+
+```solidity
+// Standard loop
+function sum4(uint256[4] calldata arr) external pure returns (uint256) {
+    uint256 total;
+    for (uint i = 0; i < 4; i++) {
+        total += arr[i];
+    }
+    return total;
+}
+
+// Unrolled
+function sum4Unrolled(uint256[4] calldata arr) external pure returns (uint256) {
+    return arr[0] + arr[1] + arr[2] + arr[3];
+}
+```
+
+Saves ~200 gas by eliminating loop overhead.
+
+## Function Optimization
+
+### Visibility and Gas
+
+| Visibility | Gas Cost | Notes |
+|------------|----------|-------|
+| `external` | Cheapest | Calldata access |
+| `public` | Higher | Copies calldata to memory |
+| `internal` | Inlined | No function call overhead |
+| `private` | Inlined | No function call overhead |
+
+```solidity
+// BAD: public with array
+function processBad(uint256[] memory data) public { }
+
+// GOOD: external with calldata
+function processGood(uint256[] calldata data) external { }
+```
+
+### Short-Circuit Evaluation
+
+Order conditions from cheapest/most-likely-false to most-expensive/most-likely-true:
+
+```solidity
+// BAD: Expensive check first
+if (expensiveLookup(x) && cheapCheck) { }
+
+// GOOD: Cheap check first
+if (cheapCheck && expensiveLookup(x)) { }
+
+// BAD: Likely-true first (always evaluates second condition)
+if (commonCase || rareCase) { }
+
+// GOOD: Likely-false first (often skips second condition)
+if (rareCase || commonCase) { }
+```
+
+### Custom Errors vs Require Strings
+
+```solidity
+// BAD: String errors (~50 bytes overhead per unique string)
+require(balance >= amount, "Insufficient balance");
+
+// GOOD: Custom errors (4 bytes selector + params)
+error InsufficientBalance(uint256 available, uint256 required);
+
+if (balance < amount) {
+    revert InsufficientBalance(balance, amount);
+}
+```
+
+**Savings**: ~100-500 gas per revert, plus reduced contract size.
+
+### Function Selector Optimization
+
+Functions are dispatched by selector (first 4 bytes of keccak256(signature)). Lower-numbered selectors are checked first:
+
+```solidity
+// Solidity checks selectors in order. If you have 50 functions,
+// the 50th function pays for 49 comparisons.
+
+// For hot paths, you can engineer selectors:
+// "transfer(address,uint256)" → 0xa9059cbb (happens to be good)
+// "transfer_oGd(address,uint256)" → 0x00000001 (engineered low selector)
+```
+
+Most codebases don't need this, but DEXs and high-frequency protocols sometimes engineer selectors.
+
+## Batch Operations
+
+### Batch Transfers
+
+```solidity
+// BAD: N separate calls
+for (uint i = 0; i < recipients.length; i++) {
+    token.transfer(recipients[i], amounts[i]);
+}
+
+// GOOD: Single batch call
+token.batchTransfer(recipients, amounts);
+
+// Implementation
+function batchTransfer(
+    address[] calldata recipients,
+    uint256[] calldata amounts
+) external {
+    require(recipients.length == amounts.length);
+
+    uint256 total;
+    for (uint i = 0; i < recipients.length;) {
+        _transfer(msg.sender, recipients[i], amounts[i]);
+        unchecked { ++i; }
+    }
+}
+```
+
+**Savings**: ~21,000 gas base cost saved per batch vs separate transactions.
+
+### Multicall Pattern
+
+Enable users to batch multiple operations:
+
+```solidity
+contract Multicall {
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint i = 0; i < data.length;) {
+            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
+            require(success);
+            results[i] = result;
+            unchecked { ++i; }
+        }
+    }
+}
+
+// Usage: batch approve + deposit + stake in one tx
+bytes[] memory calls = new bytes[](3);
+calls[0] = abi.encodeWithSelector(vault.approve.selector, amount);
+calls[1] = abi.encodeWithSelector(vault.deposit.selector, amount);
+calls[2] = abi.encodeWithSelector(vault.stake.selector, amount);
+vault.multicall(calls);
+```
+
+## EIP-4844: Blob Transactions
+
+For L2 rollups, EIP-4844 (Dencun upgrade) introduced blob-carrying transactions that provide cheap data availability:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DATA COST COMPARISON                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Calldata:  16 gas per non-zero byte, 4 gas per zero byte   │
+│  Blobs:     ~0.1 gas per byte (at typical blob gas prices)  │
+│                                                              │
+│  128 KB of data:                                            │
+│  • Calldata: ~2,000,000 gas                                 │
+│  • Blobs:    ~125,000 blob gas (separate fee market)        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Blobs are available to smart contracts via `BLOBHASH` but cannot be read directly—they're for proving data availability to L2s.
+
+<Note>
+EIP-4844 is specific to Ethereum. On Ethereum Classic, data availability continues through traditional calldata. L2s building on ETC use calldata or alternative DA solutions.
+</Note>
+
+## Assembly Optimizations
+
+For critical paths, assembly can provide significant savings:
+
+### Efficient Balance Check
+
+```solidity
+// Solidity: ~130 gas
+function hasBalance() external view returns (bool) {
+    return address(this).balance > 0;
+}
+
+// Assembly: ~40 gas
+function hasBalanceAsm() external view returns (bool result) {
+    assembly {
+        result := gt(selfbalance(), 0)
+    }
+}
+```
+
+### Efficient Hashing
+
+```solidity
+// Solidity: creates memory, copies data
+function hashPair(uint256 a, uint256 b) external pure returns (bytes32) {
+    return keccak256(abi.encodePacked(a, b));
+}
+
+// Assembly: uses scratch space
+function hashPairAsm(uint256 a, uint256 b) external pure returns (bytes32 result) {
+    assembly {
+        mstore(0x00, a)
+        mstore(0x20, b)
+        result := keccak256(0x00, 0x40)
+    }
+}
+```
+
+### Efficient Address Check
+
+```solidity
+// Solidity
+function isNonZero(address addr) external pure returns (bool) {
+    return addr != address(0);
+}
+
+// Assembly
+function isNonZeroAsm(address addr) external pure returns (bool result) {
+    assembly {
+        result := iszero(iszero(addr))
+    }
+}
+```
+
+## Immutable and Constant
+
+Constants and immutables are embedded in bytecode, avoiding SLOAD:
+
+```solidity
+contract GasComparison {
+    // SLOAD every access: 2,100 gas (cold)
+    address public owner;
+
+    // Embedded in bytecode: 3 gas
+    address public constant FACTORY = 0x1234567890123456789012345678901234567890;
+
+    // Embedded at deployment: 3 gas
+    address public immutable deployer;
+
+    constructor() {
+        deployer = msg.sender;
+    }
+}
+```
+
+Use `constant` for compile-time known values, `immutable` for deployment-time values.
+
+## Benchmarking with Foundry
+
+### Gas Snapshots
+
+```bash
+# Create baseline
+$ forge snapshot
+
+# Run after changes to compare
+$ forge snapshot --check
+
+# Diff output
+Running 10 tests for test/Gas.t.sol:GasTest
+[PASS] test_deposit() (gas: 54321)
+[PASS] test_withdraw() (gas: 43210)
+Gas difference: test_deposit() -1234 (-2.22%)
+```
+
+### Inline Gas Measurement
+
+```solidity
+function test_GasUsage() public {
+    uint256 gasBefore = gasleft();
+
+    // Operation to measure
+    vault.deposit{value: 1 ether}();
+
+    uint256 gasUsed = gasBefore - gasleft();
+    console.log("Gas used:", gasUsed);
+
+    // Assert gas is within budget
+    assertLt(gasUsed, 100_000, "Over budget");
+}
+```
+
+### Gas Reports
+
+```bash
+$ forge test --gas-report
+
+| src/Vault.sol:Vault contract |                 |        |        |        |         |
+|------------------------------|-----------------|--------|--------|--------|---------|
+| Function Name                | min             | avg    | median | max    | # calls |
+| deposit                      | 43521           | 54832  | 54832  | 66143  | 100     |
+| withdraw                     | 21432           | 28765  | 26543  | 41234  | 50      |
+```
+
+## Real-World Case Study: Uniswap V3 vs V2
+
+Uniswap V3 introduced concentrated liquidity but also many gas optimizations:
+
+| Operation | V2 Gas | V3 Gas | Savings |
+|-----------|--------|--------|---------|
+| Swap | ~100,000 | ~80,000 | 20% |
+| Add Liquidity | ~150,000 | ~200,000 | -33% (more complex) |
+
+V3 optimizations included:
+- Custom errors instead of require strings
+- Packed storage for positions
+- Transient storage for locks
+- Assembly for hot path math
+
+## Optimization Checklist
+
+```markdown
+## Storage
+- [ ] Packed structs and variables
+- [ ] Minimal storage writes
+- [ ] No redundant storage reads (cache in memory)
+- [ ] Use constants/immutables where possible
+
+## Functions
+- [ ] External over public for array params
+- [ ] Calldata over memory for read-only params
+- [ ] Custom errors over require strings
+- [ ] Short-circuit conditions optimally ordered
+
+## Loops
+- [ ] Cached array length
+- [ ] Unchecked increment
+- [ ] Consider unrolling for fixed sizes
+
+## General
+- [ ] Batch operations where possible
+- [ ] Avoid zero-to-nonzero storage writes in hot paths
+- [ ] Profile with forge gas reports
+- [ ] Compare gas snapshots before/after changes
+```
+
+## When Not to Optimize
+
+Premature optimization is the root of much unreadable code. Consider:
+
+1. **Is this path hot?** A function called once per day doesn't need micro-optimization
+2. **What's the actual savings?** 100 gas savings is ~$0.001 at 20 gwei
+3. **Does it hurt readability?** A 5% gas savings isn't worth unmaintainable code
+4. **Are you on L2?** Gas is 10-100x cheaper on L2s; optimize less aggressively
+
+Focus optimization effort on:
+- Functions called frequently (swaps, transfers)
+- Functions users pay for directly (deposits, withdrawals)
+- Batch operations that scale with input size
+
+## Summary
+
+Effective gas optimization requires understanding:
+
+1. **The cost hierarchy**: Storage >> Calls >> Memory >> Computation
+2. **Storage mechanics**: Packing, warm/cold access, refunds
+3. **Data locations**: Calldata vs memory vs storage
+4. **Loop patterns**: Caching, unchecked math, unrolling
+5. **Measurement**: Foundry snapshots and gas reports
+
+The goal isn't minimum gas at all costs—it's the right balance of gas efficiency, code clarity, and development time for your specific use case.
+
+Next, we explore token standards and their evolution, the building blocks upon which DeFi is constructed.

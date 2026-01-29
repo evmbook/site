@@ -1,0 +1,626 @@
+---
+title: Consensus & Finality
+description: Proof of Work, Proof of Stake, and how blockchains agree on state
+chapter: 7
+---
+
+# Consensus Mechanisms
+
+Consensus is how a decentralized network agrees on the state of the blockchain. It's the mechanism that allows thousands of nodes around the world to maintain the same transaction history without a central authority.
+
+This chapter explores the two primary consensus mechanisms in the EVM ecosystem: **Proof of Work (PoW)**, used by Ethereum Classic, and **Proof of Stake (PoS)**, used by Ethereum since The Merge.
+
+## The Byzantine Generals Problem
+
+Consensus mechanisms solve the Byzantine Generals Problem: how can distributed parties reach agreement when some parties may be faulty or malicious?
+
+### The Original Problem (1982)
+
+**Lamport, Shostak, and Pease (1982)** formalized this challenge in their paper "The Byzantine Generals Problem". The metaphor: Several Byzantine generals must coordinate an attack on a city. They communicate only via messengers, but some generals may be traitors who send contradictory messages.
+
+```
+General A: "Attack at dawn"  →  General B
+General A: "Retreat"         →  General C  (if A is traitor)
+
+How can honest generals coordinate?
+```
+
+**The fundamental result**: Consensus requires n ≥ 3f + 1 participants to tolerate f Byzantine (malicious) faults. With 3 generals and 1 traitor, consensus is impossible. With 4 generals and 1 traitor, the honest majority can outvote the traitor.
+
+### From Theory to Practice: PBFT (1999)
+
+**Practical Byzantine Fault Tolerance (PBFT)** by Castro and Liskov (1999) made BFT practical:
+
+```
+Three-Phase Protocol:
+1. Pre-prepare: Leader proposes a value
+2. Prepare: Validators acknowledge receipt (2f+1 needed)
+3. Commit: Validators commit to the value (2f+1 needed)
+
+View Change: If leader fails, elect new leader
+```
+
+PBFT works for small networks (~10-20 nodes) with known participants. It provides deterministic finality but requires O(n²) messages per consensus round.
+
+### Blockchain BFT: Different Approaches
+
+| System | BFT Type | Threshold | Finality | Setting |
+|--------|----------|-----------|----------|---------|
+| PBFT | Deterministic | 2/3 honest | Instant | Permissioned |
+| Bitcoin | Probabilistic | 50% honest | ~6 blocks | Permissionless |
+| Ethereum PoS | Hybrid (Casper) | 2/3 honest | ~12.8 min | Permissionless* |
+| Tendermint | Deterministic | 2/3 honest | Instant | Permissioned/PoS |
+| Avalanche | Probabilistic | ~80% honest | Seconds | Permissionless |
+
+*Permissionless to join, but validators form a known set for finality.
+
+In blockchain terms:
+- How do we know which transactions are valid?
+- How do we decide which block comes next?
+- How do we prevent double-spending?
+
+The solution involves making it economically or computationally expensive to misbehave, while rewarding honest behavior.
+
+## Proof of Work (PoW)
+
+Proof of Work was the original consensus mechanism for Bitcoin and Ethereum. It remains the consensus mechanism for Ethereum Classic.
+
+### Historical Origins
+
+Proof of Work wasn't invented by Satoshi Nakamoto. Its lineage spans nearly two decades:
+
+**Dwork & Naor (1992)** — First formalized PoW in "Pricing via Processing or Combatting Junk Mail". Their insight: computational work could meter access to systems without trusted third parties. Proposed to combat email spam.
+
+**Hashcash (1997)** — Adam Back implemented PoW for email anti-spam using SHA-1 partial hash collisions. Directly cited in Bitcoin's whitepaper.
+
+**b-money (1998)** — Wei Dai proposed decentralized currency where money creation required computational puzzles. Never implemented.
+
+**Bit Gold (1998/2005)** — Nick Szabo proposed "unforgeable" digital gold created through PoW with chained proofs. Conceptually close to Bitcoin.
+
+**RPOW (2004)** — Hal Finney created "Reusable Proofs of Work" attempting to make Hashcash stamps transferable. Relied on trusted servers.
+
+**Bitcoin (2009)** — Satoshi synthesized these ideas into a working system. The innovations:
+- Difficulty adjustment every 2016 blocks
+- Block rewards create new currency
+- Longest chain rule resolves forks
+- Economic incentives align behavior
+
+<Tip>
+Cynthia Dwork, co-author of the 1992 paper, is often overlooked in cryptocurrency histories despite co-inventing the core mechanism underlying Bitcoin, Ethereum (pre-Merge), and Ethereum Classic. She was awarded the National Medal of Science in 2025.
+</Tip>
+
+### How PoW Works
+
+Miners compete to find a nonce that, when combined with block data and hashed, produces a result below a target threshold:
+
+```
+hash(block_header, nonce) < target
+```
+
+The target adjusts to maintain a consistent block time (~13 seconds for ETC).
+
+### The Mining Process
+
+1. **Gather transactions** — Select transactions from the mempool
+2. **Build block header** — Include previous hash, merkle root, timestamp
+3. **Find valid nonce** — Brute-force search for valid hash
+4. **Broadcast block** — Share the solution with the network
+5. **Receive reward** — Earn block reward + transaction fees
+
+```solidity
+// Simplified concept
+function isValidBlock(Block memory block) public pure returns (bool) {
+    bytes32 hash = keccak256(abi.encodePacked(
+        block.previousHash,
+        block.merkleRoot,
+        block.timestamp,
+        block.nonce
+    ));
+    return uint256(hash) < block.difficulty;
+}
+```
+
+### ETCHash Algorithm
+
+Ethereum Classic uses ETCHash (a variant of Ethash) with these properties:
+
+- **Memory-hard** — Requires significant RAM (GPU friendly, ASIC resistant)
+- **DAG-based** — Uses a Directed Acyclic Graph that grows over time
+- **Adjusting difficulty** — Maintains ~13 second block times
+
+<Note>
+The DAG is the large dataset that miners must load into memory. It grows by 8MB per 30,000 blocks (about 5.2 days). The current DAG size can be found at https://minerstat.com/dag-size-calculator.
+</Note>
+
+### Hash Algorithm Evolution
+
+Different PoW algorithms emerged with different goals:
+
+| Algorithm | Used By | Design Goal | Hardware |
+|-----------|---------|-------------|----------|
+| SHA-256 | Bitcoin, BCH | Simple, ASIC-friendly | ASICs dominate |
+| Scrypt | Litecoin, DOGE | Memory-hard (initially) | ASICs exist |
+| Ethash | ETH (pre-Merge) | Memory-hard, ASIC-resistant | GPU-friendly |
+| ETCHash | ETC | Modified Ethash | GPU-friendly |
+| RandomX | Monero | CPU-optimized | CPUs preferred |
+| Equihash | Zcash | Memory-hard | ASIC-resistant |
+
+**ASIC Resistance Debate**: Memory-hard algorithms aimed to keep mining accessible to commodity hardware. However, specialized hardware eventually emerges for any algorithm if the market is large enough. The question is whether this centralization matters.
+
+### Mining Hardware Evolution
+
+Mining evolved through four hardware generations:
+
+```
+CPU (2009-2010) → GPU (2010-2013) → FPGA (2011-2012) → ASIC (2013+)
+
+Performance multipliers:
+CPU:  1 MH/s (baseline)
+GPU:  100 MH/s (~100x)
+FPGA: 500 MH/s (~500x)
+ASIC: 100+ TH/s (~100,000,000x for Bitcoin)
+```
+
+**GPU era** democratized mining—anyone with a gaming PC could participate. **ASIC era** industrialized it—profitable mining now requires specialized facilities with cheap electricity.
+
+For ETC (memory-hard): GPUs remain competitive because the large DAG requirement makes ASIC design more difficult and expensive.
+
+### Chain Selection: Longest Chain Rule
+
+When nodes receive multiple valid chains, they follow the one with the most accumulated work (highest total difficulty):
+
+```
+Chain A: Block 1 ─── Block 2 ─── Block 3
+                                    ↑
+Chain B: Block 1 ─── Block 2 ───────┘
+
+If Chain A has more total difficulty, all honest nodes will follow Chain A.
+```
+
+### PoW Security
+
+**51% Attack** — An attacker with majority hashpower can:
+- Reorder transactions
+- Double-spend
+- Censor transactions
+
+The defense is that acquiring 51% hashpower is extremely expensive.
+
+**Economics:**
+- Attacking ETC would cost millions in hardware and electricity
+- Attackers lose money if the attack reduces coin value
+- Honest mining is generally more profitable
+
+### Block Rewards
+
+Ethereum Classic's block reward schedule:
+
+| Era | Block Range | Reward |
+|-----|-------------|--------|
+| Era 1 | 0 - 5,000,000 | 5 ETC |
+| Era 2 | 5,000,001 - 10,000,000 | 4 ETC |
+| Era 3 | 10,000,001 - 15,000,000 | 3.2 ETC |
+| Era 4 | 15,000,001 - 20,000,000 | 2.56 ETC |
+| Era 5+ | 20,000,001+ | Continues decreasing by 20% |
+
+This creates a fixed monetary policy similar to Bitcoin's halving schedule.
+
+## ETC Olympia Upgrade
+
+The Olympia upgrade represents a significant evolution for Ethereum Classic, bringing modern transaction semantics while solving the challenge of decentralized protocol funding.
+
+### The Olympia ECIP Family
+
+Olympia is implemented through a coordinated family of Ethereum Classic Improvement Proposals:
+
+| ECIP | Title | Layer |
+|------|-------|-------|
+| **ECIP-1111** | EIP-1559 + EIP-3198 semantics | Consensus |
+| **ECIP-1112** | Treasury address and custody | Consensus |
+| **ECIP-1121** | Opcode alignment (PUSH0, MCOPY, etc.) | Consensus |
+| ECIP-1113-1120 | Governance frameworks | Application |
+
+The core consensus changes are ECIP-1111, 1112, and 1121. The governance ECIPs (1113-1120) define application-layer frameworks for treasury management but don't require hard fork changes.
+
+### ECIP-1111: EIP-1559 Transaction Semantics
+
+ECIP-1111 brings EIP-1559-style transactions to Ethereum Classic:
+
+- **Type 2 transactions**: `maxFeePerGas` and `maxPriorityFeePerGas` fields
+- **Base fee algorithm**: Adjusts based on block fullness, targeting 50% capacity
+- **EIP-3198**: Exposes `BASEFEE` opcode for contracts to read the current base fee
+
+The transaction format and fee calculation are identical to Ethereum's implementation. Existing wallets and tooling that support EIP-1559 will work seamlessly.
+
+### ECIP-1112: Treasury Funding Mechanism
+
+Here's where Olympia diverges from Ethereum. Instead of burning the base fee:
+
+```
+Ethereum (post-London):
+├── Base fee → BURNED
+└── Priority fee → Validator
+
+Ethereum Classic (post-Olympia):
+├── Base fee → Treasury address
+└── Priority fee → Miner
+```
+
+The treasury address is **consensus-recognized**—meaning nodes enforce that base fees go to this specific address. It's not a smart contract that could be exploited; it's built into the protocol rules.
+
+#### Why Treasury Funding?
+
+Decentralized networks face a fundamental challenge: how do you fund ongoing development without:
+1. A central foundation with pre-mined funds (centralization risk)
+2. Inflationary block rewards (dilutes existing holders)
+3. Relying on altruism (unsustainable)
+
+Olympia's solution: **redirect existing fee revenue**. Users already pay transaction fees. Rather than burning this value (which benefits all holders abstractly through scarcity) or giving it entirely to miners (who provide security but not development), Olympia allocates the base fee portion to protocol development.
+
+This creates sustainable funding without:
+- New token issuance
+- Increased fees for users
+- Central control of funds
+
+#### Treasury Governance
+
+ECIP-1113 through ECIP-1120 establish governance frameworks for treasury management. These operate at the application layer, using multisig contracts and community voting to direct funds. The consensus layer only enforces that fees go to the treasury address—how those funds are spent is determined by off-chain governance processes.
+
+### ECIP-1121: Opcode Alignment
+
+ECIP-1121 brings ETC's opcode set in line with Ethereum's recent additions:
+
+| Opcode | Hex | Description | EIP |
+|--------|-----|-------------|-----|
+| PUSH0 | 0x5F | Push zero to stack | EIP-3855 |
+| MCOPY | 0x5E | Memory copy | EIP-5656 |
+| TLOAD | 0x5C | Transient storage load | EIP-1153 |
+| TSTORE | 0x5D | Transient storage store | EIP-1153 |
+| BLOBHASH | 0x49 | Get blob hash | EIP-4844* |
+| BLOBBASEFEE | 0x4A | Get blob base fee | EIP-7516* |
+
+*Note: BLOBHASH and BLOBBASEFEE are included for bytecode compatibility but return zero on ETC since blob transactions (EIP-4844) are not implemented on proof-of-work chains.
+
+This opcode alignment ensures that smart contracts compiled for recent Ethereum versions will execute correctly on ETC. Without these opcodes, contracts using Solidity 0.8.20+ or newer tooling would fail to deploy.
+
+### Impact on Miners and Users
+
+**For users**: Transaction fee estimation becomes more predictable. The base fee algorithm smooths out fee spikes. Users get refunds when their `maxFeePerGas` exceeds the actual cost.
+
+**For miners**: Priority fees remain the incentive for transaction inclusion. Miners can still order transactions by priority fee and extract MEV. Block rewards (from the fixed emission schedule) continue unchanged.
+
+**For developers**: Modern tooling works out of the box. Contracts can read `BASEFEE`. New opcodes enable gas optimizations (PUSH0 saves gas vs PUSH1 0x00).
+
+### Philosophical Implications
+
+Olympia represents ETC's approach to evolution: adopt proven improvements (EIP-1559's UX benefits, modern opcodes) while charting a distinct path on economic policy (treasury vs burn).
+
+This is consistent with ETC's values:
+- **Immutability**: No irregular state changes; the chain history remains unaltered
+- **Sound money**: Fixed emission schedule unchanged; no new issuance
+- **Decentralization**: Treasury enables funding without central control
+
+## Proof of Stake (PoS)
+
+Proof of Stake replaces computational work with economic stake. Ethereum transitioned to PoS in September 2022 ("The Merge").
+
+### How PoS Works
+
+Validators stake 32 ETH as collateral. The protocol randomly selects validators to propose and attest to blocks:
+
+1. **Proposer** — One validator is chosen to propose the next block
+2. **Attesters** — Other validators vote on the block's validity
+3. **Finality** — After enough attestations, blocks become finalized
+4. **Rewards** — Honest validators earn rewards
+5. **Slashing** — Dishonest validators lose stake
+
+### Validator Lifecycle
+
+```
+       ┌─────────────┐
+       │   Deposit   │ (32 ETH)
+       │   32 ETH    │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │   Pending   │ (wait for activation queue)
+       │   Queue     │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │   Active    │ (proposing & attesting)
+       │  Validator  │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │    Exit     │ (voluntary or slashed)
+       │             │
+       └──────┬──────┘
+              ▼
+       ┌─────────────┐
+       │  Withdraw   │ (get stake back)
+       │             │
+       └─────────────┘
+```
+
+### Slots and Epochs
+
+Time is divided into:
+- **Slots** — 12 seconds each, one block per slot
+- **Epochs** — 32 slots (6.4 minutes)
+
+Each slot, one validator proposes a block and ~1/32 of validators attest.
+
+### Finality
+
+Unlike PoW (probabilistic finality), PoS provides:
+- **Justified** — After 1 epoch (~6.4 min), very hard to revert
+- **Finalized** — After 2 epochs (~12.8 min), economically impossible to revert
+
+### Slashing Conditions
+
+Validators are slashed (lose stake) for:
+
+1. **Double voting** — Attesting to two different blocks in the same slot
+2. **Surround voting** — Attesting in a way that contradicts prior attestations
+3. **Proposer equivocation** — Proposing two different blocks in the same slot
+
+Slashing burns 1/32 of stake immediately, with more burned if many validators are slashed simultaneously.
+
+### PoS Security
+
+**34% Attack** — An attacker with 34%+ stake can:
+- Prevent finality
+- Censor transactions
+
+**51%+ Attack** — An attacker with 51%+ stake can:
+- Control block production
+- Reorder transactions
+
+**Defense:**
+- Slashing makes attacks expensive
+- Social layer can coordinate responses
+- Inactivity leak degrades inactive validators
+
+### Extending PoS Security: Restaking
+
+**Restaking** (2023-2024) extends staked ETH's security to additional protocols:
+
+```
+Ethereum Base Layer
+    └── Validator stakes 32 ETH
+        └── Opts into Eigenlayer
+            └── Secures additional services (AVSs)
+                ├── Data availability layers
+                ├── Cross-chain bridges
+                ├── Oracles
+                └── Coprocessors
+```
+
+Validators accept additional slashing conditions in exchange for additional rewards. This "rents out" their stake to secure multiple systems simultaneously.
+
+**Liquid Restaking Tokens (LRTs)** like eETH and ezETH represent restaked positions, enabling DeFi composability while earning multiple yield layers.
+
+<Warning>
+Restaking introduces additional risk. Validators are slashable by ALL opted-in services. A failure in one AVS can trigger slashing from multiple sources simultaneously.
+</Warning>
+
+## Modern Consensus Variants
+
+Beyond PoW and PoS, other approaches have emerged:
+
+### Tendermint BFT (Cosmos)
+
+Adapted PBFT for blockchain with instant finality:
+- 2/3 supermajority commits finalize blocks instantly
+- No probabilistic waiting
+- Used by Cosmos Hub, many appchains
+
+### Avalanche Consensus
+
+Uses repeated random sampling instead of all-to-all communication:
+- Validators query random subsets
+- Probabilistic finality in seconds
+- Scales better than PBFT (sub-O(n²) messages)
+
+### Tower BFT (Solana)
+
+Combines Proof of History with BFT:
+- PoH provides cryptographic timestamps
+- Reduces communication overhead
+- Enables 400ms block times
+
+### HotStuff (2019)
+
+Linear BFT protocol (O(n) messages per round):
+- Foundation for Diem/Libra (defunct)
+- Used in some L2 and alternative L1 designs
+- Three-phase commit with rotating leaders
+
+| Consensus | Finality | Messages | Validators | Best For |
+|-----------|----------|----------|------------|----------|
+| PBFT | Instant | O(n²) | <100 | Permissioned |
+| Nakamoto PoW | Probabilistic | O(n) | Unlimited | Permissionless |
+| Casper FFG | ~12.8 min | O(n) | ~1M | Large PoS |
+| Tendermint | Instant | O(n²) | <200 | Appchains |
+| Avalanche | Seconds | O(k log n) | Thousands | High throughput |
+| HotStuff | Instant | O(n) | <100 | Linear BFT |
+
+## PoW vs PoS Comparison
+
+| Aspect | PoW (Ethereum Classic) | PoS (Ethereum) |
+|--------|------------------------|----------------|
+| **Block time** | ~13 seconds | 12 seconds |
+| **Finality** | Probabilistic (~10 min) | Economic (~13 min) |
+| **Energy use** | High | Low (~99.95% less) |
+| **Entry cost** | Mining hardware | 32 ETH stake |
+| **Centralization risk** | Mining pools | Staking pools |
+| **Attack cost** | Hardware + electricity | Stake at risk |
+| **Philosophy** | Immutable, original Ethereum | Adaptive, evolving |
+
+![Proof of Work vs Proof of Stake](/images/diagrams/ch07-pow-vs-pos.svg)
+
+## The Fork: ETH vs ETC
+
+In 2016, The DAO hack led to a contentious hard fork:
+
+- **Ethereum (ETH)** — Forked to return stolen funds, later moved to PoS
+- **Ethereum Classic (ETC)** — Maintained original chain, stayed on PoW
+
+Both chains share the same EVM specification and can run the same smart contracts. The difference is in consensus, not computation.
+
+<Note>
+This philosophical difference is fundamental:
+- **ETH** prioritizes adaptability and sustainability
+- **ETC** prioritizes immutability and original principles
+
+Neither is "wrong" — they represent different values in decentralized systems.
+</Note>
+
+## Smart Contract Implications
+
+Consensus mechanisms affect smart contract development in subtle ways:
+
+### Timestamp Manipulation
+
+- **PoW**: Miners can manipulate timestamps by ~15 seconds
+- **PoS**: Validators have less flexibility, slots are 12 seconds
+
+### Block Producer Behavior
+
+- **PoW**: Miners can front-run by including their own transactions
+- **PoS**: Proposer-Builder Separation (PBS) mitigates some MEV
+
+### Finality Considerations
+
+```solidity
+// How many confirmations to wait?
+
+// On ETC (PoW): Wait for ~50 confirmations (~10 minutes)
+// On ETH (PoS): Wait for finality (~13 minutes, or 32 blocks)
+
+function isConfirmed(uint256 blockNumber) public view returns (bool) {
+    // ETC: 50 confirmations
+    return block.number >= blockNumber + 50;
+
+    // ETH: Could check finality checkpoint
+    // return block.number >= blockNumber + 32;
+}
+```
+
+### `block.difficulty` / `block.prevrandao`
+
+```solidity
+// This behaves differently on PoW vs PoS!
+
+function getSomeValue() public view returns (uint256) {
+    // On ETC (PoW): Returns mining difficulty
+    // On ETH (PoS): Returns random value from beacon chain
+    return block.difficulty;
+}
+```
+
+## Running a Validator / Miner
+
+### Mining ETC (PoW)
+
+Requirements:
+- GPU with 4GB+ VRAM (for DAG)
+- Mining software (ethminer, T-Rex, etc.)
+- Full node or mining pool
+
+```bash
+# Start Core Geth with mining
+geth --classic --mine --miner.etherbase=0xYourAddress
+```
+
+### Staking ETH (PoS)
+
+Requirements:
+- 32 ETH per validator
+- Execution client (Geth, Nethermind, etc.)
+- Consensus client (Lighthouse, Prysm, etc.)
+- 24/7 reliable uptime
+
+Or use staking pools (Lido, Rocket Pool) for smaller amounts.
+
+## Conclusions
+
+Consensus is the foundation that makes trustless blockchains possible:
+
+- **Proof of Work** — Security through computational expense
+- **Proof of Stake** — Security through economic stake at risk
+
+Both mechanisms secure the same EVM — your smart contracts work identically on either chain. The choice between them reflects different priorities:
+
+- PoW: Proven security model, energy-intensive, original design
+- PoS: Energy-efficient, faster finality, evolving design
+
+Understanding consensus helps you write better smart contracts by knowing:
+- How block producers are selected
+- What timing guarantees exist
+- How finality affects your application
+- What attacks are possible and how to mitigate them
+
+## Common Misattributions
+
+### "Satoshi Invented Proof of Work"
+
+**Reality**: Dwork and Naor formalized PoW in 1992—16 years before Bitcoin. Adam Back implemented Hashcash in 1997, directly cited in Bitcoin's whitepaper. Satoshi synthesized these ideas into a working consensus system, but didn't invent the concept.
+
+### "The Byzantine Generals Problem Was Unsolved Before Bitcoin"
+
+**Reality**: Lamport et al. solved it in 1982 for permissioned settings. PBFT (1999) made it practical. Satoshi's innovation was solving BFT in a **permissionless** setting using PoW—different from claiming the problem was previously unsolved.
+
+### "PoW Energy Is Wasted"
+
+**Reality**: The energy expenditure creates security—it's the cost of trustless consensus. Whether this trade-off is worthwhile depends on one's values, but calling it purely wasteful misrepresents its function. The energy literally represents the cost to attack the network.
+
+### "PoS Is More Decentralized Than PoW"
+
+**Reality**: Both face centralization pressures:
+- PoW centralizes in mining pools and ASIC manufacturers
+- PoS centralizes in large staking pools and liquid staking protocols
+
+Neither inherently guarantees decentralization; both require ongoing effort to maintain it.
+
+## Finality Models Explained
+
+Finality determines when transactions become irreversible:
+
+### Probabilistic Finality (PoW)
+
+```
+Confirmations:    1      3      6      12     50+
+Risk of revert:  ~10%   ~2%   ~0.1%  ~0.001% ~0%
+
+Rule of thumb for ETC:
+- Low value: 6 confirmations (~1 minute)
+- Medium value: 12 confirmations (~2.5 minutes)
+- High value: 50+ confirmations (~10 minutes)
+```
+
+Security comes from the cumulative work required to rewrite history. Each new block makes reverting exponentially more expensive.
+
+### Economic Finality (PoS)
+
+```
+Ethereum finality timeline:
+├── 0 min:  Block included (unfinalized)
+├── 6.4 min: First epoch boundary (justified)
+├── 12.8 min: Second epoch (finalized)
+└── After finality: Revert requires burning 1/3+ of stake (~$20B+)
+```
+
+Finality is deterministic—once finalized, reverting would require slashing at least 1/3 of all staked ETH. The cost is known and astronomical.
+
+### Instant Finality (Tendermint, Some L2s)
+
+Blocks are finalized as soon as 2/3+ of validators sign. No waiting period, but:
+- Requires all validators to be available
+- Network can halt if <2/3 are online
+- Trade-off: Liveness vs. instant finality
+
+<Note>
+When building cross-chain applications, account for different finality models. Bridging from Ethereum PoS to an instant-finality chain should wait for Ethereum finality (~13 minutes) before confirming on the destination chain.
+</Note>

@@ -1,0 +1,804 @@
+---
+title: Smart Contract Security
+description: Common vulnerabilities, attack patterns, and defensive programming
+chapter: 10
+---
+
+# Smart Contract Security
+
+Security is perhaps the most important consideration when writing smart contracts. In the field of smart contract programming, mistakes can be very costly and easily exploited. Smart contracts are immutable once deployed — you cannot patch them like traditional software. Moreover, they often control significant financial value, making them attractive targets for attackers.
+
+This chapter covers common security vulnerabilities, attack patterns, and defensive programming techniques for smart contracts on both Ethereum Classic and Ethereum.
+
+## Security Best Practices
+
+Before diving into specific vulnerabilities, let's establish foundational security practices:
+
+### Minimalism and Reuse
+
+- Keep contracts simple. Complexity is the enemy of security.
+- Reuse well-tested code. Use established libraries like OpenZeppelin.
+- Follow the principle of least privilege — contracts should have only the capabilities they need.
+
+### Code Quality
+
+- Use the latest stable compiler version.
+- Enable all compiler warnings and address them.
+- Document all functions, state variables, and expected behaviors.
+- Use consistent naming conventions.
+
+### Testing and Auditing
+
+- Write comprehensive unit tests covering edge cases.
+- Test with fuzz testing and property-based testing (Foundry excels at this).
+- Get professional security audits for contracts handling significant value.
+- Consider formal verification for critical contracts.
+
+### Upgrade Considerations
+
+- Design contracts with upgradability in mind, or explicitly make them immutable.
+- If using proxy patterns, understand the risks they introduce.
+- Document your upgrade process and have it audited.
+
+## Common Vulnerabilities
+
+### Reentrancy
+
+Reentrancy is one of the most dangerous vulnerabilities. It occurs when a contract makes an external call to another contract before updating its state, allowing the called contract to "re-enter" the calling contract.
+
+**The DAO Hack Example:**
+
+```solidity
+// VULNERABLE - DO NOT USE
+contract VulnerableBank {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public {
+        uint256 amount = balances[msg.sender];
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success);
+        balances[msg.sender] = 0; // State updated AFTER external call
+    }
+}
+```
+
+An attacker can create a contract that calls back into `withdraw()` when it receives ether, draining the contract before the balance is set to zero.
+
+**Defense: Checks-Effects-Interactions Pattern:**
+
+```solidity
+// SECURE
+contract SecureBank {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public {
+        uint256 amount = balances[msg.sender];
+        require(amount > 0, "No balance");
+
+        // 1. Checks - verify conditions
+        // 2. Effects - update state BEFORE external call
+        balances[msg.sender] = 0;
+
+        // 3. Interactions - external call LAST
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+}
+```
+
+**Defense: ReentrancyGuard:**
+
+```solidity
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SecureBank is ReentrancyGuard {
+    mapping(address => uint256) public balances;
+
+    function withdraw() public nonReentrant {
+        uint256 amount = balances[msg.sender];
+        balances[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success);
+    }
+}
+```
+
+### Integer Overflow and Underflow
+
+Prior to Solidity 0.8.0, arithmetic operations could overflow or underflow silently.
+
+```solidity
+// Solidity < 0.8.0 - VULNERABLE
+uint8 x = 255;
+x = x + 1; // x is now 0, not 256!
+
+uint8 y = 0;
+y = y - 1; // y is now 255, not -1!
+```
+
+**Defense:** Use Solidity 0.8.0 or later, which has built-in overflow checking:
+
+```solidity
+// Solidity >= 0.8.0 - SAFE
+pragma solidity ^0.8.0;
+
+uint8 x = 255;
+x = x + 1; // Reverts with "Arithmetic overflow"
+```
+
+For intentional wrapping behavior, use `unchecked` blocks:
+
+```solidity
+unchecked {
+    uint8 x = 255;
+    x = x + 1; // x is 0, no revert
+}
+```
+
+### Access Control Issues
+
+Insufficient access control allows unauthorized users to execute privileged functions.
+
+```solidity
+// VULNERABLE - anyone can call
+function setOwner(address newOwner) public {
+    owner = newOwner;
+}
+```
+
+**Defense: Proper Access Control:**
+
+```solidity
+// Using modifier
+modifier onlyOwner() {
+    require(msg.sender == owner, "Not owner");
+    _;
+}
+
+function setOwner(address newOwner) public onlyOwner {
+    owner = newOwner;
+}
+```
+
+**Defense: OpenZeppelin Access Control:**
+
+```solidity
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract MyContract is Ownable, AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
+    function adminFunction() public onlyRole(ADMIN_ROLE) {
+        // Only addresses with ADMIN_ROLE can call
+    }
+}
+```
+
+### tx.origin Phishing
+
+Using `tx.origin` for authorization is dangerous because it refers to the original transaction sender, not the immediate caller.
+
+```solidity
+// VULNERABLE
+function transferOwnership(address newOwner) public {
+    require(tx.origin == owner); // DANGEROUS!
+    owner = newOwner;
+}
+```
+
+An attacker can trick the owner into calling a malicious contract, which then calls `transferOwnership`. Since `tx.origin` is still the owner, the check passes.
+
+**Defense: Always use `msg.sender`:**
+
+```solidity
+function transferOwnership(address newOwner) public {
+    require(msg.sender == owner);
+    owner = newOwner;
+}
+```
+
+### Denial of Service (DoS)
+
+#### DoS with Revert
+
+If a contract iterates over an array and makes external calls, a malicious recipient can cause the entire transaction to fail:
+
+```solidity
+// VULNERABLE
+function distributeRewards(address[] calldata recipients) public {
+    for (uint i = 0; i < recipients.length; i++) {
+        // If ANY recipient reverts, ALL distributions fail
+        payable(recipients[i]).transfer(reward);
+    }
+}
+```
+
+**Defense: Pull over Push:**
+
+```solidity
+// SECURE - pull pattern
+mapping(address => uint256) public pendingRewards;
+
+function calculateRewards(address[] calldata recipients) public {
+    for (uint i = 0; i < recipients.length; i++) {
+        pendingRewards[recipients[i]] += reward;
+    }
+}
+
+function claimReward() public {
+    uint256 amount = pendingRewards[msg.sender];
+    pendingRewards[msg.sender] = 0;
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success);
+}
+```
+
+#### DoS with Block Gas Limit
+
+Unbounded loops can exceed the block gas limit:
+
+```solidity
+// VULNERABLE - may exceed gas limit
+function processAll() public {
+    for (uint i = 0; i < users.length; i++) {
+        processUser(users[i]);
+    }
+}
+```
+
+**Defense: Pagination and Limits:**
+
+```solidity
+function processBatch(uint256 start, uint256 count) public {
+    uint256 end = start + count;
+    if (end > users.length) end = users.length;
+
+    for (uint i = start; i < end; i++) {
+        processUser(users[i]);
+    }
+}
+```
+
+### Front-Running
+
+On public blockchains, pending transactions are visible in the mempool. Attackers can see profitable transactions and submit their own with higher gas prices to get executed first.
+
+**Common Front-Running Attacks:**
+- DEX trades: Attacker buys before a large buy order, then sells after
+- NFT mints: Attacker mints before a specific token they want
+- Liquidations: Attacker front-runs liquidation for the reward
+
+**Defenses:**
+- Commit-reveal schemes: Hash your action first, reveal later
+- Flashbots/private mempools: Submit transactions privately
+- Slippage protection: Set maximum acceptable price impact
+- Batch auctions: Process all orders at the same price
+
+### Timestamp Dependence
+
+Block timestamps can be manipulated by block producers (miners on PoW, validators on PoS) within certain limits (typically ~15 seconds).
+
+```solidity
+// VULNERABLE - can be manipulated
+function lottery() public {
+    if (block.timestamp % 10 == 0) {
+        winner = msg.sender; // Miner can manipulate to win
+    }
+}
+```
+
+**Defense:** Don't use timestamps for randomness. Use Chainlink VRF or similar oracle-based randomness for high-value decisions.
+
+### Default Visibility
+
+In older Solidity versions, functions without visibility specifiers defaulted to `public`.
+
+```solidity
+// Solidity < 0.5.0 - this is PUBLIC by default!
+function internalLogic() {
+    // Anyone can call this!
+}
+```
+
+**Defense:** Always specify visibility explicitly. Solidity 0.5.0+ requires explicit visibility.
+
+```solidity
+function internalLogic() internal {
+    // Now properly internal
+}
+```
+
+### Uninitialized Storage Pointers
+
+Local storage variables can point to unexpected storage slots if not initialized:
+
+```solidity
+// VULNERABLE in older Solidity
+function processData(uint256 x) public {
+    uint256[] data; // Uninitialized storage pointer!
+    data.push(x);   // May overwrite slot 0 (like owner!)
+}
+```
+
+**Defense:** Always initialize storage pointers or use memory:
+
+```solidity
+function processData(uint256 x) public {
+    uint256[] storage data = myArray; // Explicit storage reference
+    // OR
+    uint256[] memory tempData = new uint256[](1); // Use memory
+}
+```
+
+## Security Tools
+
+### Static Analysis
+
+**Slither** — Fast static analysis framework:
+```bash
+slither MyContract.sol
+```
+
+**Mythril** — Security analysis tool using symbolic execution:
+```bash
+myth analyze MyContract.sol
+```
+
+### Fuzzing
+
+**Foundry Fuzz Testing:**
+```solidity
+function testFuzz_Withdraw(uint256 amount) public {
+    vm.assume(amount <= address(this).balance);
+    // Foundry will try many random values for amount
+    bank.withdraw(amount);
+}
+```
+
+### Formal Verification
+
+For critical contracts, formal verification can mathematically prove correctness:
+- Certora Prover
+- Solidity SMTChecker (built-in)
+- K Framework
+
+## Flash Loan Attacks
+
+Flash loans allow borrowing large amounts without collateral, as long as the loan is repaid within the same transaction. While legitimate for arbitrage and liquidations, they've enabled numerous exploits.
+
+### Flash Loan Attack Taxonomy
+
+| Attack Type | Mechanism | Example Exploits |
+|-------------|-----------|------------------|
+| **Oracle manipulation** | Borrow → skew AMM price → exploit dependent protocol | bZx (2020), Harvest (2020) |
+| **Governance attacks** | Borrow → acquire votes → pass malicious proposal | Beanstalk (2022) |
+| **Liquidation manipulation** | Borrow → crash collateral price → self-liquidate profitably | Various |
+| **Reentrancy amplification** | Borrow → trigger reentrancy with massive capital | Cream Finance (2021) |
+| **Logic exploitation** | Borrow → trigger edge case with large values | Euler (2023) |
+
+### The Flash Loan Attack Pattern
+
+```solidity
+// Attack pattern (conceptual)
+contract FlashLoanAttacker {
+    function attack() external {
+        // 1. Borrow massive amount (e.g., $100M)
+        flashLoanProvider.flashLoan(100_000_000e18);
+    }
+
+    function executeOperation(uint256 amount) external {
+        // 2. Use borrowed funds to manipulate markets
+        // - Manipulate oracle prices
+        // - Exhaust liquidity pools
+        // - Trigger bad liquidations
+
+        // 3. Profit from the manipulation
+
+        // 4. Repay loan (must happen in same tx)
+        token.transfer(msg.sender, amount + fee);
+    }
+}
+```
+
+### Flash Loan Attack Case Studies
+
+**bZx Attacks (February 2020)**:
+The first major flash loan exploits, occurring days apart:
+1. Attack 1: Borrowed ETH → opened leveraged short → manipulated oracle via Uniswap → profit
+2. Attack 2: Borrowed sUSD → pumped sUSD on Kyber → used inflated collateral to borrow ETH
+Combined loss: ~$1M
+
+**Harvest Finance (October 2020)**:
+- Borrowed USDC/USDT via flash loan
+- Repeatedly swapped large amounts to manipulate Curve pool prices
+- Deposited into Harvest at manipulated (lower) price
+- Withdrew at normal price
+- Loss: ~$34M in 7 minutes
+
+**Beanstalk Governance (April 2022)**:
+- Borrowed governance tokens (BEAN) via flash loan
+- Proposed and voted for malicious governance proposal in single transaction
+- Drained protocol treasury before timelock could prevent
+- Loss: ~$182M
+
+### Defense Against Flash Loan Attacks
+
+1. **Time-Weighted Average Prices (TWAP)** — Don't rely on spot prices
+2. **Multi-block oracle reads** — Require prices from multiple blocks
+3. **Protocol-level checks** — Ensure state changes make economic sense
+4. **Flash loan guards** — Detect and block same-transaction attacks
+5. **Governance timelocks with snapshot voting** — Prevent single-transaction governance attacks
+
+```solidity
+// Simple flash loan guard
+uint256 private _lastBlockNumber;
+
+modifier noFlashLoan() {
+    require(block.number > _lastBlockNumber, "No flash loans");
+    _;
+    _lastBlockNumber = block.number;
+}
+
+// Governance protection: require holding tokens before proposal
+modifier requirePriorTokenBalance(address proposer) {
+    require(
+        getPriorVotes(proposer, block.number - 1) >= proposalThreshold,
+        "Must hold tokens for at least 1 block"
+    );
+    _;
+}
+```
+
+## MEV (Maximal Extractable Value) Attacks
+
+MEV refers to profit extractable by reordering, inserting, or censoring transactions within a block. While some MEV is beneficial (arbitrage improves market efficiency), much of it harms users.
+
+### MEV Attack Types
+
+| Attack | Mechanism | User Impact |
+|--------|-----------|-------------|
+| **Sandwich attack** | Frontrun + backrun user's trade | User gets worse price |
+| **Frontrunning** | Copy user's profitable tx with higher gas | User's opportunity stolen |
+| **Backrunning** | Execute immediately after profitable tx | Liquidations, arbitrage captured |
+| **Time-bandit attack** | Reorg chain to capture past MEV | Consensus instability |
+
+### Sandwich Attack Deep Dive
+
+The most common MEV attack targeting users:
+
+```
+1. Victim submits: Swap 100 ETH → TOKEN
+2. Attacker frontruns: Buy TOKEN (price increases)
+3. Victim's tx executes: Gets fewer TOKEN than expected
+4. Attacker backruns: Sell TOKEN at higher price (profit)
+
+Victim paid for the attacker's profit via worse execution.
+```
+
+**Example on-chain:**
+```
+Block N:
+  Tx 1: Attacker buys 1000 TOKEN for 10 ETH
+  Tx 2: Victim swaps 100 ETH, gets 9500 TOKEN (expected 10000)
+  Tx 3: Attacker sells 1000 TOKEN for 10.5 ETH
+
+Attacker profit: 0.5 ETH
+Victim loss: ~500 TOKEN worth of slippage
+```
+
+### MEV Protection Strategies
+
+| Strategy | How It Works | Trade-off |
+|----------|--------------|-----------|
+| **Private mempools** | Submit to Flashbots, MEV Blocker | Centralization risk |
+| **Batch auctions** | CoW Protocol style—orders matched at uniform price | Higher latency |
+| **Commit-reveal** | Hide transaction details until execution | UX complexity |
+| **MEV-Share** | Searchers share profits with users | Partial protection |
+| **Tight slippage** | Limit acceptable price impact | May fail in volatile markets |
+
+```solidity
+// User protection: Set tight slippage
+// Maximum 0.5% slippage
+uint256 minAmountOut = expectedAmount * 995 / 1000;
+router.swapExactTokensForTokens(
+    amountIn,
+    minAmountOut,  // Sandwicher profit capped at 0.5%
+    path,
+    to,
+    deadline
+);
+```
+
+## Oracle Manipulation
+
+Protocols that rely on on-chain oracles are vulnerable to price manipulation. This is often combined with flash loans for maximum impact.
+
+### Common Oracle Vulnerabilities
+
+**Spot Price Reliance:**
+```solidity
+// VULNERABLE - spot price can be manipulated
+function getCollateralValue(uint256 tokenAmount) public view returns (uint256) {
+    uint256 spotPrice = uniswapPair.getReserves().reserve0 / reserve1;
+    return tokenAmount * spotPrice; // Flash loans can manipulate this
+}
+```
+
+### Oracle Manipulation Techniques
+
+| Technique | How It Works | Defense |
+|-----------|--------------|---------|
+| **AMM reserve manipulation** | Large swap skews reserves | Use TWAP, not spot |
+| **Low-liquidity attacks** | Manipulate thin markets | Require minimum liquidity |
+| **Multi-block attacks** | Manipulate across blocks | Use longer TWAP windows |
+| **Delayed oracle attacks** | Exploit stale prices | Check oracle freshness |
+
+### Chainlink Best Practices
+
+```solidity
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+function getCollateralValue(uint256 tokenAmount) public view returns (uint256) {
+    (
+        uint80 roundId,
+        int256 price,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) = chainlinkFeed.latestRoundData();
+
+    // 1. Check for valid price
+    require(price > 0, "Invalid price");
+
+    // 2. Check for stale data (e.g., no update in 1 hour)
+    require(block.timestamp - updatedAt < 3600, "Stale price");
+
+    // 3. Check round completeness
+    require(answeredInRound >= roundId, "Round not complete");
+
+    return tokenAmount * uint256(price) / 1e8;
+}
+```
+
+### Uniswap V3 TWAP Oracle
+
+```solidity
+// Using Uniswap V3 TWAP (manipulation-resistant)
+function getTWAP(address pool, uint32 twapInterval) public view returns (uint256) {
+    uint32[] memory secondsAgos = new uint32[](2);
+    secondsAgos[0] = twapInterval;  // e.g., 1800 for 30-min TWAP
+    secondsAgos[1] = 0;             // now
+
+    (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pool).observe(secondsAgos);
+
+    int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+    int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(uint56(twapInterval)));
+
+    return OracleLibrary.getQuoteAtTick(
+        arithmeticMeanTick,
+        1e18,  // base amount
+        token0,
+        token1
+    );
+}
+```
+
+<Note>
+**TWAP Duration Trade-off**: Longer TWAP windows are more manipulation-resistant but less responsive to legitimate price changes. 30 minutes is common for lending protocols; shorter windows for DEX aggregators.
+</Note>
+
+## Notable Exploits: Case Studies
+
+Learning from real exploits is essential for security awareness.
+
+### Curve Finance (July 2023) — Compiler Bug
+
+**Loss:** ~$70 million
+
+**What happened:** A reentrancy vulnerability in the Vyper compiler (versions 0.2.15-0.3.0) allowed attackers to drain several Curve pools. The compiler incorrectly implemented reentrancy locks.
+
+**Key lesson:** Compiler bugs bypass code review. The Solidity/Vyper code looked correct, but the compiled bytecode had the vulnerability.
+
+```python
+# Vyper code appeared safe
+@nonreentrant('lock')
+def remove_liquidity():
+    # ... implementation
+```
+
+The `@nonreentrant` decorator was broken in affected Vyper versions.
+
+**Defenses:**
+- Pin compiler versions explicitly
+- Test with multiple compiler versions
+- Monitor compiler security advisories
+- Consider Solidity (more battle-tested) for high-value contracts
+
+### Euler Finance (March 2023) — Flash Loan + Logic Bug
+
+**Loss:** ~$197 million (later returned by attacker)
+
+**What happened:** Attacker exploited a combination of:
+1. Missing health check in `donateToReserves()` function
+2. Flash loans to inflate collateral value
+3. Self-liquidation for profit
+
+**Simplified vulnerability:**
+```solidity
+// VULNERABLE - no health check after donation
+function donateToReserves(uint256 amount) external {
+    // Donation reduces sender's collateral
+    balances[msg.sender] -= amount;
+    reserves += amount;
+    // Missing: require(isHealthy(msg.sender));
+}
+```
+
+**Defenses:**
+- Health checks after every balance-changing operation
+- Invariant testing: "No operation should leave users in a liquidatable state without them being liquidated"
+- Integration tests simulating attack patterns
+
+### Nomad Bridge (August 2022) — Improper Initialization
+
+**Loss:** ~$190 million
+
+**What happened:** After an upgrade, the trusted root was accidentally set to 0x00. Since uninitialized mappings return 0, any message was considered valid.
+
+```solidity
+// VULNERABLE - after misconfigured upgrade
+function process(bytes memory message) external {
+    bytes32 root = messages[message].root;
+    // root defaults to 0x00 for unknown messages
+    require(acceptableRoot(root)); // 0x00 was accidentally marked acceptable!
+    // Process the (fake) message...
+}
+```
+
+**Defenses:**
+- Never accept zero values as valid
+- Test upgrade procedures thoroughly
+- Multi-sig + timelock for upgrades
+- Pausability for emergencies
+
+### Ronin Bridge (March 2022) — Compromised Keys
+
+**Loss:** ~$620 million
+
+**What happened:** Attackers compromised 5 of 9 validator private keys through social engineering. The bridge's security relied entirely on key security.
+
+**Defenses:**
+- Decentralize validator sets (more keys, distributed globally)
+- Hardware security modules (HSMs) for signing
+- Operational security training
+- Monitoring for unusual signing patterns
+- Consider optimistic bridges with fraud proofs
+
+### Wormhole Bridge (February 2022) — Signature Bypass
+
+**Loss:** ~$320 million
+
+**What happened:** Attacker bypassed signature verification by exploiting how the bridge verified guardian signatures. They could create valid-looking attestations without actual guardian signatures.
+
+**Defenses:**
+- Multiple independent verification layers
+- Formal verification of signature schemes
+- Bug bounties focused on core verification logic
+
+## Security Audit Process
+
+1. **Documentation Review** — Understand intended behavior
+2. **Architecture Review** — Identify trust boundaries and risks
+3. **Static Analysis** — Run automated tools
+4. **Manual Code Review** — Line-by-line inspection
+5. **Testing Review** — Verify test coverage and quality
+6. **Dynamic Analysis** — Fuzz testing and symbolic execution
+7. **Findings Report** — Document issues with severity ratings
+8. **Remediation** — Fix issues and verify fixes
+
+### Choosing an Auditor
+
+When selecting a security auditor:
+
+- **Track record** — Have they found critical bugs in similar protocols?
+- **Specialization** — DeFi, bridges, NFTs, etc. require different expertise
+- **Audit depth** — How many hours/weeks will they spend?
+- **Follow-up** — Do they verify remediations?
+
+Well-known audit firms include Trail of Bits, OpenZeppelin, Consensys Diligence, Spearbit, and Cyfrin.
+
+### Bug Bounty Programs
+
+Complement audits with ongoing bug bounties:
+
+```
+Typical Bug Bounty Payouts:
+├── Critical (fund theft possible): $100,000 - $1,000,000+
+├── High (significant impact): $25,000 - $100,000
+├── Medium (limited impact): $5,000 - $25,000
+└── Low (informational): $500 - $5,000
+```
+
+Platforms: Immunefi, HackerOne, Code4rena
+
+## Emergency Response
+
+Despite best efforts, exploits happen. Have a plan:
+
+### Before Deployment
+
+1. **Pausability** — Include pause functions for emergencies
+2. **Admin roles** — Define who can pause/upgrade
+3. **Monitoring** — Set up alerts for unusual activity
+4. **Communication** — Know how to reach your users
+
+### During an Attack
+
+1. **Pause if possible** — Stop the bleeding
+2. **Assess damage** — What was lost? Is attack ongoing?
+3. **Communicate** — Be transparent with users
+4. **Coordinate** — Work with white hats, exchanges, law enforcement
+
+### After an Attack
+
+1. **Post-mortem** — Document exactly what happened
+2. **Fix and verify** — Ensure the vulnerability is patched
+3. **Consider recovery** — User compensation, insurance claims
+4. **Learn** — Update processes to prevent recurrence
+
+<Callout type="note" title="Code Examples">
+Security patterns and vulnerability examples covered in this chapter:
+
+- [Reentrancy.sol](../code/chapter-10/src/Reentrancy.sol) — Reentrancy attack and protection patterns
+- [AccessControl.sol](../code/chapter-10/src/AccessControl.sol) — Role-based access control
+- [FlashLoanSecurity.sol](../code/chapter-10/src/FlashLoanSecurity.sol) — Flash loan protection patterns
+- [CommonVulnerabilities.sol](../code/chapter-10/src/CommonVulnerabilities.sol) — Common vulnerability examples
+</Callout>
+
+## Conclusions
+
+Smart contract security requires:
+
+- **Defense in depth** — Multiple layers of protection
+- **Secure patterns** — Checks-Effects-Interactions, pull over push
+- **Thorough testing** — Unit tests, fuzz tests, integration tests
+- **Professional audits** — For contracts handling significant value
+- **Continuous monitoring** — Watch for exploits after deployment
+
+### Key Lessons from 2022-2024
+
+| Exploit | Root Cause | Defense |
+|---------|------------|---------|
+| Curve (2023) | Compiler bug | Pin compiler versions, test bytecode |
+| Euler (2023) | Missing health check | Invariant testing |
+| Nomad (2022) | Bad upgrade config | Test upgrades exhaustively |
+| Ronin (2022) | Key compromise | Decentralize signing, use HSMs |
+| Wormhole (2022) | Signature bypass | Formal verification of core logic |
+
+The pattern is clear: most exploits combine multiple failures—a bug *plus* insufficient testing *plus* inadequate monitoring. No single defense is enough.
+
+Remember: in smart contracts, bugs are permanent and exploits are profitable. The cost of security is always less than the cost of an exploit.
+
+---
+
+## Research & Citations
+
+This chapter draws on security research and post-mortem analyses:
+
+**MEV Research:**
+- [@article_daian_flashboys_2019] — Flash Boys 2.0: Foundational MEV research defining the problem and measuring extraction
+- [@article_kyle_continuous_1985] — Kyle model explaining adverse selection in markets (applies to sandwich attacks)
+
+**Security Auditing:**
+- Trail of Bits publications on smart contract security
+- OpenZeppelin security guidelines and contract patterns
+- Consensys Diligence best practices
+
+**Exploit Post-Mortems:**
+- Rekt.news — comprehensive DeFi exploit documentation
+- Chainalysis and SlowMist attack analyses
+
+<Callout type="tip" title="Further Reading">
+For flash loan mechanics, see Chapter 17 (Lending). For MEV in the context of DEX trading, see Chapter 16 (AMM Evolution). For oracle design patterns, see Chapter 22 (Oracles).
+</Callout>

@@ -6,11 +6,30 @@ The official website for [masteringevm.com](https://masteringevm.com).
 
 **The book repo ([evmbook-v2025](../evmbook-v2025)) is authoritative for all content.**
 
-When updating website copy, always verify against the book:
-- Chapter names and structure → `evmbook-v2025/content/chapters/_index.json`
-- Author bio → Back cover in `evmbook-v2025/images/covers/cover-back.svg`
-- Book metadata → `evmbook-v2025/publishing/book-metadata.yaml`
-- Preface framing → `evmbook-v2025/content/chapters/00-preface.mdx`
+The website syncs the following from the book repo:
+- `content/chapters/` — 28 chapters (MDX)
+- `content/appendices/` — 8 appendices (MDX)
+- `content/chapters/_index.json` — Canonical TOC
+- `content/code/` — Code examples (Solidity, TypeScript)
+- `public/diagrams/` — Technical diagrams (SVG)
+
+## Content Sync
+
+To sync content from the book repo:
+
+```bash
+# Copy all content from book repo
+cp -r ../evmbook-v2025/content/chapters/*.mdx content/chapters/
+cp ../evmbook-v2025/content/chapters/_index.json content/chapters/
+cp -r ../evmbook-v2025/content/appendices/*.mdx content/appendices/
+cp -r ../evmbook-v2025/code/* content/code/
+cp ../evmbook-v2025/images/diagrams/*.svg public/diagrams/
+```
+
+**After syncing, update:**
+1. `src/components/layout/Sidebar.tsx` — Match chapters/appendices arrays to `_index.json`
+2. `src/components/layout/Footer.tsx` — Update chapter/appendix counts
+3. `public/sitemap.xml` — Regenerate with all chapter/appendix URLs
 
 ## Tech Stack
 
@@ -41,51 +60,59 @@ npm run format
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-│   ├── page.tsx        # Landing page
-│   ├── read/           # Book reader
-│   ├── download/       # Download options
-│   └── about/          # About page
+├── app/
+│   ├── page.tsx         # Landing page
+│   ├── read/            # Book reader (chapters, appendices)
+│   ├── code/            # Code library
+│   ├── diagrams/        # Diagram gallery
+│   ├── download/        # Download options
+│   └── about/           # About page
 ├── components/
-│   ├── layout/         # Header, Footer, Sidebar
-│   ├── content/        # MDX components, ChapterNav
-│   └── home/           # Landing page components (Hero, Features)
-├── lib/                # Utilities (content loading, animations)
-└── styles/             # Global CSS (theme variables)
+│   ├── layout/          # Header, Footer, Sidebar
+│   ├── content/         # MDX components, ChapterNav
+│   └── home/            # Landing page components
+├── lib/                 # Utilities (content loading, animations)
+└── styles/              # Global CSS (theme variables)
 
-content/                # Book content (sourced from evmbook-v2025)
-├── chapters/           # MDX chapter files (28 chapters)
-├── appendices/         # Reference appendices (8 appendices)
-└── meta/               # Colophon, about
+content/                 # Book content (synced from evmbook-v2025)
+├── chapters/            # 28 MDX chapter files
+├── appendices/          # 8 MDX appendix files
+├── code/                # Solidity & TypeScript examples
+└── meta/                # Colophon, about
 
-public/                 # Static assets (favicons, OG images)
+public/
+├── diagrams/            # 18 SVG technical diagrams
+└── ...                  # Favicons, OG images
 ```
 
-## Content Integration
-
-The book content comes from the [evmbook-v2025](../evmbook-v2025) repository.
-
-```bash
-# Content is typically copied or symlinked from the book repo
-ln -s ../evmbook-v2025/content content
-```
-
-## Release Checklist
+## Anti-Regression Checklist
 
 Before deploying, verify:
 
-- [ ] **TOC matches book**: Sidebar chapters match `evmbook-v2025/content/chapters/_index.json`
+### Content Alignment
+- [ ] **28 chapters present**: `ls content/chapters/*.mdx | wc -l` = 28
+- [ ] **8 appendices present**: `ls content/appendices/*.mdx | wc -l` = 8
+- [ ] **_index.json matches book**: Compare with `evmbook-v2025/content/chapters/_index.json`
+
+### Navigation
+- [ ] **Sidebar matches TOC**: All 28 chapters + 8 appendices listed in `Sidebar.tsx`
+- [ ] **Footer stats correct**: Shows "28 Chapters | 8 Appendices"
+- [ ] **Sitemap complete**: All chapter/appendix URLs present
+
+### Routes
+- [ ] **Build succeeds**: `npm run build` completes without errors
+- [ ] **No 404s**: All sidebar links resolve to actual pages
+- [ ] **Code library works**: `/code` page renders
+- [ ] **Diagrams render**: `/diagrams` page shows all 18 diagrams
+
+### Content Accuracy
 - [ ] **Author bio matches back cover**: About page uses exact back cover copy
 - [ ] **License is correct**: CC BY-NC 4.0 (not CC BY-SA)
-- [ ] **No unverified claims**: All features/promises are supported by book content
-- [ ] **Stats are accurate**: Chapter count (28), appendix count (8)
-- [ ] **Routes still work**: All existing URLs resolve correctly
+- [ ] **No unverified claims**: All features match actual book content
 
 ## Design System
 
-The site uses a systems-engineering theme aligned with the book cover:
-
-**Colors** (from cover):
+**Colors** (from book cover):
 - Primary: `#627EEA` (Indigo)
 - Secondary: `#8B5CF6` (Purple)
 - Tertiary: `#3AB83A` (Green)

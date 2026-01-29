@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FAFBFC"/>
+      <stop offset="100%" style="stop-color:#F0F4F8"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="depositGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3AB83A"/>
+      <stop offset="100%" style="stop-color:#2D8F2D"/>
+    </linearGradient>
+    <linearGradient id="borrowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="100%" style="stop-color:#4B6DD0"/>
+    </linearGradient>
+    <linearGradient id="liquidateGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444"/>
+      <stop offset="100%" style="stop-color:#DC2626"/>
+    </linearGradient>
+    <linearGradient id="poolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <marker id="flowArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#627EEA"/>
+    </marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3AB83A"/>
+    </marker>
+    <marker id="redArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EF4444"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E7EB" stroke-width="0.5"/>
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>
+
+  <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1a3a">Lending Protocol Flow</text>
+  <text x="400" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6B7280">Deposit collateral, borrow assets, maintain health factor</text>
+
+  <!-- Lending Pool (Center) -->
+  <g transform="translate(400, 230)" filter="url(#dropShadow)">
+    <rect x="-100" y="-80" width="200" height="160" rx="12" fill="url(#poolGradient)"/>
+    <text y="-55" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FFF">Lending Pool</text>
+
+    <rect x="-85" y="-40" width="170" height="50" rx="6" fill="#FFF" fill-opacity="0.2"/>
+    <text y="-20" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFF">Supply Pool</text>
+    <text y="-5" text-anchor="middle" font-family="monospace" font-size="8" fill="#EDE9FE">ETH, USDC, DAI...</text>
+
+    <rect x="-85" y="20" width="170" height="50" rx="6" fill="#FFF" fill-opacity="0.2"/>
+    <text y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFF">Interest Rate Model</text>
+    <text y="55" text-anchor="middle" font-family="monospace" font-size="8" fill="#EDE9FE">utilization → rate</text>
+  </g>
+
+  <!-- Supplier (Left) -->
+  <g transform="translate(100, 150)" filter="url(#dropShadow)">
+    <rect x="-60" y="-40" width="120" height="80" rx="10" fill="url(#depositGradient)"/>
+    <text y="-15" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">Supplier</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#D1FAE5">Deposits assets</text>
+    <text y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#D1FAE5">Earns interest</text>
+  </g>
+  <circle cx="100" cy="95" r="12" fill="#3AB83A"/>
+  <text x="100" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">1</text>
+
+  <!-- Arrow: Supplier → Pool (Deposit) -->
+  <path d="M 160 150 L 280 180" stroke="#3AB83A" stroke-width="2" marker-end="url(#greenArrow)"/>
+  <text x="210" y="145" font-family="Arial, sans-serif" font-size="8" fill="#3AB83A">deposit()</text>
+
+  <!-- Arrow: Pool → Supplier (aTokens) -->
+  <path d="M 280 200 L 160 170" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="210" y="210" font-family="Arial, sans-serif" font-size="8" fill="#8B5CF6">aTokens</text>
+
+  <!-- Borrower (Right) -->
+  <g transform="translate(700, 150)" filter="url(#dropShadow)">
+    <rect x="-60" y="-40" width="120" height="80" rx="10" fill="url(#borrowGradient)"/>
+    <text y="-15" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">Borrower</text>
+    <text y="5" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C7D2FE">Posts collateral</text>
+    <text y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#C7D2FE">Borrows assets</text>
+  </g>
+  <circle cx="700" cy="95" r="12" fill="#627EEA"/>
+  <text x="700" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">2</text>
+
+  <!-- Arrow: Borrower → Pool (Collateral) -->
+  <path d="M 640 150 L 520 180" stroke="#627EEA" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="590" y="145" font-family="Arial, sans-serif" font-size="8" fill="#627EEA">collateral</text>
+
+  <!-- Arrow: Pool → Borrower (Borrow) -->
+  <path d="M 520 200 L 640 170" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="590" y="210" font-family="Arial, sans-serif" font-size="8" fill="#F59E0B">borrow()</text>
+
+  <!-- Health Factor Box -->
+  <g transform="translate(400, 370)" filter="url(#dropShadow)">
+    <rect x="-120" y="-30" width="240" height="60" rx="8" fill="#FFF" stroke="#F59E0B" stroke-width="2"/>
+    <text y="-10" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#92400E">Health Factor</text>
+    <text y="8" text-anchor="middle" font-family="monospace" font-size="9" fill="#B45309">HF = (collateral × LTV) / debt</text>
+    <text y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#6B7280">HF &lt; 1.0 = liquidatable</text>
+  </g>
+
+  <!-- Liquidator (Bottom) -->
+  <g transform="translate(100, 370)" filter="url(#dropShadow)">
+    <rect x="-60" y="-35" width="120" height="70" rx="10" fill="url(#liquidateGradient)"/>
+    <text y="-10" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">Liquidator</text>
+    <text y="8" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#FECACA">Repays debt</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#FECACA">Seizes collateral</text>
+  </g>
+  <circle cx="100" cy="420" r="12" fill="#EF4444"/>
+  <text x="100" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#FFF">3</text>
+
+  <!-- Arrow: Liquidator → Pool -->
+  <path d="M 160 370 L 280 320" stroke="#EF4444" stroke-width="2" marker-end="url(#redArrow)"/>
+  <text x="210" y="365" font-family="Arial, sans-serif" font-size="8" fill="#EF4444">liquidate()</text>
+
+  <!-- Oracle (Top Right) -->
+  <g transform="translate(700, 310)" filter="url(#dropShadow)">
+    <rect x="-55" y="-30" width="110" height="60" rx="8" fill="#FFF" stroke="#6B7280" stroke-width="2"/>
+    <text y="-10" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#374151">Price Oracle</text>
+    <text y="8" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#6B7280">Chainlink</text>
+    <text y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#6B7280">ETH/USD price</text>
+  </g>
+  <path d="M 645 310 L 520 270" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+  <!-- Key insight -->
+  <g transform="translate(400, 460)">
+    <rect x="-350" y="-25" width="700" height="60" rx="8" fill="#EEF2FF" stroke="#627EEA" stroke-width="1"/>
+    <text y="-5" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#4338CA">Key Insight</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4F46E5">Interest rates adjust dynamically based on utilization. High utilization = high rates (encourages deposits, discourages borrows).</text>
+    <text y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#4F46E5">Liquidation incentive (bonus collateral) encourages liquidators to maintain protocol health.</text>
+  </g>
+</svg>

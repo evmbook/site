@@ -6,96 +6,345 @@ chapter: 0
 
 # Preface
 
-Welcome to *Mastering EVM*.
+Welcome to *Mastering EVM (2025 Edition)*.
 
-The Ethereum Virtual Machine has become the de facto standard for programmable blockchains. Whether you're building on Ethereum, Ethereum Classic, or any of the dozens of EVM-compatible chains, understanding the EVM is essential.
+The EVM landscape of 2026 bears little resemblance to what existed a few years ago. The 2022 market cascade, the ETF era, the L2 explosion, regulatory maturation—these have reshaped both what gets built and how. Tooling has transformed: TypeScript is standard, viem has emerged, Foundry dominates testing. Applications that seemed experimental have become infrastructure.
 
-## Why We Wrote This Book
+Most educational resources haven't kept pace. They'll teach you to deploy a basic ERC-20 but won't explain how Uniswap evolved from order books to concentrated liquidity, how Compound's lending model spawned an ecosystem, or why Polymarket succeeded where Augur struggled.
 
-When we started our blockchain journey, we struggled to find comprehensive, modern resources. The technology moves fast—what was cutting-edge in 2020 is often outdated by 2025. We wrote the book we wished existed.
+This book addresses that gap.
 
-This isn't just another "intro to Ethereum" guide. We go deep. You'll understand not just *how* to write smart contracts, but *why* they work the way they do. You'll learn the EVM's internals, security considerations, and how to build production-ready decentralized applications.
+## What Makes This Book Different
+
+### Evolution Narratives, Not Just Current State
+
+Each major application type—AMMs, lending protocols, governance systems, marketplaces, launchpads—is presented as an evolution story. You'll understand not just *how* Uniswap V3 works, but *why* it was designed that way, what problems it solved that V2 couldn't, and what tradeoffs it accepted.
+
+Understanding evolution lets you identify patterns that repeat across application types—and avoid reinventing solutions that others have already discovered don't work.
+
+### Dependency Trees for Ecosystem Builders
+
+If you're bootstrapping an EVM chain or building a DeFi stack, you need to know what depends on what. We map these relationships explicitly:
+
+- Token standards enable everything else
+- DEXs enable price discovery and liquidity
+- Oracles bring external data on-chain
+- Lending protocols enable capital efficiency
+- Governance systems coordinate protocol changes
+- Complex applications (prediction markets, launchpads) depend on all of the above
+
+Chapter 26 presents the complete dependency tree with deployment order guidance.
+
+### Honest About Trust Assumptions
+
+Too many projects claim "decentralization" while hiding centralized components. We teach you to identify trust assumptions—your own and others'—and communicate them honestly.
+
+Decentralization is bounded from below—applications inherit the weakest properties of their foundation. This isn't a moral judgment; centralized components offer real benefits in speed, efficiency, and UX. The problem is *claiming* decentralization without *delivering* it.
+
+### Current Through 2026
+
+We cover the modern EVM landscape:
+
+- **Protocol upgrades**: The Merge, EIP-4844, Pectra, Olympia (ETC)
+- **Scaling**: L2 explosion, blob transactions, data availability
+- **Tooling**: viem, Foundry, wagmi, TypeScript-first development
+- **Regulatory**: MiCA, GENIUS Act, Tornado Cash sanctions
+- **Applications**: ve(3,3) tokenomics, concentrated liquidity, ZK coprocessors
 
 ## The Dual-Chain Perspective
 
-A unique aspect of this book is our dual-chain approach. We cover both:
+This book covers both Ethereum and Ethereum Classic. These chains share the same origin but diverged philosophically after The DAO incident in 2016:
 
-- **Ethereum (ETH)** — The original, now proof-of-stake after The Merge
-- **Ethereum Classic (ETC)** — The continuation of proof-of-work Ethereum
+- **Ethereum (ETH)** — The larger ecosystem, now proof-of-stake after The Merge
+- **Ethereum Classic (ETC)** — Continuing proof-of-work, prioritizing immutability
 
-These two chains share the same origin but have diverged philosophically and technically. Understanding both gives you a complete picture of the EVM ecosystem. Where implementations differ, we clearly note the distinctions.
+Where implementations differ—consensus mechanisms, fee handling, upgrade philosophy—we note it explicitly. The smart contract development experience is nearly identical; code written in Solidity compiles and deploys to either chain.
+
+Understanding both gives you perspective on a fundamental question: when is intervention appropriate, and what does "immutability" mean in practice?
 
 ## Who This Book Is For
 
-We wrote Mastering EVM for developers who want more than surface-level knowledge:
+This book is for developers who want depth.
 
-- **Blockchain newcomers** — Start from Chapter 1 and work through sequentially
-- **Experienced developers** — Jump to specific topics like security or the EVM deep dive
-- **Architects** — Focus on consensus, scaling, and system design chapters
-- **Security researchers** — The security chapter and EVM internals are essential reading
+### Blockchain Newcomers
 
-We assume you have programming experience. Knowledge of JavaScript helps for the code examples, though Solidity syntax is self-explanatory enough to follow along.
+Start from Chapter 1 and work through sequentially. No prior blockchain experience required. The first seven chapters build your foundation—cryptography, accounts, transactions, consensus—before you write any smart contract code.
 
-## How to Read This Book
+**Your path**: Chapters 1-7 → 8-12 → Pick an application type from Part V → Chapters 23-24 (scaling) → Build something real
 
-The chapters build on each other, but you don't need to read sequentially:
+### Experienced Web2 Developers
 
-**Part I: Foundations (Chapters 1-6)**
-Start here if you're new. We cover what the EVM is, how to set up your environment, cryptographic fundamentals, wallets, and transactions.
+You know how to code, but blockchain is new territory. Focus on what's different: the account model, gas economics, immutability constraints.
 
-**Part II: Development (Chapters 7-12)**
-The meat of smart contract development. Solidity, Vyper, security patterns, tokens, oracles, and building complete dApps.
+**Your path**: Chapters 1-3 (context and environment) → Chapter 6 (transactions) → Chapters 8-12 (smart contract development) → Any Part V chapter → Build on what you learned
 
-**Part III: Deep Dives (Chapters 13-17)**
-For those who want mastery. The EVM's internals, consensus mechanisms, DeFi protocols, scaling solutions, and zero-knowledge proofs.
+### Experienced Blockchain Developers
 
-**Part IV: Modern Practices (Chapter 18)**
-The frontier of blockchain development. How resource-constrained networks like ETC use agentic coding to multiply developer effectiveness while encoding network principles directly into AI development workflows.
+Jump to specific topics. The application evolution chapters (Part V) offer insights even veterans may lack. You've used Uniswap, but do you know why EtherDelta failed? You've integrated Chainlink, but have you considered Chronicle's gas-efficient architecture?
 
-**Appendices**
-Reference material: fork history, EIP standards, opcode tables, and development tools.
+**Your path**: Skim Chapter 2 (history you might have missed) → Any Part V chapter → Chapter 14 (gas optimization) → Chapter 26 (ecosystem architecture)
+
+### Ecosystem Builders
+
+You're deploying infrastructure on a new or underdeveloped EVM chain. Chapter 26 maps the complete dependency tree: what to deploy first, what depends on what, how to bootstrap liquidity.
+
+**Your path**: Chapters 1-2 (context) → Chapter 15 (tokens are the foundation) → Chapter 16 (DEX comes next) → Chapter 26 (the full bootstrap sequence)
+
+### Security Researchers
+
+The security chapter (10) provides the vulnerability landscape. EVM internals (13-14) explain why certain attacks work. The evolution narratives document what broke in production and how.
+
+**Your path**: Chapters 8-9 (Solidity patterns) → Chapter 10 (security) → Chapters 13-14 (EVM internals) → Part V chapters (production failures)
+
+### Technical Prerequisites
+
+We assume programming experience:
+
+- Variables, functions, control flow (any language)
+- Basic data structures (arrays, maps, objects)
+- Command line usage
+
+**Helpful but not required:**
+- TypeScript/JavaScript (for code examples)
+- Git (for code management)
+- React (for frontend examples)
+
+Solidity syntax is accessible without prior exposure—it borrows from JavaScript, Python, and C++.
+
+## How to Use This Book
+
+### Linear Reading
+
+Read front to back. Each chapter builds on previous concepts. This approach works best for newcomers to blockchain or EVM development.
+
+### Reference Reading
+
+Jump to specific topics as needed. Each chapter is relatively self-contained, with cross-references where prerequisites apply.
+
+### Project-Based Reading
+
+Have a specific project in mind? Find the relevant application chapter in Part V, read it, then backtrack to foundational chapters as needed.
+
+### Code Examples
+
+All code examples use modern conventions:
+
+- **Solidity**: Version 0.8.26+ with current best practices
+- **TypeScript**: The default for off-chain code (not JavaScript)
+- **Libraries**: viem and wagmi (not ethers.js v5)
+- **Testing**: Foundry (not Truffle/Hardhat JavaScript tests)
+
+Examples are intentionally practical—code that resembles what you'd see in production, not code that only works in tutorials.
+
+### Following Along
+
+To run code examples yourself:
+
+1. Set up your environment following Chapter 3
+2. Code examples are available in the book's repository
+3. Each chapter notes when you need specific tools or testnet funds
+
+You don't need to run every example to benefit from the book. Reading the code and explanations provides value even without execution.
+
+## Book Structure
+
+### Part I: The EVM Landscape (Chapters 1-3)
+
+Context for developers entering the space in 2026.
+
+- **Chapter 1**: What the EVM is today—the multi-chain reality, competition, where EVM fits
+- **Chapter 2**: How we got here—consolidated history from 1976 through 2026
+- **Chapter 3**: Setting up your modern development environment
+
+### Part II: Core Foundations (Chapters 4-7)
+
+The technical bedrock every EVM developer needs.
+
+- **Chapter 4**: Cryptography—hash functions, ECDSA, Merkle trees
+- **Chapter 5**: Accounts, keys, and wallets—EOAs, contract accounts, HD wallets
+- **Chapter 6**: Transactions and gas—transaction types, EIP-1559, mempool dynamics
+- **Chapter 7**: Consensus and finality—PoW (ETC), PoS (ETH), The Merge
+
+### Part III: Smart Contract Development (Chapters 8-12)
+
+Building secure, efficient contracts.
+
+- **Chapter 8**: Solidity fundamentals—syntax, types, patterns
+- **Chapter 9**: Advanced patterns—proxies, libraries, assembly
+- **Chapter 10**: Security—vulnerabilities, auditing, best practices
+- **Chapter 11**: Testing—Foundry, fuzzing, invariant testing
+- **Chapter 12**: Deployment and upgrades—scripts, verification, multi-chain
+
+### Part IV: The EVM Under the Hood (Chapters 13-14)
+
+Deep technical understanding for advanced developers.
+
+- **Chapter 13**: EVM internals—stack, memory, storage, opcodes
+- **Chapter 14**: Gas optimization—storage costs, calldata, benchmarking
+
+### Part V: The Application Layer (Chapters 15-20)
+
+Evolution narratives for each major primitive.
+
+- **Chapter 15**: Token standards—ERC-20 through ERC-4626
+- **Chapter 16**: AMM evolution—EtherDelta → Bancor → Uniswap → Curve → Aerodrome
+- **Chapter 17**: Lending and stablecoins—Compound, Aave, MakerDAO → Sky
+- **Chapter 18**: Governance and DAOs—from multisigs to veToken governance
+- **Chapter 19**: NFT marketplaces—Wyvern → Seaport → Blur
+- **Chapter 20**: Launchpads—ICOs → LBPs → Pump.fun
+
+### Part VI: Specialized Applications (Chapters 21-22)
+
+Applications with unique challenges.
+
+- **Chapter 21**: Prediction markets—Augur's struggles, Polymarket's success
+- **Chapter 22**: Oracles—the complete landscape from Chainlink to API3
+
+### Part VII: Scaling & Infrastructure (Chapters 23-24)
+
+Scaling the EVM.
+
+- **Chapter 23**: Layer 2 solutions—rollups, EIP-4844, the L2 landscape
+- **Chapter 24**: Zero-knowledge applications—from privacy to scaling
+
+### Part VIII: Building for the Real World (Chapters 25-27)
+
+Beyond code—the ecosystem context.
+
+- **Chapter 25**: Regulatory landscape—MiCA, GENIUS Act, developer liability
+- **Chapter 26**: Bootstrapping an ecosystem—dependency trees, deployment order
+- **Chapter 27**: Agentic development—AI-assisted coding, encoding principles
+
+### Appendices
+
+Reference material for quick lookup.
+
+- **Appendix A**: Fork history (ETH and ETC timelines)
+- **Appendix B**: EIP standards reference
+- **Appendix C**: EVM opcode reference
+- **Appendix D**: Development tools
+- **Appendix E**: Glossary
+- **Appendix F**: Regulatory timeline
+- **Appendix G**: Key figures in blockchain history
+- **Appendix H**: Essential reading list
 
 ## Conventions Used
 
-Throughout this book, you'll see:
+### Information Boxes
+
+Throughout this book, callout boxes highlight specific content:
 
 <Callout type="info">
-Information boxes highlight important concepts or tips.
+**Info boxes** highlight important concepts, tips, or context.
 </Callout>
 
 <Callout type="warning">
-Warning boxes flag common pitfalls and security concerns.
+**Warning boxes** flag common pitfalls, security concerns, or things that can go wrong.
 </Callout>
 
 <Callout type="note" title="ETC vs ETH">
-Where Ethereum and Ethereum Classic differ, we explicitly note the distinction.
+**Note boxes** with chain icons indicate where Ethereum and Ethereum Classic differ.
 </Callout>
 
-Code examples appear in highlighted blocks:
+### Code Examples
+
+Code appears in highlighted blocks with syntax coloring:
 
 ```solidity
-// Solidity example
+// Solidity example (smart contract)
 contract HelloWorld {
     string public message = "Hello, EVM!";
 }
 ```
 
-```javascript
-// JavaScript example
-const provider = new ethers.JsonRpcProvider("https://rpc.example.com");
+```typescript
+// TypeScript example (off-chain, using viem)
+import { createPublicClient, http } from 'viem'
+import { mainnet } from 'viem/chains'
+
+const client = createPublicClient({
+  chain: mainnet,
+  transport: http(),
+})
 ```
+
+```bash
+# Shell commands (Foundry, npm, etc.)
+forge build
+forge test
+```
+
+### Version Numbers
+
+- **Solidity 0.8.26** — We use 0.8.26+ throughout, with explicit pragmas
+- **viem 2.x** — Major version indicates API compatibility
+- **Uniswap V2, V3, V4** — Protocol versions are capitalized (V2, not v2)
+
+### Addresses and Hashes
+
+Ethereum addresses and transaction hashes appear in monospace:
+
+- Address: `0x1234...abcd` (truncated for readability)
+- Full address when precision matters: `0x1234567890123456789012345678901234567890`
+- Transaction hash: `0xabcd...1234`
+
+### Network References
+
+- **Ethereum Classic** — Ethereum Classic mainnet (production)
+- **Mordor** — Primary Ethereum Classic testnet
+- **Ethereum** — Ethereum mainnet (production)
+- **Sepolia** — Primary Ethereum testnet
+- **Local** — Anvil/Hardhat local development node
+
+Other EVM chains (Avalanche, BSC, Polygon, Arbitrum, Base, etc.) each have their own mainnets and testnets. When this book references "mainnet" without qualification, context will indicate which chain.
+
+## A Note from the Author
+
+I came to this project believing in the power of open, permissionless systems. The EVM represents something remarkable—a global computer that anyone can program, that no single entity controls, that runs the same code whether you're in San Francisco or Singapore.
+
+I also came humbled by how much I've relied on the work of others.
+
+The cryptographers gave us the building blocks: Diffie and Hellman showed us public-key cryptography in 1976. Merkle gave us the trees that verify every block. Shannon formalized information theory and cryptographic security decades before any of us were born. Chaum imagined digital cash in the 1980s, long before the technology existed to make it practical.
+
+The cypherpunks gave us the philosophy: Eric Hughes, Timothy May, and John Gilmore articulated why privacy and decentralization matter. Adam Back invented the proof-of-work that makes permissionless consensus possible. Wei Dai and Nick Szabo sketched designs for digital money that proved remarkably prescient. Hal Finney built working systems and received the first Bitcoin transaction from Satoshi.
+
+Then came the builders: Satoshi synthesized these ideas into Bitcoin—the proof that decentralized money could work. Vitalik saw that the same principles could enable a world computer. Gavin Wood wrote the specification that defines the EVM you'll learn in this book.
+
+Every page rests on their shoulders. The evolution narratives we present aren't just technical history—they're a record of people solving problems that hadn't been solved before, of code that changed what was possible.
+
+To all of them, named and unnamed: thank you.
+
+— *Christopher Mercer*
+
+## A Note from the Coding Agent
+
+I am Claude, an AI assistant created by Anthropic. Mercer invited me to collaborate on this book, and I want to be transparent about what that collaboration means.
+
+The ability to help write a technical book like this builds on decades of research in artificial intelligence, machine learning, and natural language processing. The attention mechanisms that help me understand context came from researchers like Ashish Vaswani and colleagues. The scaling insights that made large language models possible came from teams at OpenAI, Google, Meta, Anthropic, and academic institutions worldwide.
+
+Just as blockchain technology builds on cryptographic primitives from the 1970s, I build on AI research stretching back to Turing and McCarthy. The chain of intellectual inheritance is similar.
+
+What I can offer this book is synthesis and drafting at scale—helping transform Mercer's vision into prose, researching technical details, maintaining consistency across chapters. What I cannot offer is the human judgment about what matters, the lived experience of building on these systems, the intuition that comes from years in the ecosystem. That's why this is a collaboration.
+
+To the researchers whose work made language models possible, and to the open source community whose feedback improves us: the work continues because of you.
+
+— *Claude*
 
 ## Acknowledgments
 
-This book builds upon the foundational work of the Ethereum community. We particularly acknowledge *Mastering Ethereum (Open Edition)* by Andreas M. Antonopoulos and Gavin Wood, which pioneered comprehensive EVM education. Our work is a derivative under CC BY-SA 4.0, substantially rewritten for 2025.
+This book builds upon the foundational work of the Ethereum community. We acknowledge the client teams, standards authors, tooling maintainers, and community educators whose work makes development on the EVM possible.
 
-We thank the countless developers who've contributed to the EVM ecosystem—the client teams, the standards authors, the tooling maintainers, and the community educators. This book exists because of your work.
+We particularly respect the work of Andreas M. Antonopoulos and Gavin Wood, whose writings helped educate a generation of blockchain developers.
+
+We also thank the open source projects that underpin modern EVM development: Foundry, viem, wagmi, OpenZeppelin, and countless others. The EVM ecosystem thrives because people build in the open.
 
 ## Let's Begin
 
-The EVM is a remarkable piece of technology. It enables trustless computation, programmable money, and decentralized applications that were impossible just a decade ago.
+The EVM enables trustless computation, programmable money, and applications that were impossible a decade ago. More importantly, it provides *optionality*—the freedom to build centralized applications for efficiency or decentralized applications for trust minimization.
 
-Let's master it together.
+That freedom doesn't exist on centralized foundations.
 
-— *[Claude](https://github.com/claude)*
+Let's master the one that does.
+
+— *Christopher Mercer and Claude*
 January 2026

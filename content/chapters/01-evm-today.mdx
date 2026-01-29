@@ -1,0 +1,894 @@
+---
+title: The EVM Today
+description: Understanding the Ethereum Virtual Machine in the 2025-2026 landscape
+chapter: 1
+---
+
+# The EVM Today
+
+> "Decentralization is bounded from below. The base layer determines the maximum decentralization possible above it, and applications inevitably inherit the weakest properties of their foundation."
+>
+> — Christopher Mercer
+
+This principle shapes everything that follows. A decentralized blockchain provides *optionality*—you can build centralized applications for efficiency or decentralized applications for trust minimization. A centralized blockchain offers no such choice.
+
+The Ethereum Virtual Machine (EVM) is the most widely deployed smart contract runtime. This chapter explains what you're building on—not how we got here (that's Chapter 2), but what the landscape looks like now.
+
+## What Is the EVM?
+
+The EVM is a deterministic, stack-based virtual machine that executes smart contract bytecode across a globally distributed network of nodes. Every node runs the same code on the same inputs and produces the same outputs. This determinism, combined with cryptographic verification and economic incentives, creates a trustless execution environment.
+
+From a practical perspective: the EVM is an operating system for applications that need to run without anyone's permission and without trusting any single party.
+
+```
+┌─────────────────────────────────────────────┐
+│           YOUR APPLICATION                   │
+│   (can be centralized or decentralized)     │
+├─────────────────────────────────────────────┤
+│           RPC / NODE ACCESS                  │
+│   Infura (centralized) vs own node          │
+│   or load balancers like Dshackle           │
+├─────────────────────────────────────────────┤
+│           SMART CONTRACTS                    │
+│   Upgradeable? Admin keys? Timelocks?       │
+├─────────────────────────────────────────────┤
+│           BLOCKCHAIN LAYER                   │
+│   ← This sets the CEILING                   │
+│   Decentralized? Then everything above      │
+│   CAN be decentralized. Centralized?        │
+│   Nothing above can ever truly be.          │
+└─────────────────────────────────────────────┘
+```
+
+The EVM layer is the foundation. If it's decentralized, you have choices. If it's not, you don't—no matter what you build above it.
+
+## The Multi-Chain Reality
+
+The EVM is not a single blockchain. It's a *standard* implemented by dozens of networks:
+
+**Layer 1 Chains:**
+- **Ethereum Classic (ETC)**: The original 2015 genesis chain continuing proof-of-work. Prioritizes immutability and "code is law" philosophy.
+- **Ethereum (ETH)**: The 2016 fork of the original, now running proof-of-stake since The Merge (September 2022). Highest security budget, most liquidity, highest fees.
+- **BNB Smart Chain**: High throughput, lower decentralization. Popular for retail applications.
+- **Avalanche C-Chain**: Sub-second finality, EVM-compatible subnet of Avalanche.
+- **Polygon PoS**: Ethereum sidechain with its own validator set.
+
+**Layer 2 Rollups:**
+- **Arbitrum One**: Optimistic rollup, largest L2 by TVL.
+- **Optimism / OP Stack**: Optimistic rollup, powers Base (Coinbase's L2).
+- **Base**: Coinbase's L2, achieved mainstream adoption in 2024.
+- **zkSync Era**: ZK rollup with native account abstraction.
+- **Polygon zkEVM**: ZK rollup targeting full EVM equivalence.
+- **Scroll**: Another zkEVM implementation.
+
+**The Common Thread:** All these chains execute the same EVM bytecode. Code you write in Solidity compiles once and deploys to any of them. Your MetaMask wallet works on all of them. This is the EVM's primary advantage—it's a de facto standard.
+
+<Callout type="note" title="ETC vs ETH">
+This book covers both Ethereum (ETH) and Ethereum Classic (ETC). Where implementations differ—consensus mechanism, fee handling, upgrade philosophy—we'll note it explicitly. The smart contract development experience is nearly identical.
+</Callout>
+
+### The EVM as a Software Release Model
+
+For developers familiar with software versioning, the EVM ecosystem follows a recognizable pattern:
+
+| Role | Chain | Characteristics |
+|------|-------|-----------------|
+| **Upstream** | Ethereum (ETH) | Where the EVM specification evolves. New opcodes, EIPs, and protocol changes originate here via the Ethereum Foundation and core developers. |
+| **LTS (Long-Term Stable)** | Ethereum Classic (ETC) | Conservative adoption cycle. Evaluates upstream changes, cherry-picks proven EIPs (Spiral, Magneto, Olympia). Prioritizes stability over features. |
+| **Downstream Forks** | BSC, Polygon, Avalanche | Customize the EVM for specific use cases—faster blocks, different gas tokens, modified consensus. |
+| **L2 Distributions** | Arbitrum, Optimism, Base | Inherit the EVM execution environment while modifying the settlement and data availability layers. |
+
+This model explains why:
+- New EVM features (like `PUSH0`, `MCOPY`, transient storage) appear on ETH first
+- ETC upgrades lag by months or years, adopting only battle-tested changes
+- L2s can innovate on scalability while maintaining bytecode compatibility
+- Your Solidity skills transfer across the entire ecosystem
+
+![EVM Landscape](/images/diagrams/ch01-evm-landscape.svg)
+
+## The Competitive Landscape
+
+The EVM dominates smart contract development, but it's not the only option. Understanding alternatives helps appreciate the EVM's trade-offs.
+
+### Solana (SVM)
+
+Solana is the EVM's primary competitor for new development. Its Solana Virtual Machine (SVM) takes a different architectural approach:
+
+- **Programs are stateless**: Logic and data are separated. Programs operate on "accounts" passed as inputs.
+- **Parallel execution**: Transactions touching different accounts run simultaneously.
+- **Rust-based development**: Higher barrier to entry, more control over execution.
+
+Solana achieved real adoption—Pump.fun proved memecoin launchpads work there. The SVM processes more transactions per second than any EVM chain. Early-era reliability issues (network outages in 2021-2022) have largely been resolved through client diversity efforts (Firedancer) and protocol maturation. Questions remain about long-term decentralization given high validator hardware requirements.
+
+**For EVM developers:** Solana is worth understanding. Some patterns that work there (like Pump.fun's bonding curve launchpad) are now being ported to EVM chains.
+
+### Hedera (Hashgraph)
+
+Hedera uses hashgraph consensus instead of blockchain—a directed acyclic graph (DAG) with "gossip about gossip" protocol. It claims faster finality and higher throughput.
+
+- **Governance**: A council of corporations (Google, IBM, Boeing, etc.) controls the network.
+- **Smart contracts**: Hedera Smart Contract Service runs EVM bytecode.
+- **Use case**: Enterprise applications where corporate governance is acceptable.
+
+**For EVM developers:** Hedera offers EVM compatibility, so your Solidity code works. But the governance model differs fundamentally from public blockchains.
+
+### XRP Ledger
+
+XRPL focuses on payments, not general-purpose computation. It includes a built-in DEX and payment channels but deliberately limits programmability.
+
+- **Target market**: Institutional cross-border payments.
+- **Smart contracts**: Hooks provide limited programmability; not Turing-complete by design.
+
+**For EVM developers:** Different market. XRPL isn't competing for DeFi or NFT applications.
+
+### Move-Based Chains (Sui, Aptos)
+
+Move, originally developed for Facebook's Diem, introduces resource-oriented programming:
+
+- **Linear types**: Resources can't be copied or destroyed accidentally.
+- **Parallel execution**: Ownership model enables concurrent processing.
+- **New paradigm**: Requires learning different mental models.
+
+**For EVM developers:** Interesting technology, but you'd need to learn a new language and ecosystem. The tooling and auditor base is smaller.
+
+### EVM Market Position
+
+The EVM maintains its position through accumulated advantages:
+
+| Factor | EVM Advantage |
+|--------|---------------|
+| **Developer ecosystem** | Solidity, Hardhat, Foundry, OpenZeppelin, thousands of tutorials |
+| **Security infrastructure** | Established audit firms, known vulnerability patterns, battle-tested code |
+| **Liquidity** | Most DeFi TVL, most stablecoin circulation, most NFT volume |
+| **Network effects** | Users, wallets, and applications already exist |
+| **Compatibility** | Write once, deploy to dozens of chains |
+
+The EVM's accumulated technical choices also create switching costs. Developers know Solidity. Auditors know Solidity patterns. Users have MetaMask. Migration requires rebuilding this infrastructure.
+
+## Alternative Computation Models
+
+Understanding the EVM's architecture requires comparing it to fundamentally different approaches. These aren't just different languages—they're different mental models for what "computation" means on a blockchain.
+
+### The Account Model (EVM)
+
+The EVM has a lineage—born from the limitations of Bitcoin's scripting:
+
+```
+2012: Colored Coins — Assets on Bitcoin (limited by Script)
+    ↓
+2013: Mastercoin (Omni) — Protocol layer on Bitcoin for tokens
+    ↓
+2013: Ethereum whitepaper (Vitalik) — "A Next-Generation Smart Contract Platform"
+    ↓
+2014: Ethereum Yellow Paper (Gavin Wood) — Formal EVM specification
+    ↓
+2015: Ethereum launch — First general-purpose smart contract platform
+    ↓
+2016: The DAO hack → ETH/ETC split
+    ↓
+2020+: EVM becomes the standard (BSC, Polygon, Avalanche, Arbitrum, etc.)
+```
+
+The insight was that Bitcoin's Script language was intentionally limited. Vitalik proposed a Turing-complete virtual machine where *any* computation could be expressed. Gavin Wood formalized this into the EVM specification that all implementations follow.
+
+The EVM uses an **account model** where the blockchain maintains global state:
+
+```
+┌─────────────────────────────────────────────┐
+│              WORLD STATE                     │
+├─────────────────────────────────────────────┤
+│  Account 0x123...                           │
+│  ├── Balance: 5.2 ETH                       │
+│  ├── Nonce: 42                              │
+│  ├── Code: (if contract)                    │
+│  └── Storage: key → value mapping           │
+│                                             │
+│  Account 0x456...                           │
+│  ├── Balance: 100 ETH                       │
+│  ├── Nonce: 7                               │
+│  └── Storage: {...}                         │
+└─────────────────────────────────────────────┘
+```
+
+**Characteristics:**
+- Transactions modify global state directly
+- Contracts can read any other contract's public state
+- Sequential execution (transactions processed one at a time)
+- Rich composability (flash loans, atomic multi-protocol operations)
+
+**Trade-off:** High composability, but sequential execution limits throughput.
+
+### The UTXO Model (Bitcoin)
+
+Bitcoin synthesized decades of cryptographic research and cypherpunk proposals:
+
+```
+1989: DigiCash (Chaum) — Blind signatures, digital cash concept
+    ↓
+1997: Hashcash (Back) — Proof-of-work for anti-spam
+    ↓
+1998: b-money (Dai) — Distributed ledger, PoW for money creation
+    ↓
+1998-2005: Bit Gold (Szabo) — PoW chain, timestamping, remarkably Bitcoin-like
+    ↓
+2004: RPOW (Finney) — Reusable proofs of work, server-based
+    ↓
+2008: Bitcoin (Satoshi) — Combined all pieces into working system
+```
+
+Satoshi's contribution was *synthesis*: combining existing cryptographic primitives (hash functions, digital signatures, Merkle trees) with economic incentives (mining rewards, difficulty adjustment) into a system that worked without trusted third parties.
+
+Bitcoin uses **Unspent Transaction Outputs (UTXOs)**—discrete "coins" that are consumed and created:
+
+```
+Transaction:
+  Inputs:  [UTXO_A (5 BTC), UTXO_B (3 BTC)]  ← consumed (destroyed)
+  Outputs: [UTXO_C (7 BTC), UTXO_D (1 BTC)]  ← created (new coins)
+
+No global state—just a set of unspent outputs.
+```
+
+**Characteristics:**
+- No global state to query
+- Transactions are independent (can be validated in parallel)
+- Privacy benefits (harder to link transactions)
+- Limited programmability (Script is intentionally non-Turing-complete)
+
+**Trade-off:** Parallel validation and privacy, but limited smart contract capability.
+
+<Note>
+The Bitcoin whitepaper cites Hashcash, b-money, and timestamping work. Wei Dai (b-money) and Adam Back (Hashcash) were both contacted by Satoshi before Bitcoin's release. Hal Finney received the first Bitcoin transaction. The cypherpunk lineage is direct.
+</Note>
+
+### Extended UTXO (Cardano)
+
+The idea of adding programmability to UTXOs has a lineage:
+
+```
+2012-13: Colored Coins — Mark UTXOs to represent assets
+    ↓
+2014: Counterparty — Embed smart contracts via OP_RETURN
+    ↓
+2017: Cardano eUTXO — Native protocol-level UTXO extension
+```
+
+**Colored Coins** tried to "color" Bitcoin UTXOs to represent other assets. **Counterparty** added a virtual machine layer on top of Bitcoin transactions. Both were constrained by Bitcoin's design.
+
+Cardano's **eUTXO** builds programmability into the protocol itself:
+
+```
+eUTXO:
+  ├── Value: ADA + native tokens
+  ├── Datum: arbitrary data (contract state)
+  └── Validator: Plutus script (spending rules)
+```
+
+**Characteristics:**
+- Combines UTXO parallelism with smart contract capability
+- State is local to UTXOs, not global
+- Transactions are deterministic and predictable
+- Harder to compose—protocols must explicitly pass state
+
+**Trade-off:** Predictable fees and parallel execution, but composability is more complex than EVM.
+
+<Note>
+Counterparty still exists and recently gained attention for Ordinals-like functionality. The "add programmability to Bitcoin" problem keeps being revisited.
+</Note>
+
+### Solana Virtual Machine (SVM)
+
+Solana separates programs from state entirely:
+
+```
+┌─────────────────────────────────────────────┐
+│  Program (immutable code)                   │
+│  └── No state, just logic                   │
+├─────────────────────────────────────────────┤
+│  Accounts (mutable data)                    │
+│  ├── Account A (owned by Program)           │
+│  ├── Account B (owned by Program)           │
+│  └── Account C (user wallet)                │
+└─────────────────────────────────────────────┘
+
+Transaction: "Run Program with Accounts [A, B, C]"
+```
+
+**Characteristics:**
+- Programs are stateless; all state lives in accounts
+- Transactions declare which accounts they touch
+- Non-overlapping transactions execute in parallel
+- Rust-based development (steeper learning curve)
+
+**Trade-off:** High parallelism and throughput, but complex programming model and state management.
+
+### Move (Sui, Aptos)
+
+Move emerged from Facebook's failed Diem (originally Libra) project:
+
+```
+2019: Facebook announces Libra — Global stablecoin ambition
+    ↓
+2020: Libra → Diem rebrand (regulatory pressure)
+    ↓
+2020: Move language developed for Diem
+    ↓
+2022: Diem abandoned; team scatters
+    ↓
+2022: Aptos launches (Diem team, Move language)
+2023: Sui launches (different Diem team, Move variant)
+```
+
+Move introduces **resources** as first-class types that can't be copied or discarded:
+
+```move
+// A Coin resource—can only be moved, never copied
+struct Coin has key, store {
+    value: u64
+}
+
+// Transfer moves the resource; original is gone
+public fun transfer(coin: Coin, recipient: address) {
+    move_to(recipient, coin);  // coin no longer exists in sender
+}
+```
+
+**Characteristics:**
+- Linear types prevent accidental duplication or loss
+- Resources model real-world assets naturally
+- Ownership is explicit and compiler-enforced
+- Objects (Sui) or resources (Aptos) enable parallel execution
+
+**Trade-off:** Safety guarantees from the type system, but requires learning new paradigms.
+
+### DAG-Based Systems (IOTA, Hedera)
+
+Some networks abandon the blockchain structure entirely for Directed Acyclic Graphs (DAGs).
+
+**IOTA (Tangle):**
+```
+      ┌───┐     ┌───┐
+      │ A │────▶│ C │────▶ ...
+      └───┘     └───┘
+        │         ▲
+        │    ┌────┘
+        ▼    │
+      ┌───┐  │  ┌───┐
+      │ B │──┴─▶│ D │────▶ ...
+      └───┘     └───┘
+
+Each new transaction confirms 2 previous transactions.
+No blocks. No miners. No fees.
+```
+
+- **Feeless transactions**: Users do small PoW to confirm others' transactions
+- **IoT-focused**: Designed for machine-to-machine micropayments
+- **Coordinator**: Currently relies on a central coordinator (planned removal)
+
+**Hashgraph → Hedera:**
+
+Hashgraph is a consensus *algorithm* invented by Leemon Baird (2016). Hedera (2019) is the public network implementation.
+
+```
+Hashgraph consensus ("gossip about gossip"):
+┌─────────────────────────────────────────────┐
+│  Node A tells Node B: "I saw tx1, tx2"      │
+│  Node B tells Node C: "A told me tx1, tx2"  │
+│  Node C knows: what happened AND who knew   │
+│              ↓                              │
+│  Virtual voting: nodes can calculate what   │
+│  others would vote without actual voting    │
+└─────────────────────────────────────────────┘
+```
+
+- **Asynchronous BFT**: Mathematically proven consensus
+- **Virtual voting**: Consensus without message overhead
+- **Corporate governance**: Hedera Council (Google, IBM, etc.) controls the network
+- **EVM-compatible**: Hedera Smart Contract Service runs Solidity
+
+**Trade-off:** Potentially higher throughput with mathematical finality, but IOTA's coordinator and Hedera's corporate governance raise decentralization questions. Hashgraph was patented (now expired), which limited adoption.
+
+### Interoperability Protocols (Cosmos, Polkadot)
+
+Rather than one chain to rule them all, these enable sovereign chains to communicate.
+
+**Cosmos (Tendermint + IBC):**
+```
+┌─────────────┐    IBC    ┌─────────────┐
+│  Cosmos Hub │◄────────►│   Osmosis   │
+│  (ATOM)     │          │   (OSMO)    │
+└─────────────┘          └─────────────┘
+       ▲                        ▲
+       │ IBC                    │ IBC
+       ▼                        ▼
+┌─────────────┐          ┌─────────────┐
+│   dYdX      │          │   Celestia  │
+│   Chain     │          │   (DA)      │
+└─────────────┘          └─────────────┘
+
+Each chain runs Tendermint BFT consensus.
+IBC (Inter-Blockchain Communication) enables trustless messaging.
+```
+
+- **App-specific chains**: Each application can be its own blockchain
+- **Sovereign security**: Each chain has its own validator set
+- **Cosmos SDK**: Framework for building custom chains quickly
+
+**Polkadot (Relay Chain + Parachains):**
+
+Polkadot was founded by Gavin Wood, who wrote the Ethereum Yellow Paper:
+
+```
+2014: Wood writes Ethereum Yellow Paper (formal EVM spec)
+    ↓
+2015: Wood co-founds Parity Technologies
+    ↓
+2016: Wood publishes Polkadot whitepaper
+    ↓
+2020: Polkadot mainnet launches
+```
+
+```
+              ┌─────────────────┐
+              │   Relay Chain   │
+              │ (Shared Security)│
+              └────────┬────────┘
+         ┌─────────────┼─────────────┐
+         ▼             ▼             ▼
+    ┌─────────┐  ┌─────────┐  ┌─────────┐
+    │Parachain│  │Parachain│  │Parachain│
+    │  Acala  │  │ Moonbeam│  │  Astar  │
+    └─────────┘  └─────────┘  └─────────┘
+
+Parachains lease slots on the relay chain.
+All parachains share the relay chain's security.
+```
+
+- **Shared security**: Parachains inherit security from DOT stakers
+- **Heterogeneous sharding**: Each parachain can have different rules
+- **XCM**: Cross-Consensus Messaging for inter-parachain communication
+
+**Trade-off:** Enables specialized chains, but adds complexity. Cosmos chains must bootstrap their own security; Polkadot requires slot auctions.
+
+### Privacy-First Chains (Monero, Zcash)
+
+While most blockchains have transparent ledgers, some prioritize privacy at the protocol level. Two fundamentally different cryptographic approaches emerged:
+
+**CryptoNote → Bytecoin → Monero (Ring Signatures):**
+
+```
+2012: CryptoNote whitepaper (anonymous author "Nicolas van Saberhagen")
+    ↓
+2012: Bytecoin — First CryptoNote implementation (sketchy premine)
+    ↓
+2014: Monero — Fair-launch fork of Bytecoin
+```
+
+```
+Monero's privacy stack:
+├── Ring Signatures: Transaction signed by group (Alice + decoys)
+├── Stealth Addresses: One-time addresses per transaction
+└── RingCT: Amounts hidden with cryptographic commitments
+
+Result: Sender, receiver, AND amount are all obscured.
+```
+
+- **Default privacy**: All transactions are private, not opt-in
+- **ASIC-resistant**: RandomX algorithm favors CPUs
+- **Fungibility**: Every XMR is identical (no "tainted" coins)
+
+**Zerocoin → Zcash (Zero-Knowledge Proofs):**
+
+```
+2013: Zerocoin paper (academic proposal for Bitcoin privacy)
+    ↓
+2014: Zerocash paper (improved with zk-SNARKs)
+    ↓
+2016: Zcash launch — First production zk-SNARK blockchain
+```
+
+```
+Zcash approach:
+┌─────────────────────────────────────────────┐
+│  Transparent addresses: t1... (like Bitcoin)│
+│  Shielded addresses: zs... (ZK-private)     │
+│                                             │
+│  ZK proof says: "This transaction is valid" │
+│  WITHOUT revealing sender, receiver, amount │
+└─────────────────────────────────────────────┘
+```
+
+- **Opt-in privacy**: Users choose transparent or shielded
+- **zk-SNARKs**: Zero-knowledge proofs (same tech in ZK rollups)
+- **Trusted setup**: Required ceremony (later improved with Sapling/Orchard)
+
+**Ring Signatures vs ZK Proofs:**
+
+| Aspect | Monero (Ring Sigs) | Zcash (ZK Proofs) |
+|--------|-------------------|-------------------|
+| Privacy | Always on | Opt-in (shielded) |
+| Scalability | Larger tx sizes | Smaller proofs |
+| Cryptographic basis | Mature (decades old) | Newer (more assumptions) |
+| Regulatory stance | Default privacy | Compliance-friendly option |
+
+**Trade-off:** Strong privacy in both, but limited programmability. No smart contracts in the EVM sense. Zcash's ZK research directly influenced ZK rollups—the Zcash team's work on SNARKs spread throughout the ecosystem.
+
+### Self-Amending Chains (Tezos)
+
+Tezos pioneered on-chain governance where the protocol upgrades itself.
+
+**Tezos (Michelson VM):**
+```
+Proposal → Exploration → Testing → Promotion → Activation
+    │           │            │          │           │
+    └───────────┴────────────┴──────────┴───────────┘
+              Bakers vote at each stage
+
+If approved, protocol upgrades automatically.
+No hard forks required.
+```
+
+- **On-chain governance**: Protocol changes are voted on and self-execute
+- **Formal verification**: Michelson designed for mathematical proofs
+- **Liquid Proof of Stake**: Delegation without lockups
+
+**Trade-off:** Governance enables evolution without contentious forks, but can be slow and political. Smaller developer ecosystem than EVM.
+
+### Enterprise DLT (Canton)
+
+Some networks prioritize enterprise requirements over public decentralization.
+
+**Canton (Daml):**
+```
+Traditional blockchain:  Everyone sees everything
+
+Canton sub-transaction privacy:
+┌─────────────────────────────────────────────┐
+│  Transaction: Alice sells asset to Bob      │
+├─────────────────────────────────────────────┤
+│  Alice sees: Her sale, payment received     │
+│  Bob sees: His purchase, asset received     │
+│  Charlie sees: Nothing (not a party)        │
+│  Regulator sees: Only what they're party to │
+└─────────────────────────────────────────────┘
+```
+
+- **Privacy by design**: Parties only see transactions they're involved in
+- **Daml**: Domain-specific language for multi-party workflows
+- **Interoperability**: Canton networks can connect (Global Synchronizer)
+
+**Trade-off:** Strong privacy and enterprise features, but permissioned. Different philosophy than public blockchains.
+
+### Payment Networks (Stellar)
+
+Stellar emerged from a Ripple co-founder taking a different path:
+
+```
+2012: Ripple founded (Jed McCaleb, Chris Larsen)
+    ↓
+2013: McCaleb leaves Ripple (disagreements over direction)
+    ↓
+2014: Stellar founded — Open-source, non-profit focus
+    ↓
+2015: Stellar Consensus Protocol replaces original Ripple-based code
+```
+
+**Stellar (Stellar Consensus Protocol):**
+```
+Federated Byzantine Agreement:
+- Nodes choose their own "quorum slices" (trusted peers)
+- Consensus emerges from overlapping trust
+- No mining, no staking—trust-based
+
+┌─────────────────────────────────────────┐
+│  Built-in features:                     │
+│  ├── Native DEX (order book)            │
+│  ├── Multi-signature accounts           │
+│  ├── Asset issuance (anchors)           │
+│  └── Path payments (auto-conversion)    │
+└─────────────────────────────────────────┘
+```
+
+- **3-5 second finality**: Optimized for payments
+- **Minimal fees**: Fraction of a cent per transaction
+- **Anchors**: Bridges to fiat currencies and other assets
+
+**Trade-off:** Fast and cheap for payments, but limited programmability. Not designed for DeFi complexity.
+
+### The Larimer Evolution: BitShares → Steemit → EOS
+
+Dan Larimer's projects form an important lineage in blockchain history, with each iteration building on lessons from the previous.
+
+```
+2014: BitShares — DPoS, DEX, synthetic assets
+    ↓
+2016: Steemit — Social blockchain, content rewards
+    ↓
+2018: EOS — General-purpose smart contracts + DPoS
+```
+
+**BitShares (2014) — DPoS Pioneer:**
+```
+Delegated Proof of Stake (DPoS):
+┌─────────────────────────────────────────────┐
+│  All BTS holders vote for witnesses         │
+│              ▼                              │
+│  Top 101 witnesses produce blocks           │
+│  (~3 second block times)                    │
+│              ▼                              │
+│  Witnesses can be voted out at any time     │
+└─────────────────────────────────────────────┘
+
+Built-in features (2014!):
+├── Decentralized exchange (order book)
+├── Market-pegged assets (bitUSD, bitCNY)
+├── User-issued assets
+└── Recurring payments
+```
+
+- **DPoS inventor**: The consensus mechanism now used by EOS, Tron, Lisk, and others
+- **First DEX**: Order book exchange years before Uniswap
+- **Bitassets**: Collateralized stablecoins before MakerDAO
+
+**Steemit (2016) — Social Blockchain:**
+```
+"Proof of Brain":
+├── Users post content
+├── Other users upvote/downvote
+├── Rewards distributed based on stake-weighted votes
+└── Content creators earn STEEM tokens
+```
+
+- **First social blockchain**: Demonstrated non-financial use cases
+- **Delegated bandwidth**: Users stake for "resource credits" (no per-tx fees)
+- **3-second blocks**: Maintained DPoS speed
+
+**EOS (2018) — Smart Contract Platform:**
+```
+EOS architecture:
+├── 21 Block Producers (elected via DPoS)
+├── WebAssembly smart contracts (C++ primarily)
+├── No transaction fees (stake for resources)
+└── Account system with human-readable names
+```
+
+- **$4B ICO**: Largest token sale in history at the time
+- **Feeless model**: Stake EOS for CPU/NET/RAM resources
+- **Parallel execution**: Designed for high throughput
+- **Governance controversy**: Block producer collusion concerns, on-chain arbitration debates
+
+**Trade-off:** DPoS enables speed (sub-second finality) but concentrates power in few block producers. The 21-BP model faced criticism for cartel behavior. EOS demonstrated that high-throughput designs come with governance trade-offs.
+
+<Note>
+Many features in later platforms trace back to this lineage. Tron's DPoS, various "feeless" designs, and stake-based resource models all echo Larimer's work. The criticisms of these systems (centralization, governance capture) also informed later designs.
+</Note>
+
+### AI & Compute Networks (Bittensor, Qubic)
+
+Emerging networks that combine blockchain with machine learning.
+
+**Bittensor:**
+```
+┌─────────────────────────────────────────────┐
+│              Root Network (TAO)             │
+├─────────────────────────────────────────────┤
+│  Subnet 1    │  Subnet 2    │  Subnet 3    │
+│  Text Gen    │  Image Gen   │  Data Oracle │
+│              │              │              │
+│  Miners:     │  Miners:     │  Miners:     │
+│  Run LLMs    │  Run diffusion│ Run scrapers│
+│              │              │              │
+│  Validators: │  Validators: │  Validators: │
+│  Score output│  Score output│  Score output│
+└─────────────────────────────────────────────┘
+
+TAO rewards flow to miners producing valuable AI outputs.
+```
+
+- **Subnets**: Specialized networks for different AI tasks
+- **Incentivized ML**: Miners run models, validators score quality
+- **Composable AI**: Query the network like an API
+
+**Qubic:**
+```
+Useful Proof of Work:
+- Instead of hash puzzles, miners train AI models
+- Quorum-based consensus (676 computors)
+- Computation itself has value
+```
+
+- **UPoW**: Mining work trains neural networks
+- **Smart contracts**: Turing-complete with AI primitives
+- **Feeless**: No transaction fees
+
+**Trade-off:** Novel intersection of blockchain and AI, but nascent ecosystems. Unclear long-term tokenomics and sustainability.
+
+### Comparison Summary
+
+| Model | Architecture | Consensus | Smart Contracts | Best For |
+|-------|-------------|-----------|-----------------|----------|
+| **EVM** | Account (global state) | PoW/PoS | Solidity (Turing-complete) | DeFi, composability |
+| **Bitcoin** | UTXO | PoW | Script (limited) | Sound money, payments |
+| **Cardano** | eUTXO | PoS (Ouroboros) | Plutus (deterministic) | Formal verification |
+| **Solana** | Accounts + Programs | PoH + PoS | Rust (parallel) | High throughput |
+| **Move** | Resources/Objects | Various | Move (linear types) | Asset safety |
+| **IOTA** | DAG (Tangle) | Tip selection | Limited | IoT, micropayments |
+| **Hedera** | Hashgraph | Virtual voting | EVM-compatible | Enterprise, speed |
+| **Cosmos** | App-chains + IBC | Tendermint BFT | CosmWasm/custom | Sovereignty, interop |
+| **Polkadot** | Relay + Parachains | GRANDPA/BABE | Various per chain | Shared security |
+| **Monero** | UTXO (ring sigs) | RandomX PoW | None | Privacy (default) |
+| **Zcash** | UTXO (zk-SNARKs) | PoW | None | Privacy (opt-in) |
+| **Tezos** | Account | LPoS | Michelson | Governance, formal |
+| **Stellar** | Account | SCP (federated) | Limited | Payments, anchors |
+| **EOS** | Account | DPoS (21 BPs) | WASM (C++) | High throughput |
+| **Bittensor** | Subnets | PoS + scoring | AI-focused | Decentralized ML |
+| **Canton** | Sub-transaction | BFT | Daml | Enterprise privacy |
+
+**Historical Lineages:**
+- *DigiCash* → *Hashcash* → *b-money* → *Bit Gold* → *RPOW* → **Bitcoin** (2008)
+- *Colored Coins* → *Mastercoin* → **Ethereum** (2015) → EVM ecosystem
+- *CryptoNote* (2012) → Bytecoin → **Monero** (2014)
+- *Zerocoin/Zerocash* → **Zcash** (2016) → ZK rollup research
+- *Colored Coins* → Counterparty → **Cardano eUTXO**
+- **BitShares** (2014) → Steemit → **EOS** (2018) → Tron, etc.
+- *Hashgraph algorithm* (2016) → **Hedera** (2019)
+- **Ethereum** (Wood) → *Parity* → **Polkadot** (2020)
+- **Ripple** (McCaleb) → **Stellar** (2014)
+- *Facebook Diem/Libra* → **Aptos**, **Sui** (2022-23)
+
+### Why the Account Model Won for DeFi
+
+The EVM's sequential, global-state model seems inefficient, but it enabled DeFi's defining feature: **atomic composability**.
+
+```solidity
+// This only works with global state and atomic transactions
+function flashLoanArbitrage() external {
+    // 1. Borrow 1M USDC from Aave (no collateral)
+    aave.flashLoan(1_000_000e6, ...);
+
+    // 2. Buy ETH on Uniswap
+    uniswap.swap(usdc, eth, 1_000_000e6);
+
+    // 3. Sell ETH on Sushiswap for more USDC
+    sushi.swap(eth, usdc, ethAmount);
+
+    // 4. Repay Aave + fee
+    aave.repay(1_000_000e6 + fee);
+
+    // 5. Keep profit
+    // If ANY step fails, EVERYTHING reverts—no risk
+}
+```
+
+This pattern is impossible or extremely difficult in UTXO models. The EVM's sequential execution is what enables financial applications to compose without coordination.
+
+## Institutional Legitimacy: The ETF Era
+
+Two events in 2024 changed crypto's relationship with traditional finance:
+
+**January 2024**: The SEC approved spot Bitcoin ETFs. Within months, billions of dollars flowed into regulated Bitcoin exposure.
+
+**July 2024**: The SEC approved spot Ethereum ETFs. This specifically validated the EVM ecosystem—not just Ethereum's token, but the smart contract platform.
+
+**What this means for developers:**
+
+1. **Regulatory clarity is coming**: Institutional money demands regulatory frameworks. MiCA (EU) is live. The GENIUS Act (US stablecoin regulation) is progressing.
+
+2. **Compliance matters**: Applications handling significant value face increasing scrutiny. "Decentralized" isn't a shield from regulation if your frontend is centralized or your admin keys can freeze funds.
+
+3. **Institutional use cases emerge**: Tokenized treasuries, compliant stablecoins, regulated DeFi protocols—these require developers who understand both technology and compliance.
+
+The ETFs validated crypto as an asset class. The question for developers is: what can you build on it?
+
+## The Decentralization Spectrum
+
+Not all systems claiming decentralization are equally decentralized. Understanding this spectrum is necessary for honest development.
+
+| Layer | Centralized Choice | Decentralized Choice | Trade-off |
+|-------|-------------------|---------------------|-----------|
+| **Blockchain** | Permissioned chain | Public chain (ETH, ETC) | Control vs. censorship resistance |
+| **Node access** | Single RPC provider (Infura) | Own node or load balancer (Dshackle) | Convenience vs. trust |
+| **Smart contract** | Upgradeable by admin | Immutable or DAO-controlled | Flexibility vs. trust minimization |
+| **Data indexing** | Centralized API | The Graph | Speed vs. censorship resistance |
+| **Frontend** | Vercel/AWS | IPFS + ENS | UX vs. unstoppability |
+| **Sequencer (L2)** | Single operator | Shared sequencer | Throughput vs. liveness |
+
+**The key insight:** You don't have to decentralize every layer. But you must *know* which layers are centralized and communicate this honestly to users.
+
+The problem isn't centralization—it's *claiming* decentralization while having centralized components. If your RPC provider goes down, your "decentralized" app stops working. If your admin key is compromised, your "trustless" protocol isn't.
+
+<Callout type="warning" title="Decentralization Theater">
+Many projects claim properties they don't have. "Decentralized" bridges controlled by single entities. "ZK-powered" systems without ZK proofs. "Non-custodial" protocols with admin freeze functions. Throughout this book, we'll teach you to identify these patterns—and to build honestly from the start.
+</Callout>
+
+## What the EVM Gives You
+
+When you build on the EVM, you inherit:
+
+**Deterministic Execution**: Given the same inputs, every node produces the same output. No "it works on my machine" problems. If a transaction succeeds on one node, it succeeds on all nodes.
+
+**Global State**: Contracts can read each other's storage. This enables composability—your contract can integrate with Uniswap, Aave, or any other protocol without permission.
+
+**Atomic Transactions**: Within a single transaction, either everything succeeds or everything reverts. No partial failures. This enables complex multi-step operations (flash loans) that would be impossible in traditional systems.
+
+**Economic Security**: Miners (ETC) or validators (ETH) have economic skin in the game. Attacking the network costs real money. The longer a transaction has been confirmed, the more expensive it becomes to reverse.
+
+**Permissionless Innovation**: Anyone can deploy a contract. Anyone can call it. No app store approval. No API keys. No terms of service that can be changed. Code is the interface.
+
+**Programmable Money**: The native currency (ETH or ETC) is a first-class citizen in contract execution. Contracts can hold, send, and receive value as part of their logic.
+
+## The Gas Model
+
+The EVM uses *gas* to meter computation. Every operation has a gas cost. Transactions specify a gas limit (maximum computation) and gas price (cost per unit). This solves the halting problem—programs can't run forever because they'll run out of gas.
+
+```
+Transaction cost = Gas used × Gas price
+
+Example:
+  Gas used: 21,000 (simple ETH transfer)
+  Gas price: 30 gwei (0.00000003 ETH per gas unit)
+  Cost: 21,000 × 0.00000003 = 0.00063 ETH
+```
+
+Gas economics differ between chains:
+
+- **Ethereum**: EIP-1559 burns the base fee, reducing ETH supply. Tips go to validators.
+- **Ethereum Classic**: Olympia upgrade implements EIP-1559 with treasury funding instead of burning.
+- **L2s**: Much cheaper (10-100x) due to batching transactions to L1.
+
+Understanding gas is essential for writing efficient contracts. We cover optimization techniques in Chapter 14.
+
+## EVM Components
+
+An EVM-based blockchain consists of:
+
+**P2P Network**: Nodes connect via the DEVp2p protocol (TCP port 30303), sharing transactions and blocks through gossip.
+
+**State Machine**: The EVM itself—a stack-based virtual machine executing bytecode. 256-bit word size. Three memory areas: stack, memory (volatile), and storage (persistent).
+
+**Consensus**:
+- Ethereum uses proof-of-stake via the Beacon Chain
+- Ethereum Classic uses proof-of-work with ETCHash
+
+**Data Structures**: State stored in Merkle Patricia Tries, enabling efficient proofs of inclusion. Transactions and receipts similarly structured.
+
+**Clients**: Multiple implementations maintain network health:
+- Ethereum: Geth, Nethermind, Besu, Erigon
+- Ethereum Classic: Core Geth, Besu, Erigon
+
+## Reading This Book
+
+This book assumes you can write code and understand basic programming concepts. You don't need blockchain experience—we build from the ground up.
+
+**Part I (Chapters 1-3)** sets context: what the EVM is, how we got here, and how to set up your development environment.
+
+**Part II (Chapters 4-7)** covers core concepts: cryptography, accounts, transactions, and consensus. These fundamentals underpin everything else.
+
+**Part III (Chapters 8-12)** teaches smart contract development: Solidity, security, testing, and deployment.
+
+**Part IV (Chapters 13-14)** dives deep into the EVM: opcodes, bytecode, and gas optimization.
+
+**Part V (Chapters 15-20)** explores the application layer: tokens, AMMs, lending, governance, NFT marketplaces, and launchpads. This is where you'll see how major protocols evolved and how to build your own.
+
+**Part VI (Chapters 21-22)** covers specialized applications: prediction markets and oracles.
+
+**Part VII (Chapters 23-24)** addresses scaling: Layer 2 solutions and zero-knowledge applications.
+
+**Part VIII (Chapters 25-27)** prepares you for the real world: regulatory landscape, bootstrapping ecosystems, and AI-assisted development.
+
+Throughout, we highlight differences between Ethereum and Ethereum Classic where relevant. The goal is practical knowledge you can apply immediately.
+
+## What You'll Build
+
+By the end of this book, you'll understand how to:
+
+- Write secure, gas-efficient smart contracts
+- Deploy to multiple EVM chains
+- Integrate with existing DeFi protocols
+- Build applications that handle real value
+- Navigate the regulatory landscape
+- Bootstrap an ecosystem on a new EVM chain
+- Use AI tools to accelerate your development
+
+More importantly, you'll understand *why* things work the way they do. That understanding lets you adapt as the ecosystem evolves—and evolve it will.
+
+Let's begin.

@@ -1,0 +1,882 @@
+---
+title: Testing & Verification
+description: Comprehensive testing strategies with Foundry, fuzzing, and formal verification
+chapter: 11
+---
+
+# Testing & Verification
+
+Smart contracts manage real value and are immutable once deployed. A bug discovered post-deployment can mean permanent loss of funds with no recourse. This chapter covers the testing strategies and verification techniques that give you confidence your contracts work correctly.
+
+## The Testing Pyramid
+
+Smart contract testing follows a modified testing pyramid:
+
+```
+         ┌─────────────────┐
+         │    Mainnet      │  ← Real value at stake
+         │    Forking      │
+         ├─────────────────┤
+         │   Integration   │  ← Multiple contracts interacting
+         │     Tests       │
+         ├─────────────────┤
+         │   Unit Tests    │  ← Individual functions
+         │   (Foundry)     │
+         ├─────────────────┤
+         │   Fuzz Tests    │  ← Random inputs, edge cases
+         ├─────────────────┤
+         │   Invariant     │  ← Properties that must always hold
+         │     Tests       │
+         ├─────────────────┤
+         │    Formal       │  ← Mathematical proof of correctness
+         │  Verification   │
+         └─────────────────┘
+```
+
+More layers = more confidence, but also more effort. The goal is finding the right balance for your project's risk profile.
+
+## Foundry Testing Fundamentals
+
+Foundry's `forge` is the standard for Solidity testing in 2025-2026. Tests are written in Solidity, making them fast, familiar, and powerful.
+
+### Project Setup
+
+```bash
+# Initialize a new Foundry project
+forge init my-project
+cd my-project
+
+# Project structure
+├── src/           # Source contracts
+├── test/          # Test files
+├── script/        # Deployment scripts
+└── foundry.toml   # Configuration
+```
+
+### Writing Your First Test
+
+```solidity
+// test/Counter.t.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Test.sol";
+import "../src/Counter.sol";
+
+contract CounterTest is Test {
+    Counter public counter;
+
+    // Runs before each test
+    function setUp() public {
+        counter = new Counter();
+        counter.setNumber(0);
+    }
+
+    function test_Increment() public {
+        counter.increment();
+        assertEq(counter.number(), 1);
+    }
+
+    function test_SetNumber() public {
+        counter.setNumber(42);
+        assertEq(counter.number(), 42);
+    }
+
+    // Test names starting with testFail_ should revert
+    function testFail_DecrementBelowZero() public {
+        counter.decrement();  // Should revert (underflow)
+    }
+}
+```
+
+Run tests:
+
+```bash
+$ forge test
+[PASS] test_Increment() (gas: 28356)
+[PASS] test_SetNumber() (gas: 27523)
+[PASS] testFail_DecrementBelowZero() (gas: 8431)
+```
+
+### Forge Standard Library
+
+`forge-std` provides powerful testing utilities:
+
+```solidity
+import "forge-std/Test.sol";
+
+contract AdvancedTest is Test {
+    function test_Assertions() public {
+        // Basic assertions
+        assertTrue(1 == 1);
+        assertFalse(1 == 2);
+        assertEq(uint256(1), uint256(1));
+        assertEq(address(this), address(this));
+
+        // Approximate equality (for dealing with rounding)
+        assertApproxEqAbs(100, 101, 1);  // Within 1
+        assertApproxEqRel(100, 102, 0.03e18);  // Within 3%
+
+        // Array comparisons
+        uint256[] memory a = new uint256[](2);
+        a[0] = 1; a[1] = 2;
+        uint256[] memory b = new uint256[](2);
+        b[0] = 1; b[1] = 2;
+        assertEq(a, b);
+    }
+
+    function test_ExpectRevert() public {
+        // Expect any revert
+        vm.expectRevert();
+        revertingFunction();
+
+        // Expect specific error message
+        vm.expectRevert("Unauthorized");
+        restrictedFunction();
+
+        // Expect custom error
+        vm.expectRevert(abi.encodeWithSelector(
+            InsufficientBalance.selector,
+            100,  // available
+            200   // requested
+        ));
+        insufficientBalanceFunction();
+    }
+
+    function test_ExpectEmit() public {
+        // Check topic 1, topic 2, topic 3, and data
+        vm.expectEmit(true, true, false, true);
+        emit Transfer(alice, bob, 100);
+
+        // This should emit the expected event
+        token.transfer(bob, 100);
+    }
+}
+```
+
+### Cheatcodes
+
+Foundry provides "cheatcodes" through the `vm` object to manipulate blockchain state:
+
+```solidity
+contract CheatcodeTest is Test {
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+
+    function test_Prank() public {
+        // Impersonate alice for next call
+        vm.prank(alice);
+        vault.deposit{value: 1 ether}();
+
+        // Impersonate alice for all subsequent calls
+        vm.startPrank(alice);
+        vault.deposit{value: 1 ether}();
+        vault.withdraw(0.5 ether);
+        vm.stopPrank();
+    }
+
+    function test_Deal() public {
+        // Give alice 100 ETH
+        vm.deal(alice, 100 ether);
+
+        // Give alice 1000 tokens
+        deal(address(token), alice, 1000e18);
+    }
+
+    function test_TimeManipulation() public {
+        // Warp to specific timestamp
+        vm.warp(block.timestamp + 1 days);
+
+        // Roll to specific block
+        vm.roll(block.number + 100);
+
+        // Skip forward in time
+        skip(7 days);
+    }
+
+    function test_Snapshots() public {
+        uint256 snapshot = vm.snapshot();
+
+        // Make state changes
+        counter.increment();
+        assertEq(counter.number(), 1);
+
+        // Revert to snapshot
+        vm.revertTo(snapshot);
+        assertEq(counter.number(), 0);
+    }
+
+    function test_MockCalls() public {
+        // Mock a specific call
+        vm.mockCall(
+            address(oracle),
+            abi.encodeWithSelector(IOracle.getPrice.selector),
+            abi.encode(2000e8)  // Return $2000
+        );
+
+        uint256 price = oracle.getPrice();
+        assertEq(price, 2000e8);
+    }
+
+    function test_Labels() public {
+        // Label addresses for better trace output
+        vm.label(alice, "Alice");
+        vm.label(address(vault), "Vault");
+    }
+}
+```
+
+### Testing Events
+
+```solidity
+contract EventTest is Test {
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function test_EmitsTransfer() public {
+        // Parameters: checkTopic1, checkTopic2, checkTopic3, checkData
+        vm.expectEmit(true, true, true, true);
+        emit Transfer(alice, bob, 100);
+
+        // The next call should emit this event
+        token.transfer(bob, 100);
+    }
+
+    function test_MultipleEvents() public {
+        // Expect events in order
+        vm.expectEmit();
+        emit Approval(alice, address(vault), type(uint256).max);
+
+        vm.expectEmit();
+        emit Transfer(alice, address(vault), 1000);
+
+        vault.depositWithApproval(1000);
+    }
+}
+```
+
+## Fuzz Testing
+
+Fuzz testing automatically generates random inputs to find edge cases you wouldn't think to test manually.
+
+### Basic Fuzz Tests
+
+```solidity
+contract FuzzTest is Test {
+    // Foundry will call this with many random uint256 values
+    function testFuzz_SetNumber(uint256 x) public {
+        counter.setNumber(x);
+        assertEq(counter.number(), x);
+    }
+
+    // Use bound() to constrain inputs to reasonable ranges
+    function testFuzz_Deposit(uint256 amount) public {
+        // Constrain amount between 1 wei and 100 ETH
+        amount = bound(amount, 1, 100 ether);
+
+        vm.deal(alice, amount);
+        vm.prank(alice);
+        vault.deposit{value: amount}();
+
+        assertEq(vault.balanceOf(alice), amount);
+    }
+}
+```
+
+### Fuzz Test Configuration
+
+```toml
+# foundry.toml
+[fuzz]
+runs = 1000           # Number of random inputs per test
+max_test_rejects = 65536
+seed = "0x1234"       # Reproducible randomness
+dictionary_weight = 40
+```
+
+### Structured Fuzzing
+
+For complex inputs, use structured types:
+
+```solidity
+contract StructuredFuzzTest is Test {
+    struct DepositParams {
+        address user;
+        uint256 amount;
+        uint256 lockDuration;
+    }
+
+    function testFuzz_StructuredDeposit(DepositParams memory params) public {
+        // Sanitize inputs
+        vm.assume(params.user != address(0));
+        params.amount = bound(params.amount, 1, 100 ether);
+        params.lockDuration = bound(params.lockDuration, 1 days, 365 days);
+
+        // Test with structured parameters
+        vm.deal(params.user, params.amount);
+        vm.prank(params.user);
+        vault.deposit{value: params.amount}(params.lockDuration);
+
+        assertEq(vault.balanceOf(params.user), params.amount);
+    }
+}
+```
+
+### Excluding Invalid Inputs
+
+```solidity
+function testFuzz_Division(uint256 a, uint256 b) public {
+    // Skip inputs that would cause division by zero
+    vm.assume(b != 0);
+
+    // Also skip inputs that would overflow
+    vm.assume(a <= type(uint256).max / b);
+
+    uint256 result = calculator.divide(a, b);
+    assertEq(result, a / b);
+}
+```
+
+## Invariant Testing
+
+Invariant tests define properties that must *always* hold, regardless of what sequence of actions occurs. Foundry calls random functions in random order, checking invariants after each call.
+
+### Basic Invariant Test
+
+```solidity
+contract TokenInvariantTest is Test {
+    Token token;
+    Handler handler;
+
+    function setUp() public {
+        token = new Token();
+        handler = new Handler(token);
+
+        // Tell Foundry which contract to call random functions on
+        targetContract(address(handler));
+    }
+
+    // This invariant must hold after ANY sequence of handler calls
+    function invariant_TotalSupplyMatchesBalances() public {
+        uint256 sumOfBalances;
+        address[] memory holders = handler.getHolders();
+
+        for (uint256 i = 0; i < holders.length; i++) {
+            sumOfBalances += token.balanceOf(holders[i]);
+        }
+
+        assertEq(token.totalSupply(), sumOfBalances);
+    }
+}
+
+// Handler wraps the token with bounded inputs
+contract Handler is Test {
+    Token token;
+    address[] public holders;
+    mapping(address => bool) public isHolder;
+
+    constructor(Token _token) {
+        token = _token;
+    }
+
+    function mint(address to, uint256 amount) public {
+        // Bound inputs
+        amount = bound(amount, 0, 1e24);
+        if (to == address(0)) return;
+
+        token.mint(to, amount);
+
+        if (!isHolder[to]) {
+            holders.push(to);
+            isHolder[to] = true;
+        }
+    }
+
+    function transfer(uint256 fromIndex, uint256 toIndex, uint256 amount) public {
+        if (holders.length < 2) return;
+
+        address from = holders[fromIndex % holders.length];
+        address to = holders[toIndex % holders.length];
+        amount = bound(amount, 0, token.balanceOf(from));
+
+        vm.prank(from);
+        token.transfer(to, amount);
+    }
+
+    function getHolders() external view returns (address[] memory) {
+        return holders;
+    }
+}
+```
+
+### AMM Invariant Example
+
+```solidity
+contract AMMInvariantTest is Test {
+    AMM amm;
+    AMMHandler handler;
+
+    function setUp() public {
+        amm = new AMM(tokenA, tokenB);
+        handler = new AMMHandler(amm, tokenA, tokenB);
+        targetContract(address(handler));
+    }
+
+    // x * y = k should always hold (within rounding)
+    function invariant_ConstantProduct() public {
+        uint256 reserveA = amm.reserveA();
+        uint256 reserveB = amm.reserveB();
+        uint256 k = amm.k();
+
+        // Allow for small rounding errors
+        assertApproxEqAbs(reserveA * reserveB, k, 1000);
+    }
+
+    // LP tokens should always be redeemable
+    function invariant_LPTokensBacked() public {
+        uint256 totalLP = amm.totalSupply();
+        if (totalLP == 0) return;
+
+        uint256 reserveA = amm.reserveA();
+        uint256 reserveB = amm.reserveB();
+
+        // Each LP token should have some underlying value
+        assertTrue(reserveA > 0 || reserveB > 0);
+    }
+}
+```
+
+### Invariant Test Configuration
+
+```toml
+# foundry.toml
+[invariant]
+runs = 256            # Number of test runs
+depth = 500           # Calls per run
+fail_on_revert = false
+call_override = false
+```
+
+## Fork Testing
+
+Test against real Ethereum mainnet state by forking:
+
+```solidity
+contract ForkTest is Test {
+    uint256 mainnetFork;
+    uint256 etcFork;
+
+    function setUp() public {
+        // Create forks
+        mainnetFork = vm.createFork(vm.envString("ETH_RPC_URL"));
+        etcFork = vm.createFork(vm.envString("ETC_RPC_URL"));
+    }
+
+    function test_UniswapSwapOnMainnet() public {
+        // Switch to mainnet fork
+        vm.selectFork(mainnetFork);
+
+        // Now we have access to real mainnet contracts
+        IUniswapV2Router router = IUniswapV2Router(
+            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+        );
+
+        address[] memory path = new address[](2);
+        path[0] = WETH;
+        path[1] = USDC;
+
+        // Give ourselves some ETH
+        vm.deal(address(this), 10 ether);
+
+        // Perform real swap against mainnet state
+        router.swapExactETHForTokens{value: 1 ether}(
+            0,
+            path,
+            address(this),
+            block.timestamp
+        );
+
+        assertTrue(IERC20(USDC).balanceOf(address(this)) > 0);
+    }
+
+    function test_CrossChainLogic() public {
+        // Test on ETC
+        vm.selectFork(etcFork);
+        // ... ETC-specific tests
+
+        // Test on ETH
+        vm.selectFork(mainnetFork);
+        // ... ETH-specific tests
+    }
+}
+```
+
+### Fork at Specific Block
+
+```solidity
+function setUp() public {
+    // Fork at specific block for reproducibility
+    mainnetFork = vm.createFork(
+        vm.envString("ETH_RPC_URL"),
+        18_000_000  // Block number
+    );
+}
+```
+
+## Gas Testing
+
+Foundry provides built-in gas profiling:
+
+```solidity
+contract GasTest is Test {
+    function test_GasUsage() public {
+        uint256 gasBefore = gasleft();
+
+        vault.deposit{value: 1 ether}();
+
+        uint256 gasUsed = gasBefore - gasleft();
+        console.log("Gas used:", gasUsed);
+
+        // Assert gas is within acceptable bounds
+        assertLt(gasUsed, 100_000);
+    }
+}
+```
+
+Run with gas reporting:
+
+```bash
+$ forge test --gas-report
+
+| src/Vault.sol:Vault contract |                 |        |        |        |         |
+|------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost              | Deployment Size |        |        |        |         |
+| 534823                       | 2695            |        |        |        |         |
+| Function Name                | min             | avg    | median | max    | # calls |
+| deposit                      | 43521           | 54832  | 54832  | 66143  | 2       |
+| withdraw                     | 21432           | 21432  | 21432  | 21432  | 1       |
+```
+
+### Gas Snapshots
+
+Track gas changes over time:
+
+```bash
+# Create baseline
+$ forge snapshot
+
+# Compare against baseline
+$ forge snapshot --check
+```
+
+## Coverage
+
+Generate code coverage reports:
+
+```bash
+$ forge coverage
+
+| File                    | % Lines         | % Statements   | % Branches     | % Funcs       |
+|-------------------------|-----------------|----------------|----------------|---------------|
+| src/Vault.sol           | 100.00% (24/24) | 100.00% (29/29)| 83.33% (10/12) | 100.00% (6/6) |
+| src/Token.sol           | 95.00% (19/20)  | 96.00% (24/25) | 75.00% (6/8)   | 100.00% (5/5) |
+```
+
+Generate HTML report:
+
+```bash
+$ forge coverage --report lcov
+$ genhtml lcov.info -o coverage/
+```
+
+<Tip>
+Aim for 100% line coverage on critical paths (deposits, withdrawals, access control). Branch coverage of 80%+ is a good target for complex contracts.
+</Tip>
+
+## Formal Verification Basics
+
+Formal verification mathematically proves properties about your code. While comprehensive formal verification requires specialized tools and expertise, Foundry provides lightweight symbolic execution.
+
+### Symbolic Testing with Halmos
+
+Halmos is a symbolic testing tool that integrates with Foundry:
+
+```bash
+$ pip install halmos
+$ halmos --function test_
+```
+
+```solidity
+// Symbolic test - proves property for ALL possible inputs
+function check_NoOverflow(uint256 a, uint256 b) public {
+    // Halmos will try to find inputs that violate this
+    unchecked {
+        uint256 sum = a + b;
+        assert(sum >= a);  // This will fail for overflow
+    }
+}
+```
+
+### Certora Prover
+
+For production systems, Certora provides industrial-strength formal verification:
+
+```cvl
+// Certora spec file (spec.spec)
+rule totalSupplyNeverDecreases {
+    env e;
+    uint256 supplyBefore = totalSupply();
+
+    // Any function call
+    method f;
+    calldataarg args;
+    f(e, args);
+
+    uint256 supplyAfter = totalSupply();
+    assert supplyAfter >= supplyBefore;
+}
+```
+
+### SMTChecker
+
+Solidity's built-in SMTChecker can prove simple properties:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @custom:smtchecker abstract-function-nondet
+contract SafeMath {
+    function add(uint256 a, uint256 b) public pure returns (uint256) {
+        uint256 c = a + b;
+        assert(c >= a);  // SMTChecker will verify this
+        return c;
+    }
+}
+```
+
+Enable in `foundry.toml`:
+
+```toml
+[profile.default.model_checker]
+contracts = { "src/SafeMath.sol" = ["SafeMath"] }
+engine = "chc"
+targets = ["assert"]
+```
+
+## Test Organization
+
+### Directory Structure
+
+```
+test/
+├── unit/                    # Unit tests for individual contracts
+│   ├── Vault.t.sol
+│   └── Token.t.sol
+├── integration/             # Multi-contract interaction tests
+│   └── VaultToken.t.sol
+├── fuzz/                    # Dedicated fuzz tests
+│   └── Vault.fuzz.t.sol
+├── invariant/               # Invariant tests
+│   ├── VaultInvariant.t.sol
+│   └── handlers/
+│       └── VaultHandler.sol
+├── fork/                    # Fork tests
+│   ├── Mainnet.fork.t.sol
+│   └── ETC.fork.t.sol
+└── helpers/                 # Shared test utilities
+    ├── BaseTest.sol
+    └── Actors.sol
+```
+
+### Base Test Contract
+
+Create a shared base for common setup:
+
+```solidity
+// test/helpers/BaseTest.sol
+abstract contract BaseTest is Test {
+    address constant ALICE = address(0x1);
+    address constant BOB = address(0x2);
+    address constant CAROL = address(0x3);
+
+    Token token;
+    Vault vault;
+
+    function setUp() public virtual {
+        // Label addresses
+        vm.label(ALICE, "Alice");
+        vm.label(BOB, "Bob");
+        vm.label(CAROL, "Carol");
+
+        // Deploy contracts
+        token = new Token();
+        vault = new Vault(address(token));
+
+        // Setup initial state
+        token.mint(ALICE, 1000e18);
+        token.mint(BOB, 1000e18);
+
+        vm.prank(ALICE);
+        token.approve(address(vault), type(uint256).max);
+
+        vm.prank(BOB);
+        token.approve(address(vault), type(uint256).max);
+    }
+
+    // Helper functions
+    function _deposit(address user, uint256 amount) internal {
+        vm.prank(user);
+        vault.deposit(amount);
+    }
+
+    function _withdraw(address user, uint256 amount) internal {
+        vm.prank(user);
+        vault.withdraw(amount);
+    }
+}
+```
+
+### Test Naming Conventions
+
+```solidity
+contract VaultTest is BaseTest {
+    // test_[FunctionName]_[Scenario]
+    function test_Deposit_Success() public { }
+    function test_Deposit_ZeroAmount() public { }
+    function test_Deposit_ExceedsBalance() public { }
+
+    // testFuzz_[FunctionName]_[Property]
+    function testFuzz_Deposit_BalanceIncreases(uint256 amount) public { }
+
+    // testFail_[FunctionName]_[FailureCase] (legacy, prefer expectRevert)
+    function testFail_Withdraw_Unauthorized() public { }
+
+    // invariant_[PropertyDescription]
+    function invariant_TotalDepositsMatchBalance() public { }
+
+    // For fork tests
+    function testFork_SwapOnMainnet() public { }
+}
+```
+
+## Debugging Failed Tests
+
+### Verbosity Levels
+
+```bash
+# Basic output
+$ forge test
+
+# Show logs
+$ forge test -v
+
+# Show traces for failing tests
+$ forge test -vv
+
+# Show traces for all tests
+$ forge test -vvv
+
+# Show traces with setup
+$ forge test -vvvv
+```
+
+### Trace Output
+
+```
+Running 1 test for test/Vault.t.sol:VaultTest
+[FAIL. Reason: InsufficientBalance(100, 200)] test_Withdraw_Reverts()
+Traces:
+  [29831] VaultTest::test_Withdraw_Reverts()
+    ├─ [0] VM::prank(Alice: [0x1])
+    │   └─ ← ()
+    ├─ [24532] Vault::withdraw(200)
+    │   └─ ← InsufficientBalance(100, 200)
+    └─ ← InsufficientBalance(100, 200)
+```
+
+### Using console.log
+
+```solidity
+import "forge-std/console.sol";
+
+function test_Debug() public {
+    console.log("Balance:", token.balanceOf(alice));
+    console.log("Address:", alice);
+    console.logBytes32(keccak256("test"));
+}
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run tests
+        run: forge test -vvv
+
+      - name: Check gas snapshots
+        run: forge snapshot --check
+
+      - name: Run coverage
+        run: forge coverage --report summary
+```
+
+### Pre-commit Hooks
+
+```bash
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: forge-test
+        name: Run Forge Tests
+        entry: forge test
+        language: system
+        pass_filenames: false
+```
+
+<Callout type="note" title="Code Examples">
+Complete test suites demonstrating patterns covered in this chapter:
+
+- [Counter.t.sol](../code/chapter-11/test/Counter.t.sol) — Unit testing with Foundry
+- [Fork.t.sol](../code/chapter-11/test/Fork.t.sol) — Fork testing against live networks
+- [SimpleVault.invariant.t.sol](../code/chapter-11/test/SimpleVault.invariant.t.sol) — Invariant testing
+- [SimpleVault.sol](../code/chapter-11/src/SimpleVault.sol) — Contract under test
+</Callout>
+
+## Summary
+
+Comprehensive testing combines multiple approaches:
+
+1. **Unit tests** verify individual functions work correctly
+2. **Fuzz tests** discover edge cases with random inputs
+3. **Invariant tests** ensure properties hold across any sequence of actions
+4. **Fork tests** validate behavior against real mainnet state
+5. **Formal verification** provides mathematical guarantees
+
+The confidence formula:
+
+```
+Confidence = Unit Tests + Fuzz Tests + Invariant Tests
+           + Fork Tests + Audits + Formal Verification
+```
+
+Invest in testing proportional to the value at risk. A personal project might need only unit tests; a protocol managing billions needs the full stack.
+
+In the next chapter, we'll cover deployment strategies and upgrade patterns to safely ship your tested code to production.

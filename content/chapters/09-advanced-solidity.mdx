@@ -1,0 +1,920 @@
+---
+title: Advanced Solidity Patterns
+description: Proxies, libraries, assembly, and patterns for production-grade contracts
+chapter: 9
+---
+
+# Advanced Solidity Patterns
+
+Chapter 8 covered Solidity fundamentals. This chapter explores advanced patterns used in production contracts: proxy architectures for upgradeability, library patterns for code reuse, inline assembly for low-level optimization, and design patterns that solve common problems elegantly.
+
+## The Upgradeability Problem
+
+Smart contracts are immutable by design—once deployed, their code cannot change. This creates a tension: what happens when you need to fix a bug, add features, or respond to changing requirements?
+
+The EVM community developed several patterns to address this, all based on a key insight: while *code* is immutable, *which code gets executed* can be dynamic.
+
+### Proxy Pattern Fundamentals
+
+A proxy contract delegates execution to an implementation contract:
+
+```solidity
+// Simplified proxy concept
+contract Proxy {
+    address public implementation;
+
+    fallback() external payable {
+        address impl = implementation;
+        assembly {
+            // Copy calldata to memory
+            calldatacopy(0, 0, calldatasize())
+
+            // Delegatecall to implementation
+            let result := delegatecall(gas(), impl, 0, calldatasize(), 0, 0)
+
+            // Copy return data
+            returndatacopy(0, 0, returndatasize())
+
+            // Return or revert based on result
+            switch result
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
+}
+```
+
+The `delegatecall` opcode executes the implementation's code but uses the proxy's storage. This means:
+- The proxy holds all state (storage variables)
+- The implementation provides the logic
+- Changing the implementation address "upgrades" the contract
+
+### Storage Collision: The Hidden Danger
+
+Proxies introduce a critical risk: storage collision. Both the proxy and implementation use the same storage space. If they both try to use slot 0, chaos ensues.
+
+**The problem:**
+```solidity
+contract Proxy {
+    address public implementation;  // Uses slot 0
+    address public admin;           // Uses slot 1
+}
+
+contract ImplementationV1 {
+    uint256 public value;           // Also wants slot 0!
+    address public owner;           // Also wants slot 1!
+}
+```
+
+When the implementation reads `value`, it actually reads the `implementation` address, interpreting it as a uint256.
+
+**The solution: unstructured storage**
+
+EIP-1967 defines standard storage slots using the hash of a string minus one:
+
+```solidity
+// EIP-1967 storage slots
+bytes32 constant IMPLEMENTATION_SLOT =
+    bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
+// = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
+
+bytes32 constant ADMIN_SLOT =
+    bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1);
+// = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+```
+
+These slots are practically impossible to collide with normal sequential storage.
+
+```solidity
+contract EIP1967Proxy {
+    bytes32 private constant IMPLEMENTATION_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+
+    function _getImplementation() internal view returns (address impl) {
+        assembly {
+            impl := sload(IMPLEMENTATION_SLOT)
+        }
+    }
+
+    function _setImplementation(address newImpl) internal {
+        assembly {
+            sstore(IMPLEMENTATION_SLOT, newImpl)
+        }
+    }
+}
+```
+
+## Proxy Pattern Variants
+
+### Transparent Proxy Pattern
+
+The transparent proxy (used by OpenZeppelin's `TransparentUpgradeableProxy`) solves the "function selector clash" problem.
+
+**The problem:** What if both the proxy and implementation have a function with the same selector?
+
+```solidity
+// Both have upgrade() - which one gets called?
+contract Proxy {
+    function upgrade(address newImpl) external { /* ... */ }
+}
+
+contract Implementation {
+    function upgrade(address newVersion) external { /* ... */ }
+}
+```
+
+**The solution:** The admin can only call proxy functions; everyone else can only call implementation functions.
+
+```solidity
+contract TransparentUpgradeableProxy {
+    modifier ifAdmin() {
+        if (msg.sender == _getAdmin()) {
+            _;
+        } else {
+            _fallback();
+        }
+    }
+
+    function upgradeTo(address newImplementation) external ifAdmin {
+        _setImplementation(newImplementation);
+    }
+
+    function admin() external ifAdmin returns (address) {
+        return _getAdmin();
+    }
+
+    // Non-admin calls always go to implementation
+    fallback() external payable {
+        _fallback();
+    }
+}
+```
+
+**Trade-off:** Every call checks `msg.sender == admin`, adding ~2,100 gas. For high-frequency functions, this adds up.
+
+### UUPS Pattern (Universal Upgradeable Proxy Standard)
+
+EIP-1822 (UUPS) moves the upgrade logic into the implementation contract:
+
+```solidity
+// The proxy is minimal
+contract UUPSProxy {
+    constructor(address implementation, bytes memory data) {
+        _setImplementation(implementation);
+        if (data.length > 0) {
+            (bool success,) = implementation.delegatecall(data);
+            require(success);
+        }
+    }
+
+    fallback() external payable {
+        _delegate(_getImplementation());
+    }
+}
+
+// Implementation contains upgrade logic
+abstract contract UUPSUpgradeable {
+    function upgradeTo(address newImplementation) public virtual {
+        _authorizeUpgrade(newImplementation);
+        _setImplementation(newImplementation);
+    }
+
+    // Override this to add access control
+    function _authorizeUpgrade(address) internal virtual;
+}
+
+contract MyContractV1 is UUPSUpgradeable {
+    address public owner;
+
+    function initialize(address _owner) external {
+        owner = _owner;
+    }
+
+    function _authorizeUpgrade(address) internal override {
+        require(msg.sender == owner, "Not owner");
+    }
+}
+```
+
+**Advantages:**
+- Cheaper calls (no admin check in proxy)
+- Smaller proxy deployment
+- More flexibility in upgrade logic
+
+**Danger:** If you deploy an implementation without the upgrade function (or with a bug in it), the contract becomes permanently non-upgradeable. OpenZeppelin's `UUPSUpgradeable` includes safeguards.
+
+### Beacon Proxy Pattern
+
+When you have many proxies that should all upgrade together (like user wallets or vault instances), beacon proxies shine:
+
+```solidity
+contract UpgradeableBeacon {
+    address public implementation;
+    address public owner;
+
+    function upgradeTo(address newImplementation) external {
+        require(msg.sender == owner);
+        implementation = newImplementation;
+    }
+}
+
+contract BeaconProxy {
+    address public beacon;
+
+    fallback() external payable {
+        address impl = UpgradeableBeacon(beacon).implementation();
+        _delegate(impl);
+    }
+}
+```
+
+**Use case:** Deploy 10,000 vault proxies, each pointing to the same beacon. One beacon upgrade updates all vaults atomically.
+
+### Diamond Pattern (EIP-2535)
+
+For complex systems, the diamond pattern allows multiple implementation contracts (facets):
+
+```solidity
+contract Diamond {
+    // Maps function selectors to facet addresses
+    mapping(bytes4 => address) public selectorToFacet;
+
+    fallback() external payable {
+        address facet = selectorToFacet[msg.sig];
+        require(facet != address(0), "Function not found");
+        _delegate(facet);
+    }
+
+    function diamondCut(
+        FacetCut[] calldata cuts,
+        address init,
+        bytes calldata initData
+    ) external {
+        // Add/replace/remove function selectors
+        for (uint i = 0; i < cuts.length; i++) {
+            // Process each cut...
+        }
+    }
+}
+```
+
+**Use case:** Large protocols where different teams maintain different functionality, or where contract size limits would otherwise require splitting.
+
+![Proxy Pattern Architecture](/images/diagrams/ch09-proxy-patterns.svg)
+
+## Upgrade Safety Rules
+
+Upgrading proxy implementations requires careful attention to storage layout:
+
+### Rule 1: Never Change Storage Order
+
+```solidity
+// V1
+contract ImplementationV1 {
+    uint256 public a;  // slot 0
+    uint256 public b;  // slot 1
+}
+
+// V2 - WRONG: inserted variable changes b's slot
+contract ImplementationV2 {
+    uint256 public a;      // slot 0
+    uint256 public newVar; // slot 1 - overwrites b!
+    uint256 public b;      // slot 2
+}
+
+// V2 - CORRECT: append only
+contract ImplementationV2 {
+    uint256 public a;      // slot 0
+    uint256 public b;      // slot 1
+    uint256 public newVar; // slot 2 - new storage
+}
+```
+
+### Rule 2: Never Change Variable Types
+
+```solidity
+// V1
+contract V1 {
+    uint128 public value;  // slot 0, lower 128 bits
+}
+
+// V2 - WRONG: type change corrupts storage
+contract V2 {
+    uint256 public value;  // slot 0, all 256 bits - reads garbage
+}
+```
+
+### Rule 3: Reserve Storage Gaps
+
+```solidity
+contract BaseV1 {
+    uint256 public value;
+
+    // Reserve 50 slots for future base contract variables
+    uint256[50] private __gap;
+}
+
+contract DerivedV1 is BaseV1 {
+    uint256 public derivedValue;
+}
+
+// Later, we can add to BaseV1 without breaking DerivedV1
+contract BaseV2 {
+    uint256 public value;
+    uint256 public newValue;  // Uses one gap slot
+
+    uint256[49] private __gap;  // Reduced by 1
+}
+```
+
+### Rule 4: Use Initializers, Not Constructors
+
+Constructors run during deployment and set state on the *implementation* contract, not the proxy:
+
+```solidity
+// WRONG: constructor sets state on implementation, not proxy
+contract BadImplementation {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;  // Sets owner on implementation contract!
+    }
+}
+
+// CORRECT: use initializer
+contract GoodImplementation {
+    address public owner;
+    bool private initialized;
+
+    function initialize(address _owner) external {
+        require(!initialized, "Already initialized");
+        initialized = true;
+        owner = _owner;
+    }
+}
+```
+
+OpenZeppelin provides `Initializable` with reentrancy protection:
+
+```solidity
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract MyContract is Initializable {
+    address public owner;
+
+    function initialize(address _owner) external initializer {
+        owner = _owner;
+    }
+}
+```
+
+## Libraries
+
+Libraries are deployed contracts that contain reusable code. They're called via `DELEGATECALL`, meaning they operate on the caller's storage.
+
+### Internal Library Functions
+
+When library functions are `internal`, they're inlined at compile time (no separate deployment):
+
+```solidity
+library Math {
+    function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a >= b ? a : b;
+    }
+
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a <= b ? a : b;
+    }
+}
+
+contract MyContract {
+    using Math for uint256;
+
+    function clamp(uint256 value, uint256 lo, uint256 hi)
+        external pure returns (uint256)
+    {
+        return value.max(lo).min(hi);
+    }
+}
+```
+
+### External Library Functions
+
+When functions are `external` or `public`, the library must be deployed separately:
+
+```solidity
+library ArrayUtils {
+    function indexOf(uint256[] storage arr, uint256 value)
+        external view returns (uint256)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == value) return i;
+        }
+        revert("Not found");
+    }
+}
+```
+
+Note the `storage` keyword—external library functions can accept storage pointers, enabling them to modify caller state.
+
+### Library Linking
+
+External libraries require linking at deployment:
+
+```bash
+# Foundry
+forge create MyContract --libraries ArrayUtils:0x1234...
+
+# Hardhat (in deployment script)
+const ArrayUtils = await ethers.deployContract("ArrayUtils");
+const MyContract = await ethers.deployContract("MyContract", {
+    libraries: { ArrayUtils: ArrayUtils.address }
+});
+```
+
+## Inline Assembly (Yul)
+
+Solidity allows inline assembly using Yul, a low-level language that compiles to EVM bytecode. Use it for:
+- Gas optimization in hot paths
+- Operations not expressible in Solidity
+- Direct memory/storage manipulation
+
+### Basic Assembly Syntax
+
+```solidity
+function add(uint256 a, uint256 b) public pure returns (uint256 result) {
+    assembly {
+        result := add(a, b)
+    }
+}
+```
+
+### Memory Operations
+
+```solidity
+function efficientConcat(bytes memory a, bytes memory b)
+    public pure returns (bytes memory result)
+{
+    assembly {
+        // Get lengths
+        let aLen := mload(a)
+        let bLen := mload(b)
+        let totalLen := add(aLen, bLen)
+
+        // Allocate memory for result
+        result := mload(0x40)  // Free memory pointer
+        mstore(result, totalLen)  // Store length
+
+        // Copy a's data
+        let aData := add(a, 0x20)
+        let resultData := add(result, 0x20)
+        for { let i := 0 } lt(i, aLen) { i := add(i, 0x20) } {
+            mstore(add(resultData, i), mload(add(aData, i)))
+        }
+
+        // Copy b's data
+        let bData := add(b, 0x20)
+        for { let i := 0 } lt(i, bLen) { i := add(i, 0x20) } {
+            mstore(add(add(resultData, aLen), i), mload(add(bData, i)))
+        }
+
+        // Update free memory pointer
+        mstore(0x40, add(add(result, 0x20), totalLen))
+    }
+}
+```
+
+### Storage Operations
+
+```solidity
+contract StorageExample {
+    uint256 private secretValue;
+
+    // Read from arbitrary storage slot
+    function readSlot(uint256 slot) external view returns (uint256 value) {
+        assembly {
+            value := sload(slot)
+        }
+    }
+
+    // Efficient mapping access
+    function getMappingSlot(
+        uint256 mappingSlot,
+        address key
+    ) external pure returns (bytes32) {
+        assembly {
+            // mapping[key] is at keccak256(key . mappingSlot)
+            mstore(0x00, key)
+            mstore(0x20, mappingSlot)
+            mstore(0x00, keccak256(0x00, 0x40))
+        }
+        bytes32 slot;
+        assembly {
+            slot := mload(0x00)
+        }
+        return slot;
+    }
+}
+```
+
+### Common Assembly Patterns
+
+**Efficient revert with custom error:**
+```solidity
+function revertWithSelector(bytes4 selector) internal pure {
+    assembly {
+        mstore(0x00, selector)
+        revert(0x00, 0x04)
+    }
+}
+```
+
+**Check if address is contract:**
+```solidity
+function isContract(address account) internal view returns (bool) {
+    uint256 size;
+    assembly {
+        size := extcodesize(account)
+    }
+    return size > 0;
+}
+```
+
+**Efficient ether transfer:**
+```solidity
+function safeTransferETH(address to, uint256 amount) internal {
+    assembly {
+        let success := call(gas(), to, amount, 0, 0, 0, 0)
+        if iszero(success) {
+            revert(0, 0)
+        }
+    }
+}
+```
+
+<Warning>
+Assembly bypasses Solidity's safety checks. A single mistake can cause silent data corruption, loss of funds, or security vulnerabilities. Use assembly sparingly and audit carefully.
+</Warning>
+
+## Design Patterns
+
+### Pull Over Push (Withdrawal Pattern)
+
+Instead of pushing payments to users, let them pull:
+
+```solidity
+// BAD: Push pattern - vulnerable to DoS
+contract BadAuction {
+    address public highestBidder;
+    uint256 public highestBid;
+
+    function bid() external payable {
+        require(msg.value > highestBid);
+
+        // If this fails (e.g., recipient reverts),
+        // no one can bid anymore!
+        payable(highestBidder).transfer(highestBid);
+
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+}
+
+// GOOD: Pull pattern - users withdraw their own funds
+contract GoodAuction {
+    address public highestBidder;
+    uint256 public highestBid;
+    mapping(address => uint256) public pendingReturns;
+
+    function bid() external payable {
+        require(msg.value > highestBid);
+
+        if (highestBidder != address(0)) {
+            pendingReturns[highestBidder] += highestBid;
+        }
+
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+
+    function withdraw() external {
+        uint256 amount = pendingReturns[msg.sender];
+        require(amount > 0);
+
+        pendingReturns[msg.sender] = 0;  // Update state FIRST
+        payable(msg.sender).transfer(amount);
+    }
+}
+```
+
+### Checks-Effects-Interactions (CEI)
+
+Prevent reentrancy by ordering operations correctly:
+
+```solidity
+function withdraw(uint256 amount) external {
+    // 1. CHECKS: Validate inputs and state
+    require(balances[msg.sender] >= amount, "Insufficient balance");
+
+    // 2. EFFECTS: Update state
+    balances[msg.sender] -= amount;
+
+    // 3. INTERACTIONS: External calls last
+    (bool success,) = msg.sender.call{value: amount}("");
+    require(success, "Transfer failed");
+}
+```
+
+### Factory Pattern
+
+Create new contract instances programmatically:
+
+```solidity
+contract VaultFactory {
+    event VaultCreated(address indexed owner, address vault);
+
+    mapping(address => address[]) public vaultsByOwner;
+
+    function createVault() external returns (address) {
+        Vault vault = new Vault(msg.sender);
+        vaultsByOwner[msg.sender].push(address(vault));
+        emit VaultCreated(msg.sender, address(vault));
+        return address(vault);
+    }
+
+    // CREATE2 for deterministic addresses
+    function createVault2(bytes32 salt) external returns (address) {
+        Vault vault = new Vault{salt: salt}(msg.sender);
+        vaultsByOwner[msg.sender].push(address(vault));
+        emit VaultCreated(msg.sender, address(vault));
+        return address(vault);
+    }
+
+    // Predict CREATE2 address before deployment
+    function predictAddress(bytes32 salt) external view returns (address) {
+        bytes32 hash = keccak256(abi.encodePacked(
+            bytes1(0xff),
+            address(this),
+            salt,
+            keccak256(abi.encodePacked(
+                type(Vault).creationCode,
+                abi.encode(msg.sender)
+            ))
+        ));
+        return address(uint160(uint256(hash)));
+    }
+}
+```
+
+### Minimal Proxy (Clone Pattern)
+
+EIP-1167 defines a minimal proxy for cheap deployment of many identical contracts:
+
+```solidity
+library Clones {
+    function clone(address implementation) internal returns (address instance) {
+        assembly {
+            // Store the creation code
+            mstore(0x00, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
+            mstore(0x14, shl(0x60, implementation))
+            mstore(0x28, 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
+
+            // Deploy
+            instance := create(0, 0x09, 0x37)
+        }
+        require(instance != address(0), "Clone failed");
+    }
+}
+
+contract VaultFactory {
+    address public immutable vaultImplementation;
+
+    constructor() {
+        vaultImplementation = address(new Vault());
+    }
+
+    function createVault() external returns (address) {
+        address vault = Clones.clone(vaultImplementation);
+        Vault(vault).initialize(msg.sender);
+        return vault;
+    }
+}
+```
+
+A minimal proxy costs ~45,000 gas to deploy vs ~200,000+ for a full contract.
+
+### Access Control Patterns
+
+Beyond simple `onlyOwner`, consider role-based access:
+
+```solidity
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract Treasury is AccessControl {
+    bytes32 public constant TREASURER_ROLE = keccak256("TREASURER_ROLE");
+    bytes32 public constant AUDITOR_ROLE = keccak256("AUDITOR_ROLE");
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function withdraw(address to, uint256 amount)
+        external onlyRole(TREASURER_ROLE)
+    {
+        payable(to).transfer(amount);
+    }
+
+    function audit() external view onlyRole(AUDITOR_ROLE) returns (uint256) {
+        return address(this).balance;
+    }
+}
+```
+
+### State Machine Pattern
+
+For contracts with distinct phases:
+
+```solidity
+contract Crowdfund {
+    enum State { Funding, Successful, Failed, Refunding }
+
+    State public state = State.Funding;
+    uint256 public deadline;
+    uint256 public goal;
+    uint256 public raised;
+
+    mapping(address => uint256) public contributions;
+
+    modifier inState(State expected) {
+        require(state == expected, "Invalid state");
+        _;
+    }
+
+    function contribute() external payable inState(State.Funding) {
+        require(block.timestamp < deadline, "Ended");
+        contributions[msg.sender] += msg.value;
+        raised += msg.value;
+    }
+
+    function finalize() external inState(State.Funding) {
+        require(block.timestamp >= deadline, "Not ended");
+
+        if (raised >= goal) {
+            state = State.Successful;
+        } else {
+            state = State.Failed;
+        }
+    }
+
+    function claimRefund() external {
+        require(state == State.Failed || state == State.Refunding);
+
+        uint256 amount = contributions[msg.sender];
+        contributions[msg.sender] = 0;
+        payable(msg.sender).transfer(amount);
+    }
+}
+```
+
+## Transient Storage (EIP-1153)
+
+Introduced in the Cancun upgrade (Ethereum) and available on modern EVM chains, transient storage provides cheap storage that resets after each transaction:
+
+```solidity
+contract ReentrancyGuardTransient {
+    uint256 private constant UNLOCKED = 1;
+    uint256 private constant LOCKED = 2;
+
+    modifier nonReentrant() {
+        uint256 status;
+        assembly {
+            status := tload(0)  // Transient load
+        }
+        require(status != LOCKED, "Reentrant call");
+
+        assembly {
+            tstore(0, LOCKED)   // Transient store
+        }
+
+        _;
+
+        assembly {
+            tstore(0, UNLOCKED)
+        }
+    }
+}
+```
+
+Transient storage costs:
+- `TLOAD`: 100 gas (vs `SLOAD`: 2100 gas cold, 100 gas warm)
+- `TSTORE`: 100 gas (vs `SSTORE`: 20000+ gas)
+
+Use cases:
+- Reentrancy locks
+- Callback contexts
+- Cross-contract communication within a transaction
+
+<Note>
+Transient storage is available on Ethereum (post-Cancun) and compatible L2s. Check your target chain's EVM version before using.
+</Note>
+
+## Putting It Together: A Production Contract
+
+Here's a token vault incorporating multiple advanced patterns:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+contract TokenVault is
+    Initializable,
+    UUPSUpgradeable,
+    AccessControlUpgradeable
+{
+    using SafeERC20 for IERC20;
+
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+
+    mapping(address => mapping(address => uint256)) public balances;
+
+    event Deposited(address indexed user, address indexed token, uint256 amount);
+    event Withdrawn(address indexed user, address indexed token, uint256 amount);
+
+    error InsufficientBalance(uint256 available, uint256 requested);
+    error ZeroAmount();
+
+    // Storage gap for future upgrades
+    uint256[50] private __gap;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address admin) external initializer {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(MANAGER_ROLE, admin);
+    }
+
+    function deposit(address token, uint256 amount) external {
+        if (amount == 0) revert ZeroAmount();
+
+        balances[msg.sender][token] += amount;
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit Deposited(msg.sender, token, amount);
+    }
+
+    function withdraw(address token, uint256 amount) external {
+        if (amount == 0) revert ZeroAmount();
+
+        uint256 balance = balances[msg.sender][token];
+        if (balance < amount) {
+            revert InsufficientBalance(balance, amount);
+        }
+
+        // Effects before interactions (CEI pattern)
+        balances[msg.sender][token] = balance - amount;
+
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit Withdrawn(msg.sender, token, amount);
+    }
+
+    function _authorizeUpgrade(address)
+        internal
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {}
+}
+```
+
+<Callout type="note" title="Code Examples">
+Complete implementations of advanced patterns covered in this chapter:
+
+- [ProxyPatterns.sol](../code/chapter-09/src/ProxyPatterns.sol) — Transparent, UUPS, and Beacon proxy implementations
+- [Libraries.sol](../code/chapter-09/src/Libraries.sol) — Library patterns and usage
+- [Assembly.sol](../code/chapter-09/src/Assembly.sol) — Yul inline assembly examples
+- [GasPatterns.sol](../code/chapter-09/src/GasPatterns.sol) — Gas optimization patterns
+</Callout>
+
+## Summary
+
+This chapter covered advanced Solidity patterns essential for production contracts:
+
+- **Proxy patterns** (Transparent, UUPS, Beacon, Diamond) enable upgradeability while managing storage carefully
+- **Libraries** provide code reuse with deployment flexibility
+- **Inline assembly** offers low-level control for gas optimization
+- **Design patterns** (Pull-over-Push, CEI, Factory, Clone) solve common problems elegantly
+- **Transient storage** provides cheap temporary storage for within-transaction state
+
+The next chapter covers smart contract security—how to identify vulnerabilities and protect against attacks.

@@ -20,99 +20,160 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-  <!-- Chapters -->
+  <url>
+    <loc>https://masteringevm.com/code</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/diagrams</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <!-- Part I: The EVM Landscape -->
   <url>
     <loc>https://masteringevm.com/read/00-preface</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/01-what-is-evm</loc>
+    <loc>https://masteringevm.com/read/01-evm-today</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/02-getting-started</loc>
+    <loc>https://masteringevm.com/read/02-how-we-got-here</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/03-clients</loc>
+    <loc>https://masteringevm.com/read/03-environment-setup</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- Part II: Core Foundations -->
   <url>
     <loc>https://masteringevm.com/read/04-cryptography</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/05-wallets</loc>
+    <loc>https://masteringevm.com/read/05-accounts-wallets</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/06-transactions</loc>
+    <loc>https://masteringevm.com/read/06-transactions-gas</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/07-solidity</loc>
+    <loc>https://masteringevm.com/read/07-consensus-finality</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Part III: Smart Contract Development -->
+  <url>
+    <loc>https://masteringevm.com/read/08-solidity-fundamentals</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/08-vyper</loc>
+    <loc>https://masteringevm.com/read/09-advanced-solidity</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/09-security</loc>
+    <loc>https://masteringevm.com/read/10-security</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/10-tokens</loc>
+    <loc>https://masteringevm.com/read/11-testing-verification</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/11-oracles</loc>
+    <loc>https://masteringevm.com/read/12-deployment-upgrades</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Part IV: The EVM Under the Hood -->
+  <url>
+    <loc>https://masteringevm.com/read/13-evm-internals</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/12-dapps</loc>
+    <loc>https://masteringevm.com/read/14-gas-optimization</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Part V: The Application Layer -->
+  <url>
+    <loc>https://masteringevm.com/read/15-token-standards</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/13-evm-deep-dive</loc>
+    <loc>https://masteringevm.com/read/16-amm-evolution</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/14-consensus</loc>
+    <loc>https://masteringevm.com/read/17-lending-evolution</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/15-defi</loc>
+    <loc>https://masteringevm.com/read/18-governance-daos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/16-scaling</loc>
+    <loc>https://masteringevm.com/read/19-nft-marketplaces</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/17-zero-knowledge</loc>
+    <loc>https://masteringevm.com/read/20-launchpads-distribution</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://masteringevm.com/read/18-agentic-development</loc>
+    <loc>https://masteringevm.com/read/21-prediction-markets</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/22-oracles</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Part VI: Scaling & Infrastructure -->
+  <url>
+    <loc>https://masteringevm.com/read/23-layer2-solutions</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/24-zero-knowledge</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Part VII: Building for the Real World -->
+  <url>
+    <loc>https://masteringevm.com/read/25-regulatory-landscape</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/26-bootstrapping-ecosystem</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/27-agentic-development</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -139,6 +200,21 @@
   </url>
   <url>
     <loc>https://masteringevm.com/read/appendix/e-glossary</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/f-regulatory-timeline</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/g-key-figures</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://masteringevm.com/read/appendix/h-essential-reading</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
