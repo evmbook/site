@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import Script from 'next/script'
 import '@/styles/globals.css'
 import { BackgroundSystem } from '@/components/BackgroundSystem'
 import { ThemeProvider } from '@/components/theme'
@@ -140,6 +141,11 @@ export default function RootLayout({
           <BackgroundSystem />
           <div className="relative z-10">{children}</div>
         </ThemeProvider>
+        {/* Lemon Squeezy checkout overlay - enables in-page checkout experience */}
+        <Script
+          src="https://assets.lemonsqueezy.com/lemon.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
