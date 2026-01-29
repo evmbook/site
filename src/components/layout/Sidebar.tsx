@@ -129,6 +129,43 @@ export function Sidebar() {
           ))}
         </ul>
       </div>
+
+      {/* Resources */}
+      <div>
+        <h3 className="text-xs font-bold text-[var(--accent-secondary)] uppercase tracking-wider mb-4">
+          Resources
+        </h3>
+        <ul className="space-y-1">
+          <li>
+            <Link
+              href="/code"
+              className={clsx(
+                'block px-3 py-2 text-sm transition-all duration-150',
+                pathname === '/code'
+                  ? 'bg-[var(--accent-secondary)] text-white font-bold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
+              )}
+              onClick={() => setMobileOpen(false)}
+            >
+              Code Library
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/diagrams"
+              className={clsx(
+                'block px-3 py-2 text-sm transition-all duration-150',
+                pathname === '/diagrams'
+                  ? 'bg-[var(--accent-secondary)] text-white font-bold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]'
+              )}
+              onClick={() => setMobileOpen(false)}
+            >
+              Diagrams
+            </Link>
+          </li>
+        </ul>
+      </div>
     </nav>
   )
 

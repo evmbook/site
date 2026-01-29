@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FAFBFC"/>
+      <stop offset="100%" style="stop-color:#F0F4F8"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="proxyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="100%" style="stop-color:#4B6DD0"/>
+    </linearGradient>
+    <linearGradient id="implGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="adminGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#D97706"/>
+    </linearGradient>
+    <marker id="delegateArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <marker id="callArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#627EEA"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E7EB" stroke-width="0.5"/>
+  </pattern>
+  <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>
+
+  <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1a1a3a">Proxy Pattern Architecture</text>
+  <text x="400" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#6B7280">Upgradeable contracts via delegatecall</text>
+
+  <!-- User -->
+  <g transform="translate(100, 200)" filter="url(#dropShadow)">
+    <rect x="-50" y="-35" width="100" height="70" rx="10" fill="#1a1a3a"/>
+    <text y="-8" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFF">User</text>
+    <text y="10" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#E5E7EB">calls proxy</text>
+  </g>
+
+  <!-- Arrow User → Proxy -->
+  <line x1="150" y1="200" x2="210" y2="200" stroke="#627EEA" stroke-width="2" marker-end="url(#callArrow)"/>
+  <text x="180" y="188" text-anchor="middle" font-family="monospace" font-size="8" fill="#627EEA">call()</text>
+
+  <!-- Proxy Contract -->
+  <g transform="translate(300, 200)" filter="url(#dropShadow)">
+    <rect x="-80" y="-70" width="160" height="140" rx="10" fill="url(#proxyGradient)"/>
+    <text y="-45" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Proxy Contract</text>
+    <text y="-28" text-anchor="middle" font-family="monospace" font-size="8" fill="#C7D2FE">0xProxyAddr</text>
+
+    <!-- Storage -->
+    <rect x="-65" y="-15" width="130" height="65" rx="6" fill="#FFF" fill-opacity="0.2"/>
+    <text y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFF">STORAGE</text>
+    <text y="15" text-anchor="middle" font-family="monospace" font-size="7" fill="#E0E7FF">impl: address</text>
+    <text y="28" text-anchor="middle" font-family="monospace" font-size="7" fill="#E0E7FF">admin: address</text>
+    <text y="41" text-anchor="middle" font-family="monospace" font-size="7" fill="#E0E7FF">state variables...</text>
+
+    <text y="60" text-anchor="middle" font-family="monospace" font-size="8" fill="#A5B4FC">fallback() → delegatecall</text>
+  </g>
+
+  <!-- Arrow Proxy → Implementation -->
+  <path d="M 380 200 C 430 200, 430 200, 480 200" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#delegateArrow)"/>
+  <text x="430" y="188" text-anchor="middle" font-family="monospace" font-size="8" fill="#8B5CF6">delegatecall()</text>
+
+  <!-- Implementation Contract -->
+  <g transform="translate(580, 200)" filter="url(#dropShadow)">
+    <rect x="-80" y="-70" width="160" height="140" rx="10" fill="url(#implGradient)"/>
+    <text y="-45" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFF">Implementation</text>
+    <text y="-28" text-anchor="middle" font-family="monospace" font-size="8" fill="#DDD6FE">0xImplAddr</text>
+
+    <!-- Logic -->
+    <rect x="-65" y="-15" width="130" height="65" rx="6" fill="#FFF" fill-opacity="0.2"/>
+    <text y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFF">LOGIC</text>
+    <text y="15" text-anchor="middle" font-family="monospace" font-size="7" fill="#EDE9FE">function foo()</text>
+    <text y="28" text-anchor="middle" font-family="monospace" font-size="7" fill="#EDE9FE">function bar()</text>
+    <text y="41" text-anchor="middle" font-family="monospace" font-size="7" fill="#EDE9FE">...</text>
+
+    <text y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#C4B5FD">Stateless code only</text>
+  </g>
+
+  <!-- Admin / Upgrade -->
+  <g transform="translate(300, 360)" filter="url(#dropShadow)">
+    <rect x="-60" y="-25" width="120" height="50" rx="8" fill="url(#adminGradient)"/>
+    <text y="-5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFF">Admin</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#FEF3C7">upgradeTo(newImpl)</text>
+  </g>
+  <line x1="300" y1="335" x2="300" y2="270" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,2"/>
+
+  <!-- New Implementation -->
+  <g transform="translate(580, 360)" filter="url(#dropShadow)">
+    <rect x="-70" y="-25" width="140" height="50" rx="8" fill="#FFF" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="4,2"/>
+    <text y="-5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#6D28D9">Implementation V2</text>
+    <text y="12" text-anchor="middle" font-family="monospace" font-size="8" fill="#8B5CF6">0xNewImplAddr</text>
+  </g>
+  <path d="M 360 360 L 510 360" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#delegateArrow)"/>
+  <text x="435" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#8B5CF6">upgrade</text>
+
+  <!-- Delegatecall explanation box -->
+  <g transform="translate(720, 160)" filter="url(#dropShadow)">
+    <rect x="-60" y="-50" width="120" height="100" rx="6" fill="#FFF" stroke="#E5E7EB"/>
+    <text y="-32" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#374151">delegatecall</text>
+    <text y="-16" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#6B7280">Executes impl code</text>
+    <text y="-4" text-anchor="middle" font-family="Arial, sans-serif" font-size="7" fill="#6B7280">in proxy's context:</text>
+    <text y="12" text-anchor="middle" font-family="monospace" font-size="7" fill="#4B5563">msg.sender = user</text>
+    <text y="24" text-anchor="middle" font-family="monospace" font-size="7" fill="#4B5563">storage = proxy</text>
+    <text y="36" text-anchor="middle" font-family="monospace" font-size="7" fill="#4B5563">balance = proxy</text>
+  </g>
+
+  <!-- Key insight -->
+  <g transform="translate(400, 458)">
+    <rect x="-350" y="-22" width="700" height="55" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+    <text y="-4" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#92400E">Key Insight</text>
+    <text y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#B45309">Storage layout must be identical between proxy and all implementations. Adding new variables is safe; removing or reordering is not.</text>
+    <text y="26" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#B45309">Patterns: Transparent Proxy (OpenZeppelin), UUPS (EIP-1822), Diamond (EIP-2535)</text>
+  </g>
+</svg>

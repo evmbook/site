@@ -163,7 +163,7 @@ export default function DiagramsPage() {
               >
                 <div className="aspect-[4/3] bg-white p-4 flex items-center justify-center">
                   <Image
-                    src={`/diagrams/${diagram.file}`}
+                    src={`/images/diagrams/${diagram.file}`}
                     alt={diagram.title}
                     width={600}
                     height={450}
