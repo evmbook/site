@@ -2,10 +2,10 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Colophon',
-  description: 'Technical details about how Mastering EVM was created, including technology stack, design system, and licensing.',
+  description: 'Technical details about how Mastering EVM was created, including design and licensing.',
   openGraph: {
     title: 'Colophon - Mastering EVM',
-    description: 'Technical details about how Mastering EVM was created, including technology stack, design system, and licensing.',
+    description: 'Technical details about how Mastering EVM was created, including design and licensing.',
     url: 'https://masteringevm.com/read/colophon',
   },
 }
@@ -24,60 +24,28 @@ export default function ColophonPage() {
 
         <h2>About This Book</h2>
         <p>
-          <strong>Mastering EVM</strong> is a comprehensive guide to the Ethereum Virtual Machine
-          ecosystem, covering both Ethereum (ETH) and Ethereum Classic (ETC). This work is a
-          derivative of <em>Mastering Ethereum (Open Edition)</em> by Andreas M. Antonopoulos and Gavin Wood,
-          substantially rewritten, reorganized, and updated for 2026.
+          <strong>Mastering EVM (2025 Edition)</strong> is a comprehensive guide to the Ethereum
+          Virtual Machine ecosystem, covering both Ethereum (ETH) and Ethereum Classic (ETC).
+          Written by Christopher Mercer with Claude (Anthropic) as writing collaborator.
         </p>
-
-        <h2>Technology Stack</h2>
-        <p>This website and book are built with:</p>
-        <ul>
-          <li><strong>Next.js 15</strong> — React framework with App Router and static export</li>
-          <li><strong>TypeScript</strong> — Type-safe JavaScript</li>
-          <li><strong>Tailwind CSS 4</strong> — Utility-first CSS framework</li>
-          <li><strong>Framer Motion</strong> — Animation library for React</li>
-          <li><strong>MDX</strong> — Markdown with JSX support for chapter content</li>
-        </ul>
-
-        <h2>Design System</h2>
         <p>
-          The visual design follows a <strong>Neo-Brutalist</strong> aesthetic with{' '}
-          <strong>Organic Futurism</strong> accents:
+          Published by White B0x Inc. ISBN (paperback): 979-8-9947278-0-5
+        </p>
+
+        <h2>Design</h2>
+        <p>
+          The visual design follows a <strong>Neo-Brutalist</strong> aesthetic with bold
+          borders, high-contrast typography, and a dark theme optimized for extended reading.
+        </p>
+        <p>
+          The color palette draws from both Ethereum ecosystems:
         </p>
         <ul>
-          <li>Bold borders and shadows for emphasis</li>
-          <li>High-contrast color palette optimized for readability</li>
-          <li>Glassmorphism effects for depth</li>
-          <li>Responsive typography with system font stack</li>
-          <li>Full light/dark theme support</li>
-        </ul>
-
-        <h3>Color Palette</h3>
-        <p>The theme uses a carefully selected palette:</p>
-        <ul>
-          <li><strong>Vampire Black (#060606)</strong> — Primary dark background</li>
-          <li><strong>Alloy Orange (#C36312)</strong> — Primary accent</li>
-          <li><strong>Teal Green (#02807D)</strong> — Secondary accent</li>
-          <li><strong>Sage Green (#0E7F6C)</strong> — Tertiary accent</li>
-          <li><strong>Ethereum Blue (#627EEA)</strong> — ETH brand color</li>
+          <li><strong>Ethereum Blue (#627EEA)</strong> — Primary accent</li>
+          <li><strong>Purple (#8B5CF6)</strong> — Secondary accent</li>
           <li><strong>Ethereum Classic Green (#3AB83A)</strong> — ETC brand color</li>
+          <li><strong>Vampire Black (#060606)</strong> — Dark background</li>
         </ul>
-
-        <h2>Hosting &amp; Deployment</h2>
-        <p>
-          The site is statically generated and can be hosted on any static file server.
-          The build process produces optimized HTML, CSS, and JavaScript bundles.
-        </p>
-
-        <h2>Development</h2>
-        <p>
-          This project was developed by{' '}
-          <a href="https://github.com/claude" target="_blank" rel="noopener noreferrer">
-            Claude
-          </a>{' '}
-          using Claude Code (claude-opus-4-5-20251101).
-        </p>
 
         <h2>License</h2>
         <p>
