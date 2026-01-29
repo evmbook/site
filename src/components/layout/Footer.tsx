@@ -10,20 +10,22 @@ export function Footer() {
             <h3 className="text-lg font-extrabold uppercase tracking-wider text-[var(--text-primary)]">
               Mastering EVM
             </h3>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">2025 Edition</p>
             <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">
-              A comprehensive guide to the Ethereum Virtual Machine ecosystem.
-              Free to read online, download, and share.
+              The Complete Guide to the Ethereum Virtual Machine. A systems-level
+              approach to teaching the EVM as it exists today.
             </p>
             <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-              Modernized and maintained by{' '}
+              By Christopher Mercer with{' '}
               <a
-                href="https://github.com/claude"
+                href="https://anthropic.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--link-color)] hover:text-[var(--link-hover)] transition-colors duration-150"
               >
                 Claude
-              </a>.{' '}
+              </a>{' '}
+              (Anthropic). Published by White B0x Inc.
             </p>
           </div>
 
@@ -102,20 +104,19 @@ export function Footer() {
             <p className="text-sm text-[var(--text-muted)]">
               Licensed under{' '}
               <a
-                href="https://creativecommons.org/licenses/by-sa/4.0/"
+                href="https://creativecommons.org/licenses/by-nc/4.0/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--link-color)] hover:text-[var(--link-hover)] transition-colors duration-150"
               >
-                CC BY-SA 4.0
+                CC BY-NC 4.0
               </a>
             </p>
             <p className="text-xs text-[var(--text-muted)]">
-              Last Updated: January 2026
+              Current through January 2026
             </p>
             <p className="text-xs text-[var(--text-muted)]/60">
-              Derivative of Mastering Ethereum (Open Edition) by Andreas M. Antonopoulos &amp;
-              Gavin Wood
+              28 Chapters | 8 Appendices | Ethereum &amp; Ethereum Classic
             </p>
           </div>
         </div>

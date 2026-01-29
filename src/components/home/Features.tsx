@@ -3,11 +3,12 @@
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 
+// Features aligned with book's Preface differentiators and back cover
 const features = [
   {
-    name: 'Dual-Chain Coverage',
+    name: 'Evolution Narratives',
     description:
-      'Learn about both Ethereum and Ethereum Classic. Understand the technical and philosophical differences between PoS and PoW.',
+      'Each protocol type is presented as an evolution story. Understand why Uniswap V3 was designed the way it was, not just how it works.',
     colorVar: 'var(--accent-secondary)',
     icon: (
       <svg
@@ -20,15 +21,15 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+          d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"
         />
       </svg>
     ),
   },
   {
-    name: 'Modern Tooling',
+    name: 'Dependency Trees',
     description:
-      'Updated for 2025 with Solidity 0.8.x, Foundry, Hardhat, ethers.js v6, and the latest development best practices.',
+      'Know what to deploy first when bootstrapping an ecosystem. Token standards enable DEXs, DEXs enable lending, lending enables everything else.',
     colorVar: 'var(--accent-tertiary)',
     icon: (
       <svg
@@ -41,15 +42,15 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"
+          d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
         />
       </svg>
     ),
   },
   {
-    name: 'Security First',
+    name: 'Honest Trust Assumptions',
     description:
-      'Dedicated chapter on smart contract security covering common vulnerabilities, attack vectors, and defensive patterns.',
+      'Decentralization is bounded from below. Learn to identify what is actually decentralized versus what merely claims to be.',
     colorVar: 'var(--accent-primary)',
     icon: (
       <svg
@@ -68,9 +69,9 @@ const features = [
     ),
   },
   {
-    name: 'DeFi & Scaling',
+    name: 'Dual-Chain Perspective',
     description:
-      'Deep dives into DeFi protocols, L2 scaling solutions, rollups, and zero-knowledge proofs.',
+      'Covers both Ethereum (PoS) and Ethereum Classic (PoW). Understand when intervention is appropriate and what immutability means in practice.',
     colorVar: 'var(--accent-warning)',
     icon: (
       <svg
@@ -83,15 +84,15 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+          d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
         />
       </svg>
     ),
   },
   {
-    name: 'EVM Internals',
+    name: 'Current Through 2026',
     description:
-      'Understand how the EVM actually works—opcodes, gas mechanics, memory layout, and execution model.',
+      'The Merge, EIP-4844, Pectra, Olympia. Modern tooling: viem, Foundry, TypeScript-first. Regulatory context: MiCA, GENIUS Act.',
     colorVar: 'var(--accent-info)',
     icon: (
       <svg
@@ -104,15 +105,15 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"
+          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
         />
       </svg>
     ),
   },
   {
-    name: 'Agentic Development',
+    name: 'Systems-Level Approach',
     description:
-      'Learn how AI-assisted coding amplifies developer productivity. Build principle-aligned smart contracts with Claude.',
+      'How decentralized applications evolve technically, economically, and operationally. What dependencies shape what is realistically buildable.',
     colorVar: 'var(--accent-primary)',
     icon: (
       <svg
@@ -125,7 +126,7 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+          d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"
         />
       </svg>
     ),

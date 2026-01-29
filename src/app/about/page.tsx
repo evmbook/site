@@ -4,10 +4,12 @@ import { Footer } from '@/components/layout/Footer'
 
 export const metadata = {
   title: 'About',
-  description: 'Learn about the Mastering EVM project, its origins, and how to contribute to this free EVM development guide.',
+  description:
+    'Learn about Mastering EVM (2025 Edition) by Christopher Mercer, a systems-level guide to the Ethereum Virtual Machine.',
   openGraph: {
     title: 'About Mastering EVM',
-    description: 'Learn about the Mastering EVM project, its origins, and how to contribute to this free EVM development guide.',
+    description:
+      'Learn about Mastering EVM (2025 Edition) by Christopher Mercer, a systems-level guide to the Ethereum Virtual Machine.',
     url: 'https://masteringevm.com/about',
   },
 }
@@ -22,107 +24,164 @@ export default function AboutPage() {
             <h1>About Mastering EVM</h1>
 
             <p className="lead">
-              A comprehensive guide to the Ethereum Virtual Machine ecosystem,
-              covering both Ethereum (ETH) and Ethereum Classic (ETC).
+              The Complete Guide to the Ethereum Virtual Machine. 28 chapters, 8
+              appendices, current through January 2026.
             </p>
 
-            <h2>A Living Book</h2>
+            <h2>About the Author</h2>
             <p>
-              The blockchain space moves at lightning speed. The original <em>Mastering Ethereum (Open Edition)</em> was
-              written with content reflecting February 2017—a lifetime ago in this industry. Since then,
-              we&apos;ve seen The Merge, Layer 2 scaling solutions, the DeFi explosion, and countless protocol
-              upgrades.
+              Christopher Mercer is a blockchain architect and ecosystem builder
+              focused on long-lived systems. He has deployed and maintained
+              production application protocols and has participated in network
+              protocol governance and infrastructure planning across multiple EVM
+              networks.
             </p>
             <p>
-              <strong>Mastering EVM</strong> is designed as a living document that evolves with the ecosystem.
-              We continuously update content to reflect the current state of EVM development, ensuring you&apos;re
-              learning modern practices, not historical artifacts.
+              His work centers on understanding how decentralized applications
+              evolve over time—technically, economically, and operationally—and
+              how those dependencies shape what is realistically buildable.
+              Mastering EVM reflects this systems-level approach to teaching the
+              EVM as it exists today, not as it is often idealized.
             </p>
 
-            <h2>Why This Book?</h2>
+            <h2>About the Collaboration</h2>
             <p>
-              The EVM powers one of the most significant technological revolutions of our time.
-              Yet comprehensive, up-to-date educational resources remain scarce. We wrote the
-              book we wished existed when we started our blockchain journey.
+              Claude (Anthropic) serves as writing collaborator on this book,
+              helping transform Mercer&apos;s vision into prose, researching
+              technical details, and maintaining consistency across chapters. The
+              human judgment about what matters, the lived experience of building
+              on these systems, and the intuition from years in the ecosystem
+              remain with the author.
             </p>
+
+            <h2>What Makes This Book Different</h2>
+
+            <h3>Evolution Narratives, Not Just Current State</h3>
             <p>
-              This isn&apos;t just another &quot;intro to Ethereum&quot; guide. We go deep. You&apos;ll understand
-              not just <em>how</em> to write smart contracts, but <em>why</em> they work the
-              way they do.
+              Each major application type—AMMs, lending protocols, governance
+              systems, marketplaces, launchpads—is presented as an evolution
+              story. You&apos;ll understand not just <em>how</em> Uniswap V3
+              works, but <em>why</em> it was designed that way, what problems it
+              solved that V2 couldn&apos;t, and what tradeoffs it accepted.
+            </p>
+
+            <h3>Dependency Trees for Ecosystem Builders</h3>
+            <p>
+              If you&apos;re bootstrapping an EVM chain or building a DeFi stack,
+              you need to know what depends on what. We map these relationships
+              explicitly: token standards enable DEXs, DEXs enable price
+              discovery, oracles bring external data on-chain, lending protocols
+              enable capital efficiency.
+            </p>
+
+            <h3>Honest About Trust Assumptions</h3>
+            <p>
+              Too many projects claim &quot;decentralization&quot; while hiding
+              centralized components. We teach you to identify trust
+              assumptions—your own and others&apos;—and communicate them honestly.
+              Decentralization is bounded from below.
             </p>
 
             <h2>The Dual-Chain Perspective</h2>
             <p>
-              A unique aspect of this book is our coverage of both:
+              This book covers both Ethereum and Ethereum Classic. These chains
+              share the same origin but diverged philosophically after The DAO
+              incident in 2016:
             </p>
             <ul>
-              <li><strong>Ethereum Classic (ETC)</strong> — The open and permissionless continuation of the original smart contract platform, perserving immutability from the July 30, 2015 genesis block. Now positioned as the Ethereum Virtual Machine ecosystem&apos;s Proof-of-Work anchor chain.</li>
-              <li><strong>Ethereum (ETH)</strong> — The Ethereum Foundation operated chain which forked from Ethereum Classic at block 1,920,000 on July 20, 2016, innovating and growing to become the most widely used smart contract platform. Now positioned as the Ethereum Virtual Machine ecosystem&apos;s Proof-of-Stake anchor chain.</li>
+              <li>
+                <strong>Ethereum (ETH)</strong> — The larger ecosystem, now
+                proof-of-stake after The Merge
+              </li>
+              <li>
+                <strong>Ethereum Classic (ETC)</strong> — Continuing proof-of-work,
+                prioritizing immutability
+              </li>
             </ul>
             <p>
-              These two chains share the same origin but have diverged philosophically and
-              technically. Understanding both gives you a complete picture of the EVM ecosystem.
+              Where implementations differ—consensus mechanisms, fee handling,
+              upgrade philosophy—we note it explicitly. Understanding both gives
+              you perspective on a fundamental question: when is intervention
+              appropriate, and what does &quot;immutability&quot; mean in practice?
             </p>
 
-            <h2>Attribution</h2>
-            <p>
-              This work is a derivative of <em>Mastering Ethereum (Open Edition)</em> by Andreas M. Antonopoulos
-              and Gavin Wood, available under the Creative Commons Attribution-ShareAlike 4.0
-              International License (CC BY-SA 4.0).
-            </p>
-            <p>
-              Mastering EVM has been substantially rewritten, reorganized, and updated for 2026.
-              While we build upon the foundational concepts of the original work, all content has
-              been reformulated with:
-            </p>
+            <h2>Technical Coverage</h2>
+            <p>This book covers the modern EVM landscape:</p>
             <ul>
-              <li>New examples using modern tooling (Foundry, Hardhat, ethers.js v6)</li>
-              <li>Dual-chain (Ethereum + Ethereum Classic) coverage</li>
-              <li>Updated content reflecting post-Merge reality</li>
-              <li>New chapters on DeFi, L2 scaling, and zero-knowledge proofs</li>
-              <li>A different structure and voice</li>
+              <li>
+                <strong>Protocol upgrades</strong>: The Merge, EIP-4844, Pectra,
+                Olympia (ETC)
+              </li>
+              <li>
+                <strong>Scaling</strong>: L2 explosion, blob transactions, data
+                availability
+              </li>
+              <li>
+                <strong>Tooling</strong>: viem, Foundry, wagmi, TypeScript-first
+                development
+              </li>
+              <li>
+                <strong>Regulatory</strong>: MiCA, GENIUS Act, Tornado Cash
+                sanctions
+              </li>
+              <li>
+                <strong>Applications</strong>: ve(3,3) tokenomics, concentrated
+                liquidity, ZK coprocessors
+              </li>
             </ul>
 
             <h2>License</h2>
             <p>
-              This derivative work is licensed under{' '}
-              <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">
-                CC BY-SA 4.0
-              </a>.
+              This work is licensed under{' '}
+              <a
+                href="https://creativecommons.org/licenses/by-nc/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                CC BY-NC 4.0
+              </a>{' '}
+              (Creative Commons Attribution-NonCommercial 4.0 International).
             </p>
             <p>You are free to:</p>
             <ul>
-              <li><strong>Share</strong> — copy and redistribute the material in any medium or format</li>
-              <li><strong>Adapt</strong> — remix, transform, and build upon the material for any purpose, even commercially</li>
+              <li>
+                <strong>Share</strong> — copy and redistribute the material in any
+                medium or format
+              </li>
+              <li>
+                <strong>Adapt</strong> — remix, transform, and build upon the
+                material
+              </li>
             </ul>
             <p>Under the following terms:</p>
             <ul>
-              <li><strong>Attribution</strong> — Give appropriate credit, provide a link to the license, and indicate if changes were made</li>
-              <li><strong>ShareAlike</strong> — Distribute contributions under the same license</li>
+              <li>
+                <strong>Attribution</strong> — Give appropriate credit, provide a
+                link to the license, and indicate if changes were made
+              </li>
+              <li>
+                <strong>NonCommercial</strong> — You may not use the material for
+                commercial purposes
+              </li>
             </ul>
+
+            <h2>Publisher</h2>
+            <p>
+              Published by White B0x Inc. ISBN (paperback): 979-8-9947278-0-5
+            </p>
 
             <h2>Contributing</h2>
             <p>
-              Found an error? Have a suggestion? We welcome contributions via our{' '}
-              <a href="https://github.com/evmbook" target="_blank" rel="noopener noreferrer">
+              Found an error? Have a suggestion? Contributions are welcome via the{' '}
+              <a
+                href="https://github.com/evmbook"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 GitHub repositories
-              </a>.
+              </a>
+              .
             </p>
-            <ul>
-              <li><strong>Content issues</strong> — Report or fix errors in the book content</li>
-              <li><strong>Website issues</strong> — Report or fix bugs in the website</li>
-              <li><strong>Discussions</strong> — Join the community conversation</li>
-            </ul>
-
-            <h2>Support</h2>
-            <p>
-              This book is free and always will be. If you find it valuable, consider:
-            </p>
-            <ul>
-              <li>Starring our GitHub repositories</li>
-              <li>Sharing with fellow developers</li>
-              <li>Contributing improvements via pull requests</li>
-            </ul>
           </div>
 
           <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">

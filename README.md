@@ -1,14 +1,25 @@
-# Mastering EVM - Website
+# Mastering EVM (2025 Edition) — Website
 
 The official website for [masteringevm.com](https://masteringevm.com).
 
+## Source of Truth
+
+**The book repo ([evmbook-v2025](../evmbook-v2025)) is authoritative for all content.**
+
+When updating website copy, always verify against the book:
+- Chapter names and structure → `evmbook-v2025/content/chapters/_index.json`
+- Author bio → Back cover in `evmbook-v2025/images/covers/cover-back.svg`
+- Book metadata → `evmbook-v2025/publishing/book-metadata.yaml`
+- Preface framing → `evmbook-v2025/content/chapters/00-preface.mdx`
+
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
+- **Framework**: Next.js 15 with App Router (static export)
 - **UI**: React 19
 - **Styling**: Tailwind CSS 4
 - **Content**: MDX with rehype-pretty-code
-- **Deployment**: Vercel
+- **Fonts**: Inter, Space Grotesk, JetBrains Mono
+- **Deployment**: Vercel (static export to `out/`)
 
 ## Getting Started
 
@@ -21,6 +32,9 @@ npm run dev
 
 # Build for production
 npm run build
+
+# Format code
+npm run format
 ```
 
 ## Project Structure
@@ -35,40 +49,56 @@ src/
 ├── components/
 │   ├── layout/         # Header, Footer, Sidebar
 │   ├── content/        # MDX components, ChapterNav
-│   └── home/           # Landing page components
-├── lib/                # Utilities
-└── styles/             # Global CSS
+│   └── home/           # Landing page components (Hero, Features)
+├── lib/                # Utilities (content loading, animations)
+└── styles/             # Global CSS (theme variables)
 
-content/                # Book content (from evmbook-v1)
-├── chapters/           # MDX chapter files
-├── appendices/         # Reference appendices
+content/                # Book content (sourced from evmbook-v2025)
+├── chapters/           # MDX chapter files (28 chapters)
+├── appendices/         # Reference appendices (8 appendices)
 └── meta/               # Colophon, about
+
+public/                 # Static assets (favicons, OG images)
 ```
 
 ## Content Integration
 
-The book content comes from the [evmbook-v1](https://github.com/evmbook/evmbook) repository.
-
-To set up content:
+The book content comes from the [evmbook-v2025](../evmbook-v2025) repository.
 
 ```bash
-# Option 1: Git submodule
-git submodule add https://github.com/evmbook/evmbook.git evmbook-v1
-ln -s evmbook-v1/content content
-
-# Option 2: Copy during build (CI)
-# See .github/workflows/deploy.yml
+# Content is typically copied or symlinked from the book repo
+ln -s ../evmbook-v2025/content content
 ```
 
-## Development
+## Release Checklist
 
-```bash
-npm run dev     # Start dev server on http://localhost:3000
-npm run build   # Production build
-npm run lint    # Run ESLint
-```
+Before deploying, verify:
+
+- [ ] **TOC matches book**: Sidebar chapters match `evmbook-v2025/content/chapters/_index.json`
+- [ ] **Author bio matches back cover**: About page uses exact back cover copy
+- [ ] **License is correct**: CC BY-NC 4.0 (not CC BY-SA)
+- [ ] **No unverified claims**: All features/promises are supported by book content
+- [ ] **Stats are accurate**: Chapter count (28), appendix count (8)
+- [ ] **Routes still work**: All existing URLs resolve correctly
+
+## Design System
+
+The site uses a systems-engineering theme aligned with the book cover:
+
+**Colors** (from cover):
+- Primary: `#627EEA` (Indigo)
+- Secondary: `#8B5CF6` (Purple)
+- Tertiary: `#3AB83A` (Green)
+- Background: `#0a0a1a` → `#1a1a3a`
+
+**Typography**:
+- Headers: Space Grotesk
+- Body: Inter
+- Code: JetBrains Mono
 
 ## License
 
-- **Code**: MIT License
-- **Content**: CC BY-SA 4.0 (see [evmbook-v1](https://github.com/evmbook/evmbook))
+- **Website Code**: MIT License
+- **Book Content**: CC BY-NC 4.0 (see evmbook-v2025)
+- **Author**: Christopher Mercer with Claude (Anthropic)
+- **Publisher**: White B0x Inc.

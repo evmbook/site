@@ -1,67 +1,65 @@
 @import 'tailwindcss';
 
 /* =============================================
-   Mastering EVM - Neo-Brutalist + Organic Futurism Theme
-   Bold orange accents, high contrast, thick borders
-   with glass-textured elements and organic glow effects
+   Mastering EVM - Systems Engineering Theme
+   Aligned with book cover: indigo/purple primary,
+   green accent, dark backgrounds. Industrial, modern,
+   serious—no crypto hype aesthetics.
    ============================================= */
 
 :root {
-  /* Neo-Brutalist Core - Black, Orange, Green, Teal */
-  --brutalist-black: #060606;
-  /* Vampire Black */
+  /* Core palette from book cover */
+  --brutalist-black: #0a0a1a;
   --brutalist-white: #fafafa;
 
-  /* Primary Accent - Alloy Orange (energetic, used sparingly) */
-  --accent-primary: #c36312;
-  --accent-primary-dark: #9a4e0e;
-  --accent-primary-hover: #dd904f;
-  /* Jasper Orange */
-  --accent-primary-glow: rgba(195, 99, 18, 0.4);
+  /* Primary Accent - Indigo (from cover gradient) */
+  --accent-primary: #627EEA;
+  --accent-primary-dark: #4c64c4;
+  --accent-primary-hover: #7b93f0;
+  --accent-primary-glow: rgba(98, 126, 234, 0.4);
 
-  /* Secondary Accents - Teal & Green for cool balance */
-  --accent-secondary: #02807d;
-  /* Teal Green - high contrast for links */
-  --accent-tertiary: #0e7f6c;
-  /* Sage Green - ETC/natural accent */
-  --accent-info: #095d66;
-  /* Tropical Rain Forest - for info elements */
-  --accent-warning: #dd904f;
-  /* Jasper Orange for warnings */
+  /* Secondary Accent - Purple (from cover gradient) */
+  --accent-secondary: #8B5CF6;
+  --accent-secondary-glow: rgba(139, 92, 246, 0.3);
+
+  /* Tertiary Accent - Green (from cover gradient) */
+  --accent-tertiary: #3AB83A;
+  --accent-tertiary-glow: rgba(58, 184, 58, 0.3);
+
+  /* Semantic colors */
+  --accent-info: #627EEA;
+  --accent-warning: #f59e0b;
   --accent-error: #ef4444;
 
-  /* Ethereum brand color - decorative only */
+  /* Ethereum brand color */
   --eth-brand: #627eea;
   --eth-brand-glow: rgba(98, 126, 234, 0.3);
 
-  /* Ethereum Classic brand color - decorative only */
-  --etc-brand: #669073;
-  --etc-brand-glow: rgba(102, 144, 115, 0.3);
+  /* Ethereum Classic brand color */
+  --etc-brand: #3AB83A;
+  --etc-brand-glow: rgba(58, 184, 58, 0.3);
 
-  /* Surface Colors - Deep Black base */
-  --surface-base: #060606;
-  /* Vampire Black */
-  --surface-elevated: #151515;
-  /* Chinese Black */
-  --surface-overlay: #1c1c1c;
-  --surface-glass: rgba(21, 21, 21, 0.7);
-  --surface-glass-strong: rgba(21, 21, 21, 0.85);
+  /* Surface Colors - Deep blue-black base (from cover) */
+  --surface-base: #0a0a1a;
+  --surface-elevated: #1a1a3a;
+  --surface-overlay: #0f0f2f;
+  --surface-glass: rgba(26, 26, 58, 0.7);
+  --surface-glass-strong: rgba(26, 26, 58, 0.85);
 
   /* Text Colors */
   --text-primary: #fafafa;
   --text-secondary: #d4d4d4;
-  --text-muted: #737373;
+  --text-muted: #8B9DC3;
 
-  /* Link Colors - Teal for harmony with orange accents */
-  --link-color: #2dd4bf;
-  /* Bright teal for links (readable on dark) */
+  /* Link Colors - Purple for harmony with indigo */
+  --link-color: #a78bfa;
   --link-hover: var(--accent-primary);
 
   /* Border Colors */
   --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.12);
-  --border-bold: rgba(195, 99, 18, 0.5);
-  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(98, 126, 234, 0.2);
+  --border-bold: rgba(98, 126, 234, 0.5);
+  --border-glass: rgba(139, 92, 246, 0.15);
 
   /* Semantic Colors */
   --etc-glow: var(--accent-tertiary);
@@ -70,95 +68,84 @@
 
   /* Section backgrounds */
   --section-default: transparent;
-  --section-alt: rgba(21, 21, 21, 0.9);
+  --section-alt: rgba(26, 26, 58, 0.9);
 
   /* Base */
   --background: var(--surface-base);
   --foreground: var(--text-primary);
 
-  /* Neo-Brutalist specific */
-  --border-width-bold: 4px;
-  --shadow-brutal: 4px 4px 0 0 rgba(0, 0, 0, 0.8);
-  --shadow-brutal-sm: 2px 2px 0 0 rgba(0, 0, 0, 0.8);
+  /* Border styling */
+  --border-width-bold: 3px;
+  --shadow-brutal: 4px 4px 0 0 rgba(98, 126, 234, 0.3);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(98, 126, 234, 0.3);
   --shadow-brutal-color: 4px 4px 0 0 var(--accent-primary);
 
-  /* Organic Futurism - Glass effects with teal glow */
+  /* Glass effects with indigo/purple glow */
   --glass-blur: 16px;
   --glass-blur-strong: 24px;
-  --glass-bg: rgba(21, 21, 21, 0.6);
-  --glass-bg-strong: rgba(21, 21, 21, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-glow: 0 0 40px rgba(2, 128, 125, 0.2);
-  /* Teal glow */
+  --glass-bg: rgba(26, 26, 58, 0.6);
+  --glass-bg-strong: rgba(26, 26, 58, 0.8);
+  --glass-border: rgba(139, 92, 246, 0.12);
+  --glass-glow: 0 0 40px rgba(98, 126, 234, 0.15);
 
-  /* Callout backgrounds - using new palette */
-  --callout-warning-bg: rgba(221, 144, 79, 0.1);
-  /* Jasper Orange */
-  --callout-tip-bg: rgba(14, 127, 108, 0.1);
-  /* Sage Green */
-  --callout-info-bg: rgba(2, 128, 125, 0.1);
-  /* Teal Green */
+  /* Callout backgrounds */
+  --callout-warning-bg: rgba(245, 158, 11, 0.1);
+  --callout-tip-bg: rgba(58, 184, 58, 0.1);
+  --callout-info-bg: rgba(98, 126, 234, 0.1);
 }
 
 /* Light theme overrides */
 html.light {
   /* Swap base colors */
   --brutalist-black: #fafafa;
-  --brutalist-white: #060606;
+  --brutalist-white: #0a0a1a;
 
-  /* Surface Colors - Light (off-white backgrounds) */
+  /* Surface Colors - Light */
   --surface-base: #fafafa;
-  --surface-elevated: #f5f5f5;
-  --surface-overlay: #ebebeb;
+  --surface-elevated: #f0f0f8;
+  --surface-overlay: #e8e8f0;
   --surface-glass: rgba(255, 255, 255, 0.7);
   --surface-glass-strong: rgba(255, 255, 255, 0.85);
 
   /* Text Colors - Light */
-  --text-primary: #060606;
-  --text-secondary: #404040;
-  --text-muted: #737373;
+  --text-primary: #0a0a1a;
+  --text-secondary: #404050;
+  --text-muted: #606080;
 
-  /* Secondary accents - teal/green remain primary UI elements in light mode */
-  --accent-secondary: #026c69;
-  /* Darker teal for light bg */
-  --accent-tertiary: #00563e;
-  /* Castleton Green for light bg */
-  --accent-info: #095d66;
-  /* Tropical Rain Forest */
+  /* Accent colors darken slightly for light bg */
+  --accent-primary: #4c64c4;
+  --accent-secondary: #7c4fe0;
+  --accent-tertiary: #2d9a2d;
 
-  /* Link Colors - teal for light mode */
-  --link-color: #026c69;
+  /* Link Colors - purple for light mode */
+  --link-color: #7c3aed;
   --link-hover: var(--accent-primary);
 
   /* Border Colors - Light */
   --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-default: rgba(0, 0, 0, 0.12);
-  --border-bold: rgba(195, 99, 18, 0.5);
-  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-default: rgba(98, 126, 234, 0.15);
+  --border-bold: rgba(98, 126, 234, 0.4);
+  --border-glass: rgba(139, 92, 246, 0.1);
 
   /* Base */
   --background: var(--surface-base);
   --foreground: var(--text-primary);
 
   /* Shadow adjusts for light mode */
-  --shadow-brutal: 4px 4px 0 0 rgba(0, 0, 0, 0.15);
-  --shadow-brutal-sm: 2px 2px 0 0 rgba(0, 0, 0, 0.15);
+  --shadow-brutal: 4px 4px 0 0 rgba(98, 126, 234, 0.2);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(98, 126, 234, 0.2);
   --shadow-brutal-color: 4px 4px 0 0 var(--accent-primary);
 
-  /* Organic Futurism - Glass effects for light mode */
+  /* Glass effects for light mode */
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-bg-strong: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-glow: 0 0 40px rgba(2, 128, 125, 0.15);
-  /* Teal glow */
+  --glass-border: rgba(98, 126, 234, 0.12);
+  --glass-glow: 0 0 40px rgba(98, 126, 234, 0.1);
 
-  /* Callout backgrounds - using new palette */
-  --callout-warning-bg: rgba(221, 144, 79, 0.15);
-  /* Jasper Orange */
-  --callout-tip-bg: rgba(0, 86, 62, 0.1);
-  /* Castleton Green */
-  --callout-info-bg: rgba(2, 108, 105, 0.1);
-  /* Darker teal */
+  /* Callout backgrounds */
+  --callout-warning-bg: rgba(245, 158, 11, 0.12);
+  --callout-tip-bg: rgba(58, 184, 58, 0.1);
+  --callout-info-bg: rgba(98, 126, 234, 0.1);
 }
 
 /* Keep code blocks dark in light mode for readability */
@@ -198,7 +185,7 @@ html.light ::selection {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Neo-Brutalist colors */
+  /* Systems engineering colors */
   --color-brutalist-black: var(--brutalist-black);
   --color-brutalist-white: var(--brutalist-white);
   --color-accent-primary: var(--accent-primary);
@@ -210,8 +197,9 @@ html.light ::selection {
   --color-link: var(--link-color);
   --color-link-hover: var(--link-hover);
 
-  /* Ethereum brand (decorative only) */
+  /* Ethereum brand */
   --color-eth-brand: var(--eth-brand);
+  --color-etc-brand: var(--etc-brand);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -226,16 +214,16 @@ html.light ::selection {
   --color-surface-overlay: var(--surface-overlay);
   --color-surface-glass: var(--surface-glass);
 
-  /* Typography - using CSS variables from next/font */
+  /* Typography */
   --font-sans: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  /* Border Radius - Neo-Brutalism uses smaller radii */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* Border Radius - subtle curves, not harsh brutalism */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 }
 
 /* Base Styles */
@@ -335,24 +323,24 @@ pre code {
    Background Utilities
    ============================================= */
 
-/* Grid patterns */
+/* Grid patterns - using indigo/purple from cover */
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(2, 128, 125, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(2, 128, 125, 0.06) 1px, transparent 1px);
+    linear-gradient(to right, rgba(98, 126, 234, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(98, 126, 234, 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .bg-grid-sm {
   background-image:
-    linear-gradient(to right, rgba(2, 128, 125, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(2, 128, 125, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgba(98, 126, 234, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(98, 126, 234, 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 /* Gradient utilities */
 .bg-gradient-radial {
-  background: radial-gradient(ellipse at center, rgba(195, 99, 18, 0.1) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(98, 126, 234, 0.1) 0%, transparent 70%);
 }
 
 .bg-gradient-hero {
@@ -395,21 +383,21 @@ pre code {
   -webkit-text-fill-color: transparent;
 }
 
-/* Glow effects */
+/* Glow effects - indigo/purple theme */
 .glow-primary {
   box-shadow: 0 0 20px var(--accent-primary-glow);
 }
 
 .glow-secondary {
-  box-shadow: 0 0 20px rgba(2, 128, 125, 0.3);
+  box-shadow: 0 0 20px var(--accent-secondary-glow);
 }
 
 .glow-tertiary {
-  box-shadow: 0 0 20px rgba(14, 127, 108, 0.3);
+  box-shadow: 0 0 20px var(--accent-tertiary-glow);
 }
 
 .glow-warning {
-  box-shadow: 0 0 20px rgba(221, 144, 79, 0.3);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
 /* Text glow */
@@ -418,11 +406,11 @@ pre code {
 }
 
 .text-glow-secondary {
-  text-shadow: 0 0 10px rgba(2, 128, 125, 0.5);
+  text-shadow: 0 0 10px var(--accent-secondary-glow);
 }
 
 .text-glow-tertiary {
-  text-shadow: 0 0 10px rgba(14, 127, 108, 0.5);
+  text-shadow: 0 0 10px var(--accent-tertiary-glow);
 }
 
 /* Pulse glow animation */
@@ -434,7 +422,7 @@ pre code {
   }
 
   50% {
-    box-shadow: 0 0 35px rgba(2, 128, 125, 0.4);
+    box-shadow: 0 0 35px var(--accent-secondary-glow);
   }
 }
 
@@ -488,21 +476,21 @@ pre code {
 
 /* =============================================
    Reading Panel - Content Container
-   Neo-Brutalist Style
+   Systems Engineering Style
    ============================================= */
 
 .reading-panel {
   background: var(--surface-elevated);
-  border: 4px solid rgba(255, 77, 0, 0.3);
+  border: 3px solid rgba(98, 126, 234, 0.3);
   padding: 3rem 3.5rem;
-  box-shadow: 8px 8px 0 0 rgba(255, 77, 0, 0.1);
+  box-shadow: 6px 6px 0 0 rgba(98, 126, 234, 0.1);
 }
 
 @media (max-width: 768px) {
   .reading-panel {
     padding: 1.5rem 1.25rem;
-    border-width: 3px;
-    box-shadow: 4px 4px 0 0 rgba(255, 77, 0, 0.1);
+    border-width: 2px;
+    box-shadow: 4px 4px 0 0 rgba(98, 126, 234, 0.1);
   }
 }
 
@@ -518,7 +506,7 @@ pre code {
   --tw-prose-links: var(--accent-secondary);
   --tw-prose-code: var(--accent-tertiary);
   --tw-prose-pre-bg: var(--surface-glass);
-  --tw-prose-hr: rgba(255, 77, 0, 0.2);
+  --tw-prose-hr: rgba(98, 126, 234, 0.3);
   color: var(--text-secondary);
   font-size: 1.0625rem;
   line-height: 1.85;
@@ -550,7 +538,7 @@ pre code {
   line-height: 1.25;
   letter-spacing: -0.01em;
   padding-bottom: 0.75rem;
-  border-bottom: 4px solid var(--accent-primary);
+  border-bottom: 3px solid var(--accent-primary);
 }
 
 .prose h3 {
@@ -602,14 +590,15 @@ pre code {
   color: var(--text-primary);
 }
 
-/* Inline code - Neo-Brutalist */
+/* Inline code */
 .prose code {
   color: var(--accent-tertiary);
   background: rgba(58, 184, 58, 0.1);
   padding: 0.2em 0.5em;
   font-size: 0.875em;
   font-family: var(--font-mono);
-  border: 2px solid rgba(58, 184, 58, 0.3);
+  border: 1px solid rgba(58, 184, 58, 0.25);
+  border-radius: 3px;
 }
 
 /* Code blocks - Organic Futurism Glassmorphism */
@@ -690,8 +679,8 @@ pre code {
 
 .prose hr {
   border: none;
-  height: 4px;
-  background: var(--accent-primary);
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
   margin: 3rem 0;
 }
 

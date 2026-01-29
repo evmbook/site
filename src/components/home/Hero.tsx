@@ -40,13 +40,14 @@ export function Hero({ stats }: HeroProps) {
               <span className="text-[var(--text-primary)]">Virtual Machine</span>
             </motion.h1>
 
-            {/* Subtitle */}
+            {/* Subtitle - aligned with Preface differentiators */}
             <motion.p
               variants={staggerItem}
               className="mt-8 text-lg sm:text-xl text-[var(--text-secondary)] max-w-xl leading-relaxed"
             >
-              A comprehensive guide to EVM development. Learn Solidity, smart
-              contract security, DeFi protocols, and more. Covering both{' '}
+              Evolution narratives show how protocols matured. Dependency trees
+              map what to build first. Trust assumptions reveal what&apos;s actually
+              decentralized. Covering both{' '}
               <span className="text-[var(--eth-brand)] font-semibold">Ethereum</span> and{' '}
               <span className="text-[var(--etc-brand)] font-semibold">
                 Ethereum Classic
