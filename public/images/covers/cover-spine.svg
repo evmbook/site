@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 693.75" width="1.2in" height="9.25in">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0f0f2f"/>
+      <stop offset="50%" style="stop-color:#1a1a3a"/>
+      <stop offset="100%" style="stop-color:#0f0f2f"/>
+    </linearGradient>
+
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#3AB83A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+
+  <!-- Side accent lines -->
+  <rect x="0" y="0" width="3" height="693.75" fill="url(#accentGradient)"/>
+  <rect x="87" y="0" width="3" height="693.75" fill="url(#accentGradient)"/>
+
+  <!-- Title (rotated) -->
+  <g transform="translate(55, 350) rotate(-90)">
+    <text text-anchor="middle" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#FFFFFF">
+      MASTERING EVM
+    </text>
+  </g>
+
+  <!-- Edition badge -->
+  <g transform="translate(45, 580)">
+    <rect x="-25" y="-10" width="50" height="20" rx="3" fill="#627EEA" opacity="0.3"/>
+    <text text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#8B9DC3">
+      2025
+    </text>
+  </g>
+
+  <!-- Author (rotated) -->
+  <g transform="translate(55, 650) rotate(-90)">
+    <text text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#AAAAAA">
+      Mercer
+    </text>
+  </g>
+
+  <!-- Publisher mark at bottom -->
+  <g transform="translate(45, 30)">
+    <rect x="-12" y="-12" width="24" height="24" rx="4" fill="none" stroke="#627EEA" stroke-width="1" opacity="0.5"/>
+    <text text-anchor="middle" y="5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#627EEA">W</text>
+  </g>
+</svg>

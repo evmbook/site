@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 562.5 693.75" width="7.5in" height="9.25in">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="50%" style="stop-color:#1a1a3a"/>
+      <stop offset="100%" style="stop-color:#0f0f2f"/>
+    </linearGradient>
+
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#3AB83A"/>
+    </linearGradient>
+
+    <pattern id="hexPattern" width="60" height="52" patternUnits="userSpaceOnUse">
+      <polygon points="30,0 60,15 60,37 30,52 0,37 0,15"
+               fill="none" stroke="#627EEA" stroke-width="0.5" opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  <rect width="100%" height="100%" fill="url(#hexPattern)"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="562.5" height="8" fill="url(#accentGradient)"/>
+
+  <!-- Main description box -->
+  <g transform="translate(50, 60)">
+    <!-- Description text -->
+    <text font-family="Georgia, serif" font-size="13" fill="#E0E0E0" line-height="1.6">
+      <tspan x="0" y="0" font-size="16" fill="#FFFFFF" font-weight="bold">The Complete Guide to the Ethereum Virtual Machine</tspan>
+      <tspan x="0" y="35">From cryptographic foundations to production DeFi, this comprehensive</tspan>
+      <tspan x="0" y="55">guide covers everything you need to build on EVM-compatible blockchains.</tspan>
+      <tspan x="0" y="95" font-weight="bold" fill="#8B9DC3">What You'll Learn:</tspan>
+      <tspan x="0" y="120" fill="#CCCCCC">&#8226; Solidity fundamentals through advanced patterns</tspan>
+      <tspan x="0" y="142" fill="#CCCCCC">&#8226; Smart contract security and real-world exploit analysis</tspan>
+      <tspan x="0" y="164" fill="#CCCCCC">&#8226; Testing with Foundry: unit, fuzz, and invariant testing</tspan>
+      <tspan x="0" y="186" fill="#CCCCCC">&#8226; DeFi primitives: AMMs, lending, governance, oracles</tspan>
+      <tspan x="0" y="208" fill="#CCCCCC">&#8226; Layer 2 solutions and zero-knowledge applications</tspan>
+      <tspan x="0" y="230" fill="#CCCCCC">&#8226; Multi-chain deployment and upgrade strategies</tspan>
+      <tspan x="0" y="252" fill="#CCCCCC">&#8226; AI-assisted development with agentic coding patterns</tspan>
+      <tspan x="0" y="295" font-style="italic" fill="#AAAAAA">"Decentralization is bounded from below. The base layer determines</tspan>
+      <tspan x="0" y="315" font-style="italic" fill="#AAAAAA">the maximum decentralization possible above it." — Christopher Mercer</tspan>
+    </text>
+  </g>
+
+  <!-- Divider line -->
+  <rect x="50" y="400" width="462.5" height="1" fill="#627EEA" opacity="0.3"/>
+
+  <!-- About the Author section -->
+  <g transform="translate(50, 430)">
+    <text font-family="Arial, sans-serif" font-size="12" fill="#8B9DC3" font-weight="bold">ABOUT THE AUTHOR</text>
+    <text y="28" font-family="Georgia, serif" font-size="9" fill="#CCCCCC">
+      <tspan x="0" dy="0">Christopher Mercer is a blockchain architect and ecosystem builder focused</tspan>
+      <tspan x="0" dy="14">on long-lived systems. He has deployed and maintained production application</tspan>
+      <tspan x="0" dy="14">protocols and participated in network protocol governance and infrastructure</tspan>
+      <tspan x="0" dy="14">planning across multiple EVM networks.</tspan>
+      <tspan x="0" dy="21">His work centers on understanding how decentralized applications evolve over</tspan>
+      <tspan x="0" dy="14">time—technically, economically, and operationally—and how those dependencies</tspan>
+      <tspan x="0" dy="14">shape what is realistically buildable. Mastering EVM reflects this systems-level</tspan>
+      <tspan x="0" dy="14">approach, reviewing the EVM as it exists today rather than as it is often idealized.</tspan>
+    </text>
+  </g>
+
+  <!-- Technical specs -->
+  <g transform="translate(50, 600)">
+    <text font-family="monospace" font-size="10" fill="#666666">
+      <tspan x="0" dy="0">28 Chapters | 8 Appendices | Code Examples</tspan>
+      <tspan x="0" dy="15">Covers: Ethereum, Ethereum Classic, L2s</tspan>
+      <tspan x="0" dy="15">Current through January 2026</tspan>
+    </text>
+  </g>
+
+  <!-- ISBN-13 Barcode: 979-8-9947278-0-5 -->
+  <g transform="translate(370, 570)">
+    <rect x="0" y="0" width="160" height="100" fill="#FFFFFF" rx="3"/>
+    <g transform="translate(5, 8) scale(0.8)">
+      <!-- Start guard: 101 -->
+      <rect x="0" y="0" width="2" height="70" fill="#000"/>
+      <rect x="4" y="0" width="2" height="70" fill="#000"/>
+      <!-- Left side digits (7,9,8,9,9,4) pattern LGGLGL -->
+      <rect x="8" y="0" width="2" height="60" fill="#000"/>
+      <rect x="10" y="0" width="2" height="60" fill="#000"/>
+      <rect x="12" y="0" width="2" height="60" fill="#000"/>
+      <rect x="16" y="0" width="2" height="60" fill="#000"/>
+      <rect x="18" y="0" width="2" height="60" fill="#000"/>
+      <rect x="24" y="0" width="2" height="60" fill="#000"/>
+      <rect x="28" y="0" width="2" height="60" fill="#000"/>
+      <rect x="30" y="0" width="2" height="60" fill="#000"/>
+      <rect x="32" y="0" width="2" height="60" fill="#000"/>
+      <rect x="40" y="0" width="2" height="60" fill="#000"/>
+      <rect x="46" y="0" width="2" height="60" fill="#000"/>
+      <rect x="54" y="0" width="2" height="60" fill="#000"/>
+      <rect x="58" y="0" width="2" height="60" fill="#000"/>
+      <rect x="60" y="0" width="2" height="60" fill="#000"/>
+      <rect x="66" y="0" width="2" height="60" fill="#000"/>
+      <rect x="70" y="0" width="2" height="60" fill="#000"/>
+      <rect x="72" y="0" width="2" height="60" fill="#000"/>
+      <rect x="74" y="0" width="2" height="60" fill="#000"/>
+      <rect x="78" y="0" width="2" height="60" fill="#000"/>
+      <rect x="86" y="0" width="2" height="60" fill="#000"/>
+      <rect x="88" y="0" width="2" height="60" fill="#000"/>
+      <!-- Center guard: 01010 -->
+      <rect x="92" y="0" width="2" height="70" fill="#000"/>
+      <rect x="96" y="0" width="2" height="70" fill="#000"/>
+      <!-- Right side digits (7,2,7,8,0,5) -->
+      <rect x="100" y="0" width="2" height="60" fill="#000"/>
+      <rect x="108" y="0" width="2" height="60" fill="#000"/>
+      <rect x="114" y="0" width="2" height="60" fill="#000"/>
+      <rect x="116" y="0" width="2" height="60" fill="#000"/>
+      <rect x="120" y="0" width="2" height="60" fill="#000"/>
+      <rect x="122" y="0" width="2" height="60" fill="#000"/>
+      <rect x="128" y="0" width="2" height="60" fill="#000"/>
+      <rect x="136" y="0" width="2" height="60" fill="#000"/>
+      <rect x="142" y="0" width="2" height="60" fill="#000"/>
+      <rect x="148" y="0" width="2" height="60" fill="#000"/>
+      <rect x="156" y="0" width="2" height="60" fill="#000"/>
+      <rect x="158" y="0" width="2" height="60" fill="#000"/>
+      <rect x="160" y="0" width="2" height="60" fill="#000"/>
+      <rect x="166" y="0" width="2" height="60" fill="#000"/>
+      <rect x="170" y="0" width="2" height="60" fill="#000"/>
+      <rect x="176" y="0" width="2" height="60" fill="#000"/>
+      <rect x="178" y="0" width="2" height="60" fill="#000"/>
+      <rect x="180" y="0" width="2" height="60" fill="#000"/>
+      <!-- End guard: 101 -->
+      <rect x="184" y="0" width="2" height="70" fill="#000"/>
+      <rect x="188" y="0" width="2" height="70" fill="#000"/>
+    </g>
+    <!-- ISBN number -->
+    <text x="80" y="85" text-anchor="middle" font-family="monospace" font-size="9" fill="#000">ISBN 979-8-9947278-0-5</text>
+  </g>
+
+  <!-- Publisher -->
+  <text x="50" y="680" font-family="Arial, sans-serif" font-size="11" fill="#666666">
+    White B0x Inc.
+  </text>
+
+  <!-- Price (US) -->
+  <text x="512.5" y="680" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#666666">
+    $49.99 US
+  </text>
+</svg>
