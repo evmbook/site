@@ -1,19 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <!-- Background gradient matching book cover -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a1a"/>
+      <stop offset="50%" style="stop-color:#1a1a3a"/>
+      <stop offset="100%" style="stop-color:#0f0f2f"/>
+    </linearGradient>
+
+    <!-- Accent gradient matching book cover -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#627EEA"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#3AB83A"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="0.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
   <!-- Background -->
-  <rect width="32" height="32" rx="4" fill="#060606"/>
+  <rect width="32" height="32" rx="4" fill="url(#bgGradient)"/>
 
-  <!-- Prism shape - 3D geometric form inspired by blockchain/EVM -->
-  <!-- Front face -->
-  <polygon points="16,4 26,12 26,22 16,28 6,22 6,12" fill="none" stroke="#C36312" stroke-width="2"/>
+  <!-- EVM Crystal/Diamond - matching og-image design -->
+  <g transform="translate(16, 16)">
+    <!-- Outer glow hexagon -->
+    <polygon points="0,-12 8.5,-6 8.5,6 0,12 -8.5,6 -8.5,-6"
+             fill="none" stroke="url(#accentGradient)" stroke-width="0.25"
+             filter="url(#glow)" opacity="0.5"/>
 
-  <!-- Inner edges creating 3D prism effect -->
-  <line x1="16" y1="4" x2="16" y2="16" stroke="#C36312" stroke-width="1.5"/>
-  <line x1="16" y1="16" x2="6" y2="12" stroke="#C36312" stroke-width="1.5"/>
-  <line x1="16" y1="16" x2="26" y2="12" stroke="#C36312" stroke-width="1.5"/>
-  <line x1="16" y1="16" x2="16" y2="28" stroke="#C36312" stroke-width="1.5" opacity="0.6"/>
-  <line x1="16" y1="16" x2="6" y2="22" stroke="#C36312" stroke-width="1.5" opacity="0.6"/>
-  <line x1="16" y1="16" x2="26" y2="22" stroke="#C36312" stroke-width="1.5" opacity="0.6"/>
+    <!-- Main diamond -->
+    <polygon points="0,-10 7,-5 7,5 0,10 -7,5 -7,-5"
+             fill="none" stroke="url(#accentGradient)" stroke-width="0.4"/>
 
-  <!-- Center glow dot -->
-  <circle cx="16" cy="16" r="2" fill="#C36312"/>
+    <!-- Inner structure -->
+    <polygon points="0,-6 4.5,-3 4.5,3 0,6 -4.5,3 -4.5,-3"
+             fill="none" stroke="#627EEA" stroke-width="0.2" opacity="0.7"/>
+
+    <!-- Center lines -->
+    <line x1="0" y1="-6" x2="0" y2="6" stroke="#8B5CF6" stroke-width="0.15" opacity="0.5"/>
+    <line x1="-4.5" y1="0" x2="4.5" y2="0" stroke="#8B5CF6" stroke-width="0.15" opacity="0.5"/>
+
+    <!-- Center point -->
+    <circle cx="0" cy="0" r="0.8" fill="url(#accentGradient)" opacity="0.9"/>
+  </g>
 </svg>
