@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
     // Use ESLint CLI directly instead of Next.js built-in linting
     ignoreDuringBuilds: true,
   },
+  // Use polling for file watching to avoid inotify limits
+  // and exclude code examples directory
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        poll: 1000, // Check for changes every 1 second
+        aggregateTimeout: 300,
+        ignored: ['**/content/code/**', '**/node_modules/**', '**/.git/**'],
+      }
+    }
+    return config
+  },
 }
 
 const withMDX = createMDX({
