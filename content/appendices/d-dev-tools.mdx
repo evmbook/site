@@ -603,6 +603,268 @@ With MCP enabled, Claude can:
 - Check transaction receipts and logs
 - Verify contract deployments
 
+### GitHub Copilot
+
+GitHub Copilot provides AI-powered code completion directly in your IDE. It excels at autocompleting Solidity patterns, test scaffolding, and repetitive code.
+
+- **Website**: [github.com/features/copilot](https://github.com/features/copilot)
+- **Documentation**: [docs.github.com/copilot](https://docs.github.com/en/copilot)
+
+**Key features for EVM development:**
+
+- Inline code completion for Solidity and TypeScript
+- Pattern recognition from OpenZeppelin and common contracts
+- Test generation assistance
+- NatSpec documentation completion
+
+#### Installing Copilot
+
+**VS Code:**
+1. Install the "GitHub Copilot" extension from the marketplace
+2. Sign in with your GitHub account (requires Copilot subscription)
+3. Copilot activates automatically in supported files (.sol, .ts, .js)
+
+**Neovim:**
+```bash
+# Using lazy.nvim
+{
+  "github/copilot.vim",
+  config = function()
+    vim.g.copilot_filetypes = { solidity = true }
+  end,
+}
+```
+
+Run `:Copilot setup` and authenticate with GitHub.
+
+**JetBrains IDEs:**
+1. Install "GitHub Copilot" from Preferences → Plugins
+2. Restart the IDE and sign in via Tools → GitHub Copilot → Login
+
+#### Configuring for Solidity
+
+Create `.github/copilot-instructions.md` in your project root:
+
+```markdown
+# Copilot Instructions for EVM Development
+
+When generating Solidity code:
+- Target Solidity ^0.8.24
+- Use OpenZeppelin contracts v5.x patterns
+- Include NatSpec documentation (@notice, @param, @return)
+- Follow checks-effects-interactions pattern
+- Emit events for state changes
+
+When generating tests:
+- Use Foundry's forge-std for Solidity tests
+- Use Hardhat with ethers.js v6 for TypeScript tests
+- Include edge cases and failure scenarios
+```
+
+#### Effective Prompts for Solidity
+
+Write descriptive comments to guide Copilot:
+
+```solidity
+// ERC-20 token with 1 million fixed supply, minted to deployer
+contract MyToken is ERC20 {
+    // Copilot will complete the constructor
+}
+
+// Withdraw function with reentrancy protection
+// Requires balance >= amount, emits Withdrawal event
+function withdraw(uint256 amount) external {
+    // Copilot will implement the pattern
+}
+```
+
+#### Copilot Chat
+
+Copilot Chat provides conversational assistance within your IDE:
+
+- **VS Code**: Open via Ctrl/Cmd+Shift+I or the chat icon
+- **JetBrains**: Tools → GitHub Copilot → Chat
+
+Example queries:
+- "Explain this contract's access control"
+- "Add fuzz tests for the withdraw function"
+- "What vulnerabilities should I check for?"
+
+### Cursor
+
+Cursor is a fork of VS Code with deep AI integration, designed for AI-first development. It combines familiar VS Code functionality with powerful AI features.
+
+- **Website**: [cursor.com](https://cursor.com)
+- **Documentation**: [docs.cursor.com](https://docs.cursor.com)
+
+**Key features for EVM development:**
+
+- **Composer**: Multi-file editing with AI across your codebase
+- **Chat**: Context-aware conversations about your code
+- **Cmd+K**: Inline code generation and editing
+- **Codebase indexing**: AI understands your entire project structure
+- **Multiple models**: Choose between Claude, GPT-4, and others
+
+#### Installing Cursor
+
+Download from [cursor.com](https://cursor.com) for macOS, Windows, or Linux. Cursor imports your VS Code settings, extensions, and keybindings automatically.
+
+#### Configuring for Solidity
+
+1. Install the Solidity extension (Juan Blanco or Nomic Foundation)
+2. Open Settings (Cmd/Ctrl+,) → Cursor Settings
+3. Enable "Include project context" for better completions
+
+Create `.cursorrules` in your project root:
+
+```
+You are an expert Solidity developer working on EVM smart contracts.
+
+Project context:
+- Solidity version: ^0.8.24
+- Framework: Foundry
+- Networks: Ethereum Classic (chainId 61), Ethereum (chainId 1)
+
+Code standards:
+- Use OpenZeppelin contracts v5.x
+- Follow checks-effects-interactions pattern
+- Include NatSpec documentation for all public functions
+- Emit events for all state changes
+- Use custom errors instead of require strings
+
+Security priorities:
+- Check for reentrancy vulnerabilities
+- Validate all external inputs
+- Consider gas optimization for loops
+- Document trust assumptions
+```
+
+#### Using Composer for Multi-File Edits
+
+Press Cmd/Ctrl+Shift+I to open Composer. Describe changes that span multiple files:
+
+```
+Add a withdrawal limit feature to the Faucet contract:
+1. Add a daily limit of 1 ETH per address in Faucet.sol
+2. Create a mapping to track withdrawals per day
+3. Update the tests in Faucet.t.sol to cover the new limit
+4. Add the limit as a constructor parameter
+```
+
+Composer will propose edits across all relevant files for review before applying.
+
+#### Inline Editing with Cmd+K
+
+Select code and press Cmd/Ctrl+K for targeted edits:
+
+- "Add reentrancy guard to this function"
+- "Convert to use custom errors"
+- "Add NatSpec documentation"
+- "Optimize gas usage"
+
+### ChatGPT
+
+OpenAI's ChatGPT provides conversational AI assistance for EVM development through web and API interfaces.
+
+- **Website**: [chat.openai.com](https://chat.openai.com)
+- **API Documentation**: [platform.openai.com/docs](https://platform.openai.com/docs)
+
+**Key features for EVM development:**
+
+- Code generation and explanation
+- Security review assistance
+- Documentation writing
+- Learning and research
+
+#### Using ChatGPT for Solidity
+
+ChatGPT works best with clear context. Start conversations with project details:
+
+```
+I'm developing smart contracts for Ethereum Classic using:
+- Solidity ^0.8.24
+- Foundry for testing
+- OpenZeppelin contracts v5.x
+
+Help me implement a token vesting contract with:
+- Linear vesting over 12 months
+- Cliff period of 3 months
+- Revocable by admin
+```
+
+#### Custom GPTs for EVM Development
+
+Create a Custom GPT with specialized instructions:
+
+1. Go to chat.openai.com → Explore GPTs → Create
+2. Add system instructions:
+
+```
+You are an expert EVM smart contract developer.
+
+When writing Solidity:
+- Target version ^0.8.24
+- Use OpenZeppelin v5.x patterns
+- Include comprehensive NatSpec
+- Follow security best practices
+
+When reviewing code:
+- Check for common vulnerabilities (reentrancy, overflow, access control)
+- Identify centralization risks
+- Suggest gas optimizations
+
+Always explain your reasoning and trade-offs.
+```
+
+3. Add knowledge files (OpenZeppelin docs, your style guide)
+
+#### ChatGPT Code Interpreter
+
+For data analysis tasks, use Code Interpreter:
+
+- Analyze gas usage patterns from transaction data
+- Parse and visualize on-chain data exports
+- Generate charts for token distribution analysis
+- Process large CSV files of blockchain data
+
+Upload your data file and describe the analysis:
+
+```
+This CSV contains all transactions to my contract over 30 days.
+Analyze:
+1. Gas usage distribution
+2. Peak usage times
+3. Most common function calls
+4. Unique user counts per day
+```
+
+#### API Integration
+
+Integrate GPT models into development workflows:
+
+```typescript
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+async function reviewContract(source: string): Promise<string> {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4-turbo",
+    messages: [
+      {
+        role: "system",
+        content: "You are a smart contract security auditor. Review the code for vulnerabilities.",
+      },
+      {
+        role: "user",
+        content: `Review this Solidity contract:\n\n${source}`,
+      },
+    ],
+  });
+  return response.choices[0].message.content;
+}
+```
+
 ### Agentic Workflows
 
 Effective patterns for AI-assisted EVM development:
@@ -651,3 +913,6 @@ See Chapter 18: Agentic Development for comprehensive coverage of AI-assisted bl
 - **ethers.js**: [docs.ethers.org](https://docs.ethers.org)
 - **viem**: [viem.sh](https://viem.sh)
 - **Claude Code**: [docs.anthropic.com/claude-code](https://docs.anthropic.com/en/docs/claude-code)
+- **Cursor**: [cursor.com](https://cursor.com)
+- **GitHub Copilot**: [github.com/features/copilot](https://github.com/features/copilot)
+- **ChatGPT**: [chat.openai.com](https://chat.openai.com)

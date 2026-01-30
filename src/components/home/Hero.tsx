@@ -79,7 +79,7 @@ export function Hero({ stats }: HeroProps) {
                   />
                 </svg>
               </Link>
-              <Link
+{/* <Link
                 href="/download"
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-bold uppercase tracking-wider bg-transparent text-[var(--text-primary)] border-4 border-[var(--text-primary)] shadow-[var(--shadow-brutal)] hover:shadow-[var(--shadow-brutal-sm)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[var(--text-primary)] hover:text-[var(--surface-base)] transition-all duration-150"
               >
@@ -97,7 +97,7 @@ export function Hero({ stats }: HeroProps) {
                     d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
                   />
                 </svg>
-              </Link>
+              </Link> */}
             </motion.div>
 
             {/* Dual chain indicator - Neo-Brutalist */}

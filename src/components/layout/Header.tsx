@@ -32,12 +32,12 @@ export function Header() {
             >
               Read Online
             </Link>
-            <Link
+{/* <Link
               href="/download"
               className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
             >
               Download
-            </Link>
+            </Link> */}
             <Link
               href="/about"
               className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors duration-150"
@@ -124,13 +124,13 @@ export function Header() {
               >
                 Read Online
               </Link>
-              <Link
+{/* <Link
                 href="/download"
                 className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Download
-              </Link>
+              </Link> */}
               <Link
                 href="/about"
                 className="block px-3 py-3 text-base font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)] transition-all duration-150"

@@ -43,7 +43,7 @@ export function Footer() {
                   Read Online
                 </Link>
               </li>
-              <li>
+{/* <li>
                 <Link
                   href="/download"
                   className="text-sm text-[var(--text-secondary)] hover:text-[var(--link-color)] transition-colors duration-150"
@@ -58,7 +58,7 @@ export function Footer() {
                 >
                   Download EPUB
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 

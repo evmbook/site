@@ -16,31 +16,14 @@ On July 20, 2016, at block 1,920,000, the Ethereum network experienced a content
 
 This split created two separate chains sharing a common history up to block 1,920,000.
 
-## Ethereum Classic Forks
-
-| Fork Name | Block | Date | Notable Changes |
-|-----------|-------|------|-----------------|
-| Frontier | 0 | Jul 2015 | Genesis |
-| Homestead | 1,150,000 | Mar 2016 | EIP-2, EIP-7, EIP-8 |
-| DAO Fork | 1,920,000 | Jul 2016 | ETC continues unforked |
-| Tangerine Whistle | 2,500,000 | Oct 2016 | Gas repricing |
-| Spurious Dragon | 8,772,000 | Jan 2019 | Replay protection |
-| Atlantis | 8,772,000 | Sep 2019 | Byzantium equivalence |
-| Agharta | 9,573,000 | Jan 2020 | Constantinople equivalence |
-| Phoenix | 10,500,839 | Jun 2020 | Istanbul equivalence |
-| Thanos | 11,700,000 | Nov 2020 | DAG size reduction |
-| Magneto | 13,189,133 | Jul 2021 | Berlin equivalence |
-| Mystique | 14,525,000 | Feb 2022 | London equivalence (no EIP-1559) |
-| Spiral | 19,250,000 | Feb 2024 | Shanghai equivalence (partial) |
-| **Olympia** | TBD | 2025 | EIP-1559 with treasury, ECIP-1121 opcodes |
-
 ## Ethereum Forks
 
 | Fork Name | Block | Date | Notable Changes |
 |-----------|-------|------|-----------------|
 | Frontier | 0 | Jul 2015 | Genesis |
-| Homestead | 1,150,000 | Mar 2016 | EIP-2, EIP-7, EIP-8 |
-| DAO Fork | 1,920,000 | Jul 2016 | Irregular state change |
+| Ice Age | 200,000 | Sep 2015 | Activated the gas market |
+| Homestead | 1,150,000 | Mar 2016 | Activate transactions and smart contracts |
+| DAO Fork | 1,920,000 | Jul 2016 | Irregulate state change to reverse The DAO theft |
 | Tangerine Whistle | 2,463,000 | Oct 2016 | Gas repricing |
 | Spurious Dragon | 2,675,000 | Nov 2016 | State clearing |
 | Byzantium | 4,370,000 | Oct 2017 | zkSNARK precompiles |
@@ -54,7 +37,29 @@ This split created two separate chains sharing a common history up to block 1,92
 | **The Merge** | 15,537,394 | Sep 2022 | **Transition to PoS** |
 | Shanghai | 17,034,870 | Apr 2023 | Validator withdrawals |
 | Dencun | 19,426,587 | Mar 2024 | EIP-4844 blobs |
-| **Pectra** | TBD | Late 2024 | EIP-7702 (native AA), EIP-7251, EIP-7002 |
+| Pectra | 22,431,111 | May 2025 | Blob capacity, validator flexibility |
+| Fusaka | 23,935,720| Dec 2025 | PeerDAS data scaling |
+
+## Ethereum Classic Forks
+
+| Fork Name | Block | Date | Notable Changes |
+|-----------|-------|------|-----------------|
+| Frontier | 0 | Jul 2015 | Genesis |
+| Ice Age | 200,000 | Sep 2015 | Activated the gas market |
+| Homestead | 1,150,000 | Mar 2016 | Activate transactions and smart contracts |
+| DAO Fork | 1,920,000 | Jul 2016 | Renamed to Ethereum Classic, Foundation forks away |
+| Gas Reprice | 2,500,000 | Oct 2016 | Tangerine Whistle equivalence |
+| Die Hard | 3,000,000 | Jan 2017 | Spurious Dragon equivalence |
+| Gotham | 5,000,000 | Dec 2017 | ETC Monetary Policy |
+| Defuse Difficulty Bomb | 5,900,000 | May 2018 | LTS PoW EVM alignment |
+| Atlantis | 8,772,000 | Sep 2019 | Byzantium equivalence |
+| Agharta | 9,573,000 | Jan 2020 | Constantinople equivalence |
+| Phoenix | 10,500,839 | Jun 2020 | Istanbul equivalence |
+| Thanos | 11,700,000 | Nov 2020 | DAG size reduction, ETChash specification |
+| Magneto | 13,189,133 | Jul 2021 | Berlin equivalence |
+| Mystique | 14,525,000 | Feb 2022 | London equivalence (partial) |
+| Spiral | 19,250,000 | Feb 2024 | Shanghai equivalence (partial) |
+| Olympia | TBD | 2026 | EIP-1559 with treasury redirect, Decun, Pectra, Fusaka opcodes |
 
 ## Key Differences After The Merge
 
@@ -66,7 +71,7 @@ After September 2022, ETH and ETC diverged significantly:
 | Block time | 12 seconds (fixed) | ~13 seconds (variable) |
 | Finality | ~13 minutes (economic) | ~10 minutes (probabilistic) |
 | Monetary policy | Deflationary (burn) | Fixed emission schedule |
-| Validator/Miner role | 32 ETH stake | GPU mining |
+| Validator/Miner role | 32 ETH stake | ASIC and GPU mining |
 
 ## EIP Compatibility
 
@@ -79,12 +84,8 @@ ETC maintains EVM compatibility with ETH through coordinated upgrades:
 | Istanbul | Phoenix | Full compatibility |
 | Berlin | Magneto | Full compatibility |
 | London | Mystique | No EIP-1559 (fee burn) |
-| Shanghai | Spiral | No withdrawals (not PoS) |
-| — | Olympia | EIP-1559 with treasury (not burn), opcode alignment |
-
-<Note>
-ETC generally implements EVM-related EIPs while skipping consensus-related changes that assume Proof of Stake. The Olympia upgrade is notable for implementing EIP-1559 semantics but with a different economic model: base fees go to a treasury for protocol development rather than being burned.
-</Note>
+| Shanghai | Spiral | No PoS EIPs |
+| Decun, Pectra, Fusaka | Olympia | No PoS EIPs |
 
 ## Resources
 
